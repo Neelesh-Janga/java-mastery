@@ -1,0 +1,346 @@
+[
+  {
+    "id": "cf-001",
+    "topic": "completablefuture",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "supplyAsync — fetch user profile",
+    "description": "Simulate an async user profile fetch using supplyAsync. The task sleeps 500ms to simulate network latency, then returns a user name string.",
+    "starterCode": "// Simulate: fetch user profile asynchronously\n// Sleep 500ms, return \"User: Alice\"\n// Block for result with join() and print it\n",
+    "hints": [
+      "CompletableFuture.supplyAsync(() -> { Thread.sleep(...); return ...; })",
+      "Use join() to block for result"
+    ],
+    "solution": {
+      "code": "CompletableFuture<String> userFuture = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    System.out.println(\"Fetching user... (thread: \" + Thread.currentThread().getName() + \")\");\n    return \"User: Alice\";\n});\nSystem.out.println(\"Main thread continues while fetching...\");\nString user = userFuture.join(); // blocks until done\nSystem.out.println(\"Got: \" + user);",
+      "explanation": "CompletableFuture.supplyAsync() runs the Supplier in the ForkJoinPool.commonPool() (or a custom Executor passed as second arg). The main thread continues executing while the async task runs in a pool thread — this is the core benefit. join() blocks until completion and rethrows exceptions unchecked. get() does the same but declares checked exceptions. The print statement before join() often appears before the 'Fetching user...' line, proving true asynchrony.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<U> CompletableFuture.supplyAsync(Supplier<U> supplier)",
+          "description": "Runs the Supplier asynchronously in the ForkJoinPool and returns a CompletableFuture<U>."
+        },
+        {
+          "method": "CompletableFuture<U> CompletableFuture.supplyAsync(Supplier<U> supplier, Executor executor)",
+          "description": "Same as above but uses the provided Executor instead of ForkJoinPool."
+        },
+        {
+          "method": "T join()",
+          "description": "Waits for completion and returns result. Throws unchecked CompletionException on failure."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-002",
+    "topic": "completablefuture",
+    "subtopic": "transformation",
+    "difficulty": "beginner",
+    "title": "thenApply — transform the result",
+    "description": "After fetching a product price (as a double), apply a 10% discount using thenApply.",
+    "starterCode": "// Simulate fetching product price: 100.0\n// Apply 10% discount with thenApply\n// Print final price\n",
+    "hints": ["thenApply takes a Function<T, R>", "price -> price * 0.9"],
+    "solution": {
+      "code": "CompletableFuture<Double> discountedPrice = CompletableFuture\n    .supplyAsync(() -> {\n        try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n        return 100.0; // original price\n    })\n    .thenApply(price -> {\n        System.out.println(\"Applying discount to: \" + price);\n        return price * 0.9; // 10% discount\n    });\n\nSystem.out.println(\"Discounted price: \" + discountedPrice.join()); // 90.0",
+      "explanation": "thenApply() is the CompletableFuture equivalent of map() on a stream. It transforms the result when it arrives, using a Function<T,U>. The transformation runs in the same thread that completed the previous stage (or the calling thread if already complete). No new async task is launched — it's just a synchronous transform chained onto the completion. Use thenApplyAsync() to run the transform in a thread pool.",
+      "methodSignatures": [
+        {
+          "method": "<U> CompletableFuture<U> thenApply(Function<? super T,? extends U> fn)",
+          "description": "When this stage completes, applies fn to the result and returns a new CompletableFuture<U>."
+        },
+        {
+          "method": "<U> CompletableFuture<U> thenApplyAsync(Function<? super T,? extends U> fn)",
+          "description": "Same as thenApply but runs fn asynchronously in ForkJoinPool."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-003",
+    "topic": "completablefuture",
+    "subtopic": "consumption",
+    "difficulty": "beginner",
+    "title": "thenAccept — consume the result",
+    "description": "Fetch a notification message async, then consume it with thenAccept to simulate sending an email (print it).",
+    "starterCode": "// Fetch message: \"Your order #123 has shipped!\"\n// Use thenAccept to print/consume it\n// Note: thenAccept returns CompletableFuture<Void>\n",
+    "hints": ["thenAccept takes a Consumer<T>", "join() the Void future to wait for completion"],
+    "solution": {
+      "code": "CompletableFuture<Void> sent = CompletableFuture\n    .supplyAsync(() -> \"Your order #123 has shipped!\")\n    .thenAccept(message -> {\n        System.out.println(\"[EMAIL] Sending: \" + message);\n        // simulate sending...\n    });\n\nsent.join(); // wait for the consumer to complete\nSystem.out.println(\"Email notification sent.\");",
+      "explanation": "thenAccept() applies a Consumer to the result — it consumes the value but produces no new value, returning CompletableFuture<Void>. It's the terminal operation of a CompletableFuture pipeline (like forEach in streams). The void future still needs to be joined/awaited if you want to ensure completion before the program exits. Use thenRun() (no-argument Runnable) when you don't even need the value.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<Void> thenAccept(Consumer<? super T> action)",
+          "description": "When this stage completes, passes the result to action. Returns CompletableFuture<Void>."
+        },
+        {
+          "method": "CompletableFuture<Void> thenRun(Runnable action)",
+          "description": "When this stage completes, runs action (no access to result). Returns CompletableFuture<Void>."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-004",
+    "topic": "completablefuture",
+    "subtopic": "chaining",
+    "difficulty": "intermediate",
+    "title": "thenCompose — chain dependent futures",
+    "description": "Scenario: First fetch a user ID, then use that ID to fetch the user's full profile. These are dependent — you need the user ID before you can fetch the profile.",
+    "starterCode": "// Step 1: fetchUserId() -> CompletableFuture<Integer> returns 42\n// Step 2: fetchProfile(int id) -> CompletableFuture<String> returns \"Profile of user 42\"\n// Chain with thenCompose\n",
+    "hints": [
+      "thenCompose is flatMap for CompletableFuture",
+      "id -> fetchProfile(id)"
+    ],
+    "solution": {
+      "code": "java.util.function.Supplier<CompletableFuture<Integer>> fetchUserId = () ->\n    CompletableFuture.supplyAsync(() -> {\n        try { Thread.sleep(300); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n        return 42;\n    });\n\njava.util.function.Function<Integer, CompletableFuture<String>> fetchProfile = id ->\n    CompletableFuture.supplyAsync(() -> {\n        try { Thread.sleep(300); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n        return \"Profile of user \" + id;\n    });\n\nString profile = fetchUserId.get()\n    .thenCompose(fetchProfile)\n    .join();\nSystem.out.println(profile); // Profile of user 42",
+      "explanation": "thenCompose() is the flatMap of CompletableFuture. It takes a Function that returns a CompletableFuture and flattens it — you get CompletableFuture<String>, not CompletableFuture<CompletableFuture<String>>. Use it when step B depends on the result of step A and both are async. Contrast with thenApply (sync transform) and thenCombine (parallel independent tasks). Total time: ~600ms (300+300 sequential).",
+      "methodSignatures": [
+        {
+          "method": "<U> CompletableFuture<U> thenCompose(Function<? super T, ? extends CompletionStage<U>> fn)",
+          "description": "When this stage completes, passes result to fn which returns a new CompletionStage. Returns a flat CompletableFuture<U> (not nested)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-005",
+    "topic": "completablefuture",
+    "subtopic": "combining",
+    "difficulty": "intermediate",
+    "title": "thenCombine — merge two independent futures",
+    "description": "Scenario: Fetch a user's name and their loyalty points simultaneously (independent calls). Once both complete, combine them into a greeting string.",
+    "starterCode": "// Fetch user name: \"Alice\" (300ms)\n// Fetch loyalty points: 1500 (400ms)\n// Both run in parallel — combine into \"Alice has 1500 points\"\n",
+    "hints": [
+      "thenCombine takes a BiFunction<T, U, R>",
+      "Total time should be ~400ms (max of the two), not 700ms"
+    ],
+    "solution": {
+      "code": "CompletableFuture<String> nameFuture = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(300); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Alice\";\n});\n\nCompletableFuture<Integer> pointsFuture = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(400); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return 1500;\n});\n\nlong start = System.currentTimeMillis();\nString result = nameFuture\n    .thenCombine(pointsFuture, (name, points) -> name + \" has \" + points + \" points\")\n    .join();\nSystem.out.println(result); // Alice has 1500 points\nSystem.out.println(\"Time: \" + (System.currentTimeMillis() - start) + \"ms\"); // ~400ms",
+      "explanation": "thenCombine() waits for BOTH futures to complete and combines their results with a BiFunction. Crucially, both futures run in parallel (they were both started immediately), so the total time is approximately max(300, 400) = 400ms — not 700ms. This is the parallel-fan-out pattern for independent async tasks. Compare: thenCompose for sequential dependent tasks, thenCombine for parallel independent tasks.",
+      "methodSignatures": [
+        {
+          "method": "<U,V> CompletableFuture<V> thenCombine(CompletionStage<? extends U> other, BiFunction<? super T,? super U,? extends V> fn)",
+          "description": "When both this stage and other complete, combines their results with fn."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-006",
+    "topic": "completablefuture",
+    "subtopic": "combining",
+    "difficulty": "intermediate",
+    "title": "allOf — wait for all futures",
+    "description": "Send 3 notification emails in parallel (each takes ~200ms). Use allOf to wait for all to complete.",
+    "starterCode": "// Create 3 CompletableFutures that simulate sending emails (200ms each)\n// Use CompletableFuture.allOf() to wait for all\n// Print total time (~200ms not 600ms)\n",
+    "hints": [
+      "allOf returns CompletableFuture<Void>",
+      "To collect results: use thenApply on each future after allOf"
+    ],
+    "solution": {
+      "code": "CompletableFuture<String> email1 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Sent to alice@example.com\";\n});\nCompletableFuture<String> email2 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Sent to bob@example.com\";\n});\nCompletableFuture<String> email3 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Sent to carol@example.com\";\n});\n\nlong start = System.currentTimeMillis();\nCompletableFuture.allOf(email1, email2, email3).join(); // wait for all\nSystem.out.println(\"All emails sent in \" + (System.currentTimeMillis() - start) + \"ms\"); // ~200ms\n\n// Collect results:\nList<String> results = List.of(email1.join(), email2.join(), email3.join());\nresults.forEach(System.out::println);",
+      "explanation": "allOf() takes varargs of CompletableFutures and returns a CompletableFuture<Void> that completes when ALL of them complete. It runs all futures in parallel — total time is the slowest individual task, not the sum. Note: allOf returns Void, so to collect actual results you join() each individual future after allOf completes (they are already done at that point, so join() returns immediately).",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<Void> CompletableFuture.allOf(CompletableFuture<?>... cfs)",
+          "description": "Returns a CompletableFuture<Void> that completes when ALL given futures complete. If any fail, the result fails."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-007",
+    "topic": "completablefuture",
+    "subtopic": "combining",
+    "difficulty": "intermediate",
+    "title": "anyOf — first future wins",
+    "description": "Simulate querying 3 different cache servers simultaneously. Return the result from whichever responds first.",
+    "starterCode": "// 3 cache server futures with 400ms, 200ms, 600ms delays\n// anyOf returns the first to complete\n",
+    "hints": ["anyOf returns CompletableFuture<Object>", "Cast the result"],
+    "solution": {
+      "code": "CompletableFuture<String> server1 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(400); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Result from Server-1\";\n});\nCompletableFuture<String> server2 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Result from Server-2\";\n});\nCompletableFuture<String> server3 = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(600); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    return \"Result from Server-3\";\n});\n\nlong start = System.currentTimeMillis();\nString winner = (String) CompletableFuture.anyOf(server1, server2, server3).join();\nSystem.out.println(winner); // Result from Server-2\nSystem.out.println(\"Time: \" + (System.currentTimeMillis() - start) + \"ms\"); // ~200ms",
+      "explanation": "anyOf() returns a CompletableFuture<Object> that completes as soon as ANY one of the input futures completes, with that future's result. The other futures continue running (they are not cancelled). The return type is Object — you must cast. Use this for race conditions, hedged requests, or timeout-with-fallback patterns. The slowest futures are simply ignored after the winner completes.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<Object> CompletableFuture.anyOf(CompletableFuture<?>... cfs)",
+          "description": "Returns a CompletableFuture<Object> that completes when the FIRST given future completes, with that result."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-008",
+    "topic": "completablefuture",
+    "subtopic": "exception",
+    "difficulty": "intermediate",
+    "title": "exceptionally — fallback on failure",
+    "description": "Simulate a payment service that randomly fails. Use exceptionally() to return a default 'PAYMENT_FAILED' response instead of propagating the exception.",
+    "starterCode": "// Simulate payment that throws RuntimeException(\"Payment gateway down\")\n// Use exceptionally to return \"PAYMENT_FAILED\" fallback\n",
+    "hints": ["exceptionally takes a Function<Throwable, T>"],
+    "solution": {
+      "code": "CompletableFuture<String> payment = CompletableFuture\n    .supplyAsync(() -> {\n        throw new RuntimeException(\"Payment gateway down\");\n    })\n    .exceptionally(ex -> {\n        System.out.println(\"Error: \" + ex.getMessage());\n        return \"PAYMENT_FAILED\";\n    });\n\nString result = payment.join();\nSystem.out.println(\"Result: \" + result); // PAYMENT_FAILED",
+      "explanation": "exceptionally() is like a catch block for CompletableFuture. It takes a Function<Throwable, T> — if the stage completed exceptionally, the function is applied to produce a fallback value; if the stage completed normally, exceptionally() is a no-op and passes the result through. The Throwable argument is a CompletionException that wraps the original exception — use getCause() for the real cause.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn)",
+          "description": "If this stage fails, applies fn to the exception and uses the result as the stage's value. No-op on success."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-009",
+    "topic": "completablefuture",
+    "subtopic": "exception",
+    "difficulty": "intermediate",
+    "title": "handle — handle both result and exception",
+    "description": "Use handle() to process both the success and failure cases of an async inventory check. On success format a message; on failure log and return a safe default.",
+    "starterCode": "// Async inventory check that may succeed (return 150) or throw\n// Use handle() to produce a formatted string in both cases\n",
+    "hints": [
+      "handle takes a BiFunction<T, Throwable, R>",
+      "Exactly one of the two parameters will be null"
+    ],
+    "solution": {
+      "code": "// Success case\nCompletableFuture<String> successCase = CompletableFuture\n    .supplyAsync(() -> 150)\n    .handle((stock, ex) -> {\n        if (ex != null) return \"Error: \" + ex.getCause().getMessage();\n        return \"Stock available: \" + stock;\n    });\nSystem.out.println(successCase.join()); // Stock available: 150\n\n// Failure case\nCompletableFuture<String> failureCase = CompletableFuture\n    .<Integer>supplyAsync(() -> { throw new RuntimeException(\"DB unreachable\"); })\n    .handle((stock, ex) -> {\n        if (ex != null) return \"Error: \" + ex.getCause().getMessage();\n        return \"Stock available: \" + stock;\n    });\nSystem.out.println(failureCase.join()); // Error: DB unreachable",
+      "explanation": "handle() is like a finally/catch-and-transform combined. Its BiFunction receives both the result and the exception — exactly one will be null. On success: result is the value, exception is null. On failure: result is null, exception is the CompletionException. Unlike exceptionally() which only fires on failure, handle() always fires. Unlike whenComplete() which consumes the pair and returns the same value, handle() can transform the value (returns CompletableFuture<R>).",
+      "methodSignatures": [
+        {
+          "method": "<U> CompletableFuture<U> handle(BiFunction<? super T, Throwable, ? extends U> fn)",
+          "description": "Always invoked (success or failure). BiFunction receives (result, exception) where one is null. Can transform to a new type U."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-010",
+    "topic": "completablefuture",
+    "subtopic": "exception",
+    "difficulty": "intermediate",
+    "title": "whenComplete — side effect on completion",
+    "description": "Use whenComplete() to log the result (or error) of an async operation, without changing the outcome.",
+    "starterCode": "// Async operation that returns \"Order confirmed\"\n// Use whenComplete to log success/failure\n// The result should pass through unchanged\n",
+    "hints": [
+      "whenComplete takes a BiConsumer<T, Throwable>",
+      "It returns the same CompletableFuture<T> (does not change value)"
+    ],
+    "solution": {
+      "code": "CompletableFuture<String> order = CompletableFuture\n    .supplyAsync(() -> \"Order confirmed\")\n    .whenComplete((result, ex) -> {\n        if (ex != null) {\n            System.err.println(\"[LOG] Failed: \" + ex.getCause().getMessage());\n        } else {\n            System.out.println(\"[LOG] Succeeded: \" + result);\n        }\n    });\n\nSystem.out.println(\"Final: \" + order.join()); // [LOG] Succeeded: Order confirmed  \\n  Final: Order confirmed",
+      "explanation": "whenComplete() is for side effects (logging, metrics, cleanup) — it sees the result or exception but cannot change either. It returns a CompletableFuture<T> with the same value as the original (the BiConsumer's return is void). Compare: handle() can transform the value, whenComplete() cannot. If whenComplete's action throws, that exception is used instead of the original. Great for logging and auditing without affecting the data flow.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<T> whenComplete(BiConsumer<? super T, ? super Throwable> action)",
+          "description": "When this stage completes (success or failure), performs action. Returns CompletableFuture<T> with the same outcome."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-011",
+    "topic": "completablefuture",
+    "subtopic": "exception",
+    "difficulty": "intermediate",
+    "title": "completeExceptionally — manual failure injection",
+    "description": "Create a CompletableFuture that is manually completed with an exception (e.g. for timeout or validation failure). Show how this propagates through the chain.",
+    "starterCode": "// Create a CompletableFuture<String> manually\n// Complete it with an exception\n// Show how exceptionally() catches it\n",
+    "hints": ["new CompletableFuture<>()", "future.completeExceptionally(new ...)"],
+    "solution": {
+      "code": "CompletableFuture<String> future = new CompletableFuture<>();\n\n// Simulate a background thread detecting a timeout\nCompletableFuture.runAsync(() -> {\n    try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    future.completeExceptionally(new RuntimeException(\"Request timed out after 100ms\"));\n});\n\nString result = future\n    .exceptionally(ex -> \"Fallback: \" + ex.getCause().getMessage())\n    .join();\nSystem.out.println(result); // Fallback: Request timed out after 100ms",
+      "explanation": "completeExceptionally() manually fails a CompletableFuture, just as complete() manually succeeds it. This is useful for: custom timeout implementations, validation failures, or wrapping callbacks into CompletableFutures. Any stages chained after the future will see the exception and can handle it with exceptionally/handle. If the future was already completed, completeExceptionally() returns false and has no effect.",
+      "methodSignatures": [
+        {
+          "method": "boolean completeExceptionally(Throwable ex)",
+          "description": "Manually completes this future with an exception. Returns true if this invocation caused completion."
+        },
+        {
+          "method": "boolean complete(T value)",
+          "description": "Manually completes this future with a value. Returns true if this invocation caused completion."
+        },
+        {
+          "method": "CompletableFuture<Void> CompletableFuture.runAsync(Runnable runnable)",
+          "description": "Runs a Runnable asynchronously (no return value). Returns CompletableFuture<Void>."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-012",
+    "topic": "completablefuture",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "orTimeout and completeOnTimeout (Java 9+)",
+    "description": "Use orTimeout() to fail a slow future after 300ms, and completeOnTimeout() to return a default value instead.",
+    "starterCode": "// Slow future that takes 1000ms\n// orTimeout: fail with TimeoutException after 300ms\n// completeOnTimeout: return \"default\" after 300ms instead of failing\n",
+    "hints": [
+      "orTimeout(300, TimeUnit.MILLISECONDS) — Java 9+",
+      "completeOnTimeout(value, 300, TimeUnit.MILLISECONDS) — Java 9+"
+    ],
+    "solution": {
+      "code": "// orTimeout — throws TimeoutException\nCompletableFuture<String> withTimeout = CompletableFuture\n    .supplyAsync(() -> {\n        try { Thread.sleep(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n        return \"slow result\";\n    })\n    .orTimeout(300, java.util.concurrent.TimeUnit.MILLISECONDS)\n    .exceptionally(ex -> \"Timed out: \" + ex.getCause().getClass().getSimpleName());\nSystem.out.println(withTimeout.join()); // Timed out: TimeoutException\n\n// completeOnTimeout — returns default value\nCompletableFuture<String> withDefault = CompletableFuture\n    .supplyAsync(() -> {\n        try { Thread.sleep(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n        return \"slow result\";\n    })\n    .completeOnTimeout(\"default-after-timeout\", 300, java.util.concurrent.TimeUnit.MILLISECONDS);\nSystem.out.println(withDefault.join()); // default-after-timeout",
+      "explanation": "orTimeout() (Java 9+) makes the future fail with TimeoutException if it hasn't completed within the given time. completeOnTimeout() (Java 9+) is the graceful alternative — it completes the future with a default value instead of an exception. Both use a ScheduledThreadPoolExecutor internally. Use orTimeout when you want to propagate the failure; use completeOnTimeout for graceful degradation.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<T> orTimeout(long timeout, TimeUnit unit)",
+          "description": "Java 9+. If not completed within timeout, completes exceptionally with TimeoutException."
+        },
+        {
+          "method": "CompletableFuture<T> completeOnTimeout(T value, long timeout, TimeUnit unit)",
+          "description": "Java 9+. If not completed within timeout, completes normally with the given value."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-013",
+    "topic": "completablefuture",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "thenRun — fire-and-forget after completion",
+    "description": "After an order is placed asynchronously, use thenRun to trigger a post-completion action (e.g. send analytics event) that doesn't need the result.",
+    "starterCode": "// Place order: returns \"Order #456 placed\"\n// thenRun: log analytics event (no access to order result)\n// thenAccept vs thenRun — what is the difference?\n",
+    "hints": ["thenRun takes Runnable — no parameter", "thenAccept gets the value; thenRun does not"],
+    "solution": {
+      "code": "CompletableFuture.supplyAsync(() -> \"Order #456 placed\")\n    .thenAccept(order -> System.out.println(\"[thenAccept] Order result: \" + order))\n    .thenRun(() -> System.out.println(\"[thenRun] Analytics event sent (no value access)\"))\n    .join();\n\n// Chain: supplyAsync -> thenAccept (consumes String) -> thenRun (Void -> nothing)",
+      "explanation": "thenRun() executes a Runnable after the previous stage completes — it has no access to the result. This is ideal for fire-and-forget side effects like logging, metrics, or cleanup that don't need the computed value. Chaining thenAccept (which has the value) followed by thenRun (which doesn't) shows how each step narrows the type: String -> Void -> Void.",
+      "methodSignatures": [
+        {
+          "method": "CompletableFuture<Void> thenRun(Runnable action)",
+          "description": "When this stage completes, runs action with no access to the result. Returns CompletableFuture<Void>."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cf-014",
+    "topic": "completablefuture",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Real scenario: Order Checkout Pipeline",
+    "description": "Build a complete async checkout pipeline: (1) validate cart, (2) fetch user and apply discount in parallel, (3) place order, (4) send confirmation email, (5) handle any failure gracefully.",
+    "starterCode": "// Step 1: validateCart() -> CompletableFuture<String> (cartId)\n// Step 2: fetchUser() and applyDiscount() in parallel -> combine into order total\n// Step 3: placeOrder(total) -> CompletableFuture<String> (orderId)\n// Step 4: thenAccept to send confirmation\n// Step 5: exceptionally to handle failures\n",
+    "hints": [
+      "validateCart -> thenCompose to step 2+3 -> thenAccept -> exceptionally",
+      "thenCombine for parallel step 2"
+    ],
+    "solution": {
+      "code": "CompletableFuture<String> validateCart = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    System.out.println(\"[1] Cart validated\");\n    return \"CART-99\";\n});\n\nCompletableFuture<String> fetchUser = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(200); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    System.out.println(\"[2a] User fetched\");\n    return \"Alice\";\n});\n\nCompletableFuture<Double> applyDiscount = CompletableFuture.supplyAsync(() -> {\n    try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }\n    System.out.println(\"[2b] Discount applied\");\n    return 89.99;\n});\n\nCompletableFuture<String> pipeline = validateCart\n    .thenCompose(cartId -> fetchUser.thenCombine(applyDiscount,\n        (user, total) -> user + \":\" + total + \":\" + cartId))\n    .thenCompose(info -> CompletableFuture.supplyAsync(() -> {\n        System.out.println(\"[3] Placing order for \" + info);\n        return \"ORDER-\" + System.currentTimeMillis();\n    }))\n    .whenComplete((orderId, ex) -> {\n        if (ex == null) System.out.println(\"[LOG] Order created: \" + orderId);\n        else System.err.println(\"[LOG] Failed: \" + ex.getMessage());\n    })\n    .thenApply(orderId -> \"Confirmation: \" + orderId)\n    .exceptionally(ex -> \"Checkout failed: \" + ex.getCause().getMessage());\n\nSystem.out.println(pipeline.join());",
+      "explanation": "This pipeline shows all the key patterns together: (1) supplyAsync for independent async starts, (2) thenCompose for dependent steps, (3) thenCombine for parallel independent steps (fetchUser and applyDiscount run concurrently), (4) whenComplete for non-intrusive logging, (5) thenApply to transform the result, (6) exceptionally as the final safety net. The total time is roughly max(100 + max(200, 150)) = ~300ms instead of 550ms sequential.",
+      "methodSignatures": [
+        {
+          "method": "<U> CompletableFuture<U> thenCompose(Function<? super T, ? extends CompletionStage<U>> fn)",
+          "description": "Sequential chaining: use fn's result to start the next async step."
+        },
+        {
+          "method": "<U,V> CompletableFuture<V> thenCombine(CompletionStage<? extends U> other, BiFunction<? super T,? super U,? extends V> fn)",
+          "description": "Parallel combining: when both complete, merge results."
+        },
+        {
+          "method": "CompletableFuture<T> whenComplete(BiConsumer<? super T, ? super Throwable> action)",
+          "description": "Side effect on completion without changing the value."
+        },
+        {
+          "method": "CompletableFuture<T> exceptionally(Function<Throwable, ? extends T> fn)",
+          "description": "Fallback when any previous stage fails."
+        }
+      ]
+    }
+  }
+]

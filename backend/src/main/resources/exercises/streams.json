@@ -1,0 +1,948 @@
+[
+  {
+    "id": "streams-001",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Create a stream and print elements",
+    "description": "Given a list of names, create a stream from it and print each name using forEach.",
+    "starterCode": "List<String> names = List.of(\"Alice\", \"Bob\", \"Charlie\", \"Diana\");\n// Create a stream and print each name\n",
+    "hints": ["Use .stream() to get a Stream from a List", "Use forEach with a lambda like s -> System.out.println(s)"],
+    "solution": {
+      "code": "names.stream()\n     .forEach(System.out::println);",
+      "explanation": "stream() creates a sequential Stream from the collection. forEach() is a terminal operation that iterates over each element and applies the given Consumer. System.out::println is a method reference equivalent to s -> System.out.println(s).",
+      "methodSignatures": [
+        {
+          "method": "Stream<E> Collection.stream()",
+          "description": "Returns a sequential Stream with this collection as its source."
+        },
+        {
+          "method": "void Stream.forEach(Consumer<? super T> action)",
+          "description": "Terminal operation. Performs the action for each element of the stream. Order is not guaranteed for parallel streams."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-002",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Filter even numbers",
+    "description": "Given a list of integers [1..10], filter only the even numbers and collect them into a new list.",
+    "starterCode": "List<Integer> numbers = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);\n// Filter even numbers and collect to a list\n",
+    "hints": ["Use filter() with n % 2 == 0", "Use collect(Collectors.toList()) as terminal op"],
+    "solution": {
+      "code": "List<Integer> evens = numbers.stream()\n    .filter(n -> n % 2 == 0)\n    .collect(Collectors.toList());\nSystem.out.println(evens); // [2, 4, 6, 8, 10]",
+      "explanation": "filter() is an intermediate operation that keeps only elements matching the given Predicate. collect(Collectors.toList()) accumulates the remaining elements into a List. Nothing executes until collect() is called — streams are lazy.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> filter(Predicate<? super T> predicate)",
+          "description": "Intermediate operation. Returns a stream of elements that match the given predicate."
+        },
+        {
+          "method": "<R,A> R collect(Collector<? super T,A,R> collector)",
+          "description": "Terminal operation. Performs a mutable reduction using a Collector. Collectors.toList() produces an ArrayList."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-003",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Map strings to uppercase",
+    "description": "Given a list of city names, transform every name to uppercase using map().",
+    "starterCode": "List<String> cities = List.of(\"london\", \"paris\", \"new york\", \"tokyo\");\n// Map each city to uppercase\n",
+    "hints": ["Use map() with String::toUpperCase"],
+    "solution": {
+      "code": "List<String> upper = cities.stream()\n    .map(String::toUpperCase)\n    .collect(Collectors.toList());\nSystem.out.println(upper);",
+      "explanation": "map() transforms each element using the given Function, producing a stream of the new type. String::toUpperCase is a method reference to the instance method toUpperCase() on each String element. The stream type remains Stream<String> since the output type is the same.",
+      "methodSignatures": [
+        {
+          "method": "<R> Stream<R> map(Function<? super T, ? extends R> mapper)",
+          "description": "Intermediate operation. Returns a stream where each element is the result of applying the mapper function."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-004",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Count elements matching a condition",
+    "description": "Given a list of words, count how many have length greater than 4.",
+    "starterCode": "List<String> words = List.of(\"cat\", \"elephant\", \"dog\", \"butterfly\", \"ox\", \"horse\");\n// Count words with length > 4\n",
+    "hints": ["Chain filter() then count()"],
+    "solution": {
+      "code": "long count = words.stream()\n    .filter(w -> w.length() > 4)\n    .count();\nSystem.out.println(count); // 3",
+      "explanation": "count() is a terminal operation that returns the number of elements in the stream as a long. Chaining filter() before count() is the idiomatic way to count matching elements — more readable than collecting to a list and calling size().",
+      "methodSignatures": [
+        {
+          "method": "long count()",
+          "description": "Terminal operation. Returns the count of elements in the stream."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-005",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Find first element matching a condition",
+    "description": "From a list of numbers, find the first number greater than 50. Return an Optional.",
+    "starterCode": "List<Integer> numbers = List.of(10, 30, 55, 72, 91);\n// Find first number > 50\n",
+    "hints": ["Use filter() then findFirst()"],
+    "solution": {
+      "code": "Optional<Integer> first = numbers.stream()\n    .filter(n -> n > 50)\n    .findFirst();\nfirst.ifPresent(n -> System.out.println(\"Found: \" + n)); // 55",
+      "explanation": "findFirst() returns an Optional<T> containing the first element of the stream, or an empty Optional if the stream is empty. It short-circuits — it stops processing as soon as the first matching element is found. findAny() is similar but makes no ordering guarantee (better for parallel streams).",
+      "methodSignatures": [
+        {
+          "method": "Optional<T> findFirst()",
+          "description": "Terminal, short-circuiting. Returns an Optional with the first element, or empty if stream is empty."
+        },
+        {
+          "method": "Optional<T> findAny()",
+          "description": "Terminal, short-circuiting. Returns an Optional with any element; may be faster in parallel streams."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-006",
+    "topic": "streams",
+    "subtopic": "basics",
+    "difficulty": "beginner",
+    "title": "Collect to a Set (remove duplicates)",
+    "description": "Given a list with duplicate numbers, collect the stream into a Set to remove duplicates.",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 2, 3, 3, 3, 4);\n// Collect to a Set\n",
+    "hints": ["Use Collectors.toSet()"],
+    "solution": {
+      "code": "Set<Integer> unique = nums.stream()\n    .collect(Collectors.toSet());\nSystem.out.println(unique); // [1, 2, 3, 4] (order not guaranteed)",
+      "explanation": "Collectors.toSet() accumulates elements into a HashSet, which naturally deduplicates. If order matters, use Collectors.toCollection(LinkedHashSet::new) instead. Note that unlike distinct(), this approach doesn't preserve insertion order unless using a LinkedHashSet.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Set<T>> Collectors.toSet()",
+          "description": "Returns a Collector that accumulates elements into a new Set. No guarantees on type, mutability, or order."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-007",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "beginner",
+    "title": "Sort a list using sorted()",
+    "description": "Given an unsorted list of integers, sort them in ascending and then descending order.",
+    "starterCode": "List<Integer> nums = List.of(5, 2, 8, 1, 9, 3);\n// Sort ascending, then sort descending\n",
+    "hints": ["sorted() with no args = natural order", "sorted(Comparator.reverseOrder()) for descending"],
+    "solution": {
+      "code": "List<Integer> asc = nums.stream()\n    .sorted()\n    .collect(Collectors.toList());\nSystem.out.println(asc); // [1, 2, 3, 5, 8, 9]\n\nList<Integer> desc = nums.stream()\n    .sorted(Comparator.reverseOrder())\n    .collect(Collectors.toList());\nSystem.out.println(desc); // [9, 8, 5, 3, 2, 1]",
+      "explanation": "sorted() with no arguments uses natural ordering (Comparable). sorted(Comparator) accepts any Comparator. Comparator.reverseOrder() returns a Comparator that imposes the reverse of natural ordering. You can also write Comparator.naturalOrder() explicitly for clarity.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> sorted()",
+          "description": "Intermediate op. Returns a stream sorted by natural order. T must implement Comparable."
+        },
+        {
+          "method": "Stream<T> sorted(Comparator<? super T> comparator)",
+          "description": "Intermediate op. Returns a stream sorted by the given Comparator."
+        },
+        {
+          "method": "Comparator<T> Comparator.reverseOrder()",
+          "description": "Returns a Comparator that reverses natural ordering."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-008",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "beginner",
+    "title": "Sort strings by length",
+    "description": "Sort a list of strings by their length (shortest first). Break ties alphabetically.",
+    "starterCode": "List<String> words = List.of(\"banana\", \"fig\", \"apple\", \"kiwi\", \"plum\");\n// Sort by length, then alphabetically\n",
+    "hints": ["Comparator.comparingInt(String::length)", "Use .thenComparing() for secondary sort"],
+    "solution": {
+      "code": "List<String> sorted = words.stream()\n    .sorted(Comparator.comparingInt(String::length)\n                      .thenComparing(Comparator.naturalOrder()))\n    .collect(Collectors.toList());\nSystem.out.println(sorted); // [fig, kiwi, plum, apple, banana]",
+      "explanation": "Comparator.comparingInt() creates a Comparator from a ToIntFunction key extractor. thenComparing() chains a secondary Comparator used when the primary comparison is equal. This pattern is very common for multi-key sorting without writing a full Comparator implementation.",
+      "methodSignatures": [
+        {
+          "method": "Comparator<T> Comparator.comparingInt(ToIntFunction<? super T> keyExtractor)",
+          "description": "Creates a Comparator that compares by an int-valued key."
+        },
+        {
+          "method": "Comparator<T> thenComparing(Comparator<? super T> other)",
+          "description": "Returns a lexicographic-order Comparator that uses the other comparator when this one returns zero."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-009",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "beginner",
+    "title": "Remove duplicates with distinct()",
+    "description": "From a list with repeated strings, remove duplicates while preserving encounter order.",
+    "starterCode": "List<String> tags = List.of(\"java\", \"python\", \"java\", \"go\", \"python\", \"rust\");\n// Remove duplicates preserving order\n",
+    "hints": ["distinct() uses equals() under the hood"],
+    "solution": {
+      "code": "List<String> unique = tags.stream()\n    .distinct()\n    .collect(Collectors.toList());\nSystem.out.println(unique); // [java, python, go, rust]",
+      "explanation": "distinct() is a stateful intermediate operation that uses equals() and hashCode() to identify duplicates. It preserves encounter order for ordered streams (like those from List). It is equivalent to collecting to a LinkedHashSet but more expressive in a pipeline.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> distinct()",
+          "description": "Stateful intermediate op. Returns a stream with no duplicate elements (per Object.equals)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-010",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "beginner",
+    "title": "Limit and skip elements",
+    "description": "From an infinite stream of natural numbers, skip the first 5 and then take the next 10.",
+    "starterCode": "// Create an infinite stream starting from 1 and get elements 6-15\n",
+    "hints": ["Use Stream.iterate(1, n -> n + 1)", "Chain skip(5) then limit(10)"],
+    "solution": {
+      "code": "List<Integer> result = Stream.iterate(1, n -> n + 1)\n    .skip(5)\n    .limit(10)\n    .collect(Collectors.toList());\nSystem.out.println(result); // [6, 7, 8, 9, 10, 11, 12, 13, 14, 15]",
+      "explanation": "Stream.iterate() creates an infinite ordered stream using a seed and a UnaryOperator. skip(n) discards the first n elements. limit(n) truncates the stream to at most n elements — this is essential when working with infinite streams to ensure termination.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Stream.iterate(T seed, UnaryOperator<T> f)",
+          "description": "Creates an infinite ordered stream: seed, f(seed), f(f(seed)), ..."
+        },
+        {
+          "method": "Stream<T> skip(long n)",
+          "description": "Intermediate op. Discards the first n elements of the stream."
+        },
+        {
+          "method": "Stream<T> limit(long maxSize)",
+          "description": "Short-circuiting intermediate op. Truncates stream to at most maxSize elements."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-011",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "intermediate",
+    "title": "flatMap — flatten a list of lists",
+    "description": "Given a list of sentences, flatten all words into a single stream and collect to a list.",
+    "starterCode": "List<String> sentences = List.of(\"Hello world\", \"Java streams are powerful\", \"Learn every day\");\n// Flatten all words into a single list\n",
+    "hints": ["Split each sentence by space to get String[]", "Use Arrays.stream() inside flatMap"],
+    "solution": {
+      "code": "List<String> allWords = sentences.stream()\n    .flatMap(sentence -> Arrays.stream(sentence.split(\" \")))\n    .collect(Collectors.toList());\nSystem.out.println(allWords);\n// [Hello, world, Java, streams, are, powerful, Learn, every, day]",
+      "explanation": "flatMap() replaces each element with a stream of elements, then flattens all those streams into one. It's the difference between map() which gives Stream<String[]> (a stream of arrays) and flatMap() which gives Stream<String> (one element per word). This is essential for working with nested collections.",
+      "methodSignatures": [
+        {
+          "method": "<R> Stream<R> flatMap(Function<? super T, ? extends Stream<? extends R>> mapper)",
+          "description": "Intermediate op. Maps each element to a stream, then flattens all streams into one."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-012",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "intermediate",
+    "title": "reduce — sum of all elements",
+    "description": "Using reduce(), compute the sum and product of a list of integers without using IntStream.",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 3, 4, 5);\n// Compute sum using reduce()\n// Compute product using reduce()\n",
+    "hints": ["reduce(identity, BinaryOperator)", "Identity for sum is 0, for product is 1"],
+    "solution": {
+      "code": "int sum = nums.stream()\n    .reduce(0, Integer::sum);\nSystem.out.println(\"Sum: \" + sum); // 15\n\nint product = nums.stream()\n    .reduce(1, (a, b) -> a * b);\nSystem.out.println(\"Product: \" + product); // 120",
+      "explanation": "reduce(identity, accumulator) folds elements left-to-right using a BinaryOperator. The identity is the starting value and also the result if the stream is empty. Integer::sum is a method reference to Integer.sum(a, b). The overload without identity returns Optional<T> since an empty stream has no result.",
+      "methodSignatures": [
+        {
+          "method": "T reduce(T identity, BinaryOperator<T> accumulator)",
+          "description": "Terminal op. Reduces stream to one value by combining with identity. Always returns T."
+        },
+        {
+          "method": "Optional<T> reduce(BinaryOperator<T> accumulator)",
+          "description": "Terminal op. Reduces without identity — returns Optional.empty() for empty streams."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-013",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "intermediate",
+    "title": "min and max of a stream",
+    "description": "Find the minimum and maximum string by length from a list of words.",
+    "starterCode": "List<String> words = List.of(\"stream\", \"lambda\", \"api\", \"functional\", \"java\");\n// Find shortest and longest word\n",
+    "hints": ["min/max take a Comparator", "Use Comparator.comparingInt(String::length)"],
+    "solution": {
+      "code": "Optional<String> shortest = words.stream()\n    .min(Comparator.comparingInt(String::length));\nOptional<String> longest = words.stream()\n    .max(Comparator.comparingInt(String::length));\nSystem.out.println(shortest.orElse(\"none\")); // api\nSystem.out.println(longest.orElse(\"none\"));  // functional",
+      "explanation": "min() and max() are terminal operations that return an Optional<T> using the provided Comparator. They return empty Optional for empty streams. Note you need separate stream pipelines since a stream can only be consumed once — reusing a consumed stream throws IllegalStateException.",
+      "methodSignatures": [
+        {
+          "method": "Optional<T> min(Comparator<? super T> comparator)",
+          "description": "Terminal op. Returns the minimum element according to the comparator."
+        },
+        {
+          "method": "Optional<T> max(Comparator<? super T> comparator)",
+          "description": "Terminal op. Returns the maximum element according to the comparator."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-014",
+    "topic": "streams",
+    "subtopic": "intermediate",
+    "difficulty": "intermediate",
+    "title": "anyMatch, allMatch, noneMatch",
+    "description": "Given a list of scores [45, 78, 92, 55, 88], check: (1) any score >= 90, (2) all scores > 40, (3) no score is negative.",
+    "starterCode": "List<Integer> scores = List.of(45, 78, 92, 55, 88);\n// Check all three conditions\n",
+    "hints": ["These are short-circuit terminal operations", "They return boolean"],
+    "solution": {
+      "code": "boolean anyAbove90 = scores.stream().anyMatch(s -> s >= 90);\nboolean allAbove40 = scores.stream().allMatch(s -> s > 40);\nboolean noneNegative = scores.stream().noneMatch(s -> s < 0);\nSystem.out.println(anyAbove90);  // true\nSystem.out.println(allAbove40);  // true\nSystem.out.println(noneNegative); // true",
+      "explanation": "These are short-circuiting terminal predicates. anyMatch returns true as soon as one match is found. allMatch returns false as soon as one non-match is found. noneMatch returns false as soon as one match is found. All return true for empty streams (except anyMatch which returns false).",
+      "methodSignatures": [
+        {
+          "method": "boolean anyMatch(Predicate<? super T> predicate)",
+          "description": "Short-circuit terminal op. Returns true if any element matches. False for empty stream."
+        },
+        {
+          "method": "boolean allMatch(Predicate<? super T> predicate)",
+          "description": "Short-circuit terminal op. Returns true if ALL elements match, or stream is empty."
+        },
+        {
+          "method": "boolean noneMatch(Predicate<? super T> predicate)",
+          "description": "Short-circuit terminal op. Returns true if NO elements match, or stream is empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-015",
+    "topic": "streams",
+    "subtopic": "collectors",
+    "difficulty": "intermediate",
+    "title": "Collect to Map",
+    "description": "Given a list of strings, create a Map where the key is the string and the value is its length.",
+    "starterCode": "List<String> words = List.of(\"java\", \"stream\", \"api\", \"lambda\");\n// Create Map<String, Integer> word -> length\n",
+    "hints": ["Use Collectors.toMap(keyMapper, valueMapper)"],
+    "solution": {
+      "code": "Map<String, Integer> wordLengths = words.stream()\n    .collect(Collectors.toMap(\n        word -> word,\n        String::length\n    ));\nSystem.out.println(wordLengths);\n// {java=4, stream=6, api=3, lambda=6}",
+      "explanation": "Collectors.toMap() takes a key mapper and a value mapper, both Functions. If there are duplicate keys it throws IllegalStateException by default — you can provide a merge function as a third argument: toMap(k, v, (e1, e2) -> e1) keeps the first. The fourth argument can specify the Map implementation.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Map<K,U>> Collectors.toMap(Function<? super T,? extends K> keyMapper, Function<? super T,? extends U> valueMapper)",
+          "description": "Collects to a Map using the two mapper functions. Throws on duplicate keys."
+        },
+        {
+          "method": "Collector<T,?,Map<K,U>> Collectors.toMap(Function keyMapper, Function valueMapper, BinaryOperator<U> mergeFunction)",
+          "description": "Three-arg version: mergeFunction resolves duplicate key conflicts."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-016",
+    "topic": "streams",
+    "subtopic": "collectors",
+    "difficulty": "intermediate",
+    "title": "groupingBy — group by word length",
+    "description": "Group a list of words by their length into a Map<Integer, List<String>>.",
+    "starterCode": "List<String> words = List.of(\"one\", \"two\", \"three\", \"four\", \"five\", \"six\", \"seven\");\n// Group by length\n",
+    "hints": ["Collectors.groupingBy(String::length)"],
+    "solution": {
+      "code": "Map<Integer, List<String>> byLength = words.stream()\n    .collect(Collectors.groupingBy(String::length));\nSystem.out.println(byLength);\n// {3=[one, two, six], 5=[three, seven], 4=[four, five]}",
+      "explanation": "groupingBy() is one of the most powerful Collectors. It uses a classifier Function to group elements. The downstream collector defaults to toList(). You can compose it: groupingBy(length, counting()) gives Map<Integer, Long> with counts instead of lists.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Map<K,List<T>>> Collectors.groupingBy(Function<? super T,? extends K> classifier)",
+          "description": "Groups elements by classifier into Map<K, List<T>>."
+        },
+        {
+          "method": "Collector<T,?,Map<K,D>> Collectors.groupingBy(Function classifier, Collector<? super T,A,D> downstream)",
+          "description": "Two-arg version: downstream collector processes each group (e.g. counting(), joining())."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-017",
+    "topic": "streams",
+    "subtopic": "collectors",
+    "difficulty": "intermediate",
+    "title": "partitioningBy — split into two groups",
+    "description": "Partition a list of integers into even and odd numbers using partitioningBy.",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);\n// Partition into evens and odds\n",
+    "hints": ["partitioningBy returns Map<Boolean, List<T>>", "true key = matching elements"],
+    "solution": {
+      "code": "Map<Boolean, List<Integer>> partition = nums.stream()\n    .collect(Collectors.partitioningBy(n -> n % 2 == 0));\nSystem.out.println(\"Evens: \" + partition.get(true));  // [2, 4, 6, 8, 10]\nSystem.out.println(\"Odds: \"  + partition.get(false)); // [1, 3, 5, 7, 9]",
+      "explanation": "partitioningBy() is a special case of groupingBy where the classifier is a Predicate. It always produces a Map with exactly two keys: true and false. It's slightly more efficient than groupingBy(predicate ? TRUE : FALSE) because it's optimised for binary partitioning.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Map<Boolean,List<T>>> Collectors.partitioningBy(Predicate<? super T> predicate)",
+          "description": "Partitions elements into two groups: those matching the predicate (true) and those not (false)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-018",
+    "topic": "streams",
+    "subtopic": "collectors",
+    "difficulty": "intermediate",
+    "title": "joining — concatenate strings",
+    "description": "Join a list of words into a single comma-separated string with prefix '[' and suffix ']'.",
+    "starterCode": "List<String> words = List.of(\"java\", \"stream\", \"collector\", \"joining\");\n// Join with comma, prefix [, suffix ]\n",
+    "hints": ["Collectors.joining(delimiter, prefix, suffix)"],
+    "solution": {
+      "code": "String result = words.stream()\n    .collect(Collectors.joining(\", \", \"[\", \"]\"));\nSystem.out.println(result); // [java, stream, collector, joining]",
+      "explanation": "joining() has three overloads: no args (simple concatenation), one arg (delimiter only), and three args (delimiter, prefix, suffix). It uses a StringBuilder internally and is far more efficient than reducing with string concatenation. The prefix and suffix are added once around the whole result.",
+      "methodSignatures": [
+        {
+          "method": "Collector<CharSequence,?,String> Collectors.joining()",
+          "description": "Concatenates all elements into a String."
+        },
+        {
+          "method": "Collector<CharSequence,?,String> Collectors.joining(CharSequence delimiter)",
+          "description": "Joins elements with the given delimiter between each pair."
+        },
+        {
+          "method": "Collector<CharSequence,?,String> Collectors.joining(CharSequence delimiter, CharSequence prefix, CharSequence suffix)",
+          "description": "Joins with delimiter, wrapping the whole result with prefix and suffix."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-019",
+    "topic": "streams",
+    "subtopic": "collectors",
+    "difficulty": "intermediate",
+    "title": "counting with groupingBy",
+    "description": "Given a list of words, count how many words exist for each starting letter.",
+    "starterCode": "List<String> words = List.of(\"apple\", \"avocado\", \"banana\", \"blueberry\", \"cherry\", \"citrus\", \"apricot\");\n// Count words per starting letter\n",
+    "hints": ["groupingBy with Collectors.counting() as downstream"],
+    "solution": {
+      "code": "Map<Character, Long> countByLetter = words.stream()\n    .collect(Collectors.groupingBy(\n        w -> w.charAt(0),\n        Collectors.counting()\n    ));\nSystem.out.println(countByLetter);\n// {a=3, b=2, c=2}",
+      "explanation": "Combining groupingBy with a downstream Collector is the key pattern for aggregation. counting() produces a Long count for each group instead of the default List. Other useful downstream collectors: summingInt(), averagingInt(), joining(), toList().",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Long> Collectors.counting()",
+          "description": "Downstream collector that counts the number of elements in each group."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-020",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Word frequency count",
+    "description": "Given a paragraph, compute the frequency of each word (case-insensitive), sorted by frequency descending.",
+    "starterCode": "String text = \"the quick brown fox jumps over the lazy dog the fox\";\n// Word frequency map, sorted descending by count\n",
+    "hints": [
+      "Split by space, stream the array",
+      "groupingBy with counting()",
+      "Sort the entrySet by value descending"
+    ],
+    "solution": {
+      "code": "Map<String, Long> freq = Arrays.stream(text.split(\"\\\\s+\"))\n    .map(String::toLowerCase)\n    .collect(Collectors.groupingBy(w -> w, Collectors.counting()));\n\nfreq.entrySet().stream()\n    .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()))\n    .forEach(e -> System.out.println(e.getKey() + \" -> \" + e.getValue()));\n// the -> 3, fox -> 2, quick -> 1, ...",
+      "explanation": "The pattern: split → stream → groupingBy(identity, counting()) gives the frequency map. Sorting: entrySet().stream() converts entries to a stream; Map.Entry.comparingByValue() creates a Comparator on entry values; Comparator.reverseOrder() flips it for descending order. This is the canonical word-count solution in streams.",
+      "methodSignatures": [
+        {
+          "method": "Comparator<Map.Entry<K,V>> Map.Entry.comparingByValue(Comparator<? super V> cmp)",
+          "description": "Returns a Comparator that compares Map.Entry by value using the given Comparator."
+        },
+        {
+          "method": "Comparator<Map.Entry<K,V>> Map.Entry.comparingByValue()",
+          "description": "Returns a Comparator that compares Map.Entry by natural ordering of values."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-021",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Character frequency count",
+    "description": "Count the frequency of each character in a string (excluding spaces), sorted alphabetically.",
+    "starterCode": "String text = \"hello world\";\n// Character frequency map, sorted alphabetically\n",
+    "hints": [
+      "chars() returns IntStream",
+      "filter out spaces",
+      "Convert int to char: (char) c",
+      "Use boxed() and groupingBy"
+    ],
+    "solution": {
+      "code": "Map<Character, Long> charFreq = text.chars()\n    .filter(c -> c != ' ')\n    .mapToObj(c -> (char) c)\n    .collect(Collectors.groupingBy(c -> c, TreeMap::new, Collectors.counting()));\nSystem.out.println(charFreq);\n// {d=1, e=1, h=1, l=3, o=2, r=1, w=1}",
+      "explanation": "String.chars() returns an IntStream of char code points. filter removes spaces. mapToObj converts int back to Character. The three-arg groupingBy: (classifier, mapFactory, downstream) — passing TreeMap::new ensures alphabetical ordering. Collectors.counting() counts occurrences per character.",
+      "methodSignatures": [
+        {
+          "method": "IntStream String.chars()",
+          "description": "Returns an IntStream of char values from the string."
+        },
+        {
+          "method": "<R> Stream<R> IntStream.mapToObj(IntFunction<? extends R> mapper)",
+          "description": "Maps IntStream to a Stream of objects."
+        },
+        {
+          "method": "Collector<T,?,M> Collectors.groupingBy(Function classifier, Supplier<M> mapFactory, Collector downstream)",
+          "description": "Three-arg groupingBy: uses mapFactory to control the Map type (e.g. TreeMap for sorted keys)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-022",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Sort a Map by value",
+    "description": "Given a Map<String, Integer> of product scores, produce a sorted list of entries by score descending.",
+    "starterCode": "Map<String, Integer> scores = new HashMap<>();\nscores.put(\"ProductA\", 78);\nscores.put(\"ProductB\", 95);\nscores.put(\"ProductC\", 62);\nscores.put(\"ProductD\", 88);\n// Sort by value descending and print\n",
+    "hints": [
+      "Stream the entrySet()",
+      "sorted(Map.Entry.comparingByValue(reverseOrder()))",
+      "forEach to print"
+    ],
+    "solution": {
+      "code": "scores.entrySet().stream()\n    .sorted(Map.Entry.<String, Integer>comparingByValue(Comparator.reverseOrder()))\n    .forEach(e -> System.out.println(e.getKey() + \" = \" + e.getValue()));\n// ProductB = 95\n// ProductD = 88\n// ProductA = 78\n// ProductC = 62",
+      "explanation": "Maps have no natural sort order — to sort by value you must stream the entry set. Map.Entry.comparingByValue() uses natural order; the overload with Comparator.reverseOrder() reverses it. To collect back into a sorted map use LinkedHashMap: .collect(toMap(Entry::getKey, Entry::getValue, (e1,e2)->e1, LinkedHashMap::new)).",
+      "methodSignatures": [
+        {
+          "method": "Set<Map.Entry<K,V>> Map.entrySet()",
+          "description": "Returns a Set view of the key-value pairs in the map."
+        },
+        {
+          "method": "Comparator<Map.Entry<K,V>> Map.Entry.comparingByValue()",
+          "description": "Returns a comparator that compares entries by value in natural order."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-023",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Sort a Map by key",
+    "description": "Given a Map<String, Integer>, collect it into a new Map sorted by key alphabetically using streams.",
+    "starterCode": "Map<String, Integer> map = new HashMap<>();\nmap.put(\"banana\", 3);\nmap.put(\"apple\", 5);\nmap.put(\"cherry\", 1);\nmap.put(\"date\", 4);\n// Collect to a LinkedHashMap sorted by key\n",
+    "hints": [
+      "Stream entrySet, sorted(Map.Entry.comparingByKey())",
+      "Collect to LinkedHashMap to preserve order"
+    ],
+    "solution": {
+      "code": "Map<String, Integer> sortedByKey = map.entrySet().stream()\n    .sorted(Map.Entry.comparingByKey())\n    .collect(Collectors.toMap(\n        Map.Entry::getKey,\n        Map.Entry::getValue,\n        (e1, e2) -> e1,\n        LinkedHashMap::new\n    ));\nSystem.out.println(sortedByKey);\n// {apple=5, banana=3, cherry=1, date=4}",
+      "explanation": "Map.Entry.comparingByKey() sorts entries alphabetically. The four-arg toMap() is used here: key mapper, value mapper, merge function (for duplicate keys — never triggered here but required), and a Supplier<Map> that creates a LinkedHashMap to preserve insertion order. Without LinkedHashMap::new, the order would not be guaranteed.",
+      "methodSignatures": [
+        {
+          "method": "Comparator<Map.Entry<K,V>> Map.Entry.comparingByKey()",
+          "description": "Returns a comparator that compares entries by key natural order."
+        },
+        {
+          "method": "Collector<T,?,M> Collectors.toMap(Function keyMapper, Function valueMapper, BinaryOperator<U> mergeFunction, Supplier<M> mapFactory)",
+          "description": "Collects into a Map created by mapFactory, resolving duplicate keys with mergeFunction."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-024",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Top-N elements",
+    "description": "From a list of student scores, find the top 3 highest scores.",
+    "starterCode": "List<Integer> scores = List.of(72, 45, 91, 88, 63, 97, 55, 84);\n// Find top 3 scores\n",
+    "hints": ["sorted descending, then limit(3)"],
+    "solution": {
+      "code": "List<Integer> top3 = scores.stream()\n    .sorted(Comparator.reverseOrder())\n    .limit(3)\n    .collect(Collectors.toList());\nSystem.out.println(top3); // [97, 91, 88]",
+      "explanation": "The pattern for top-N is: sort descending + limit(N). This is O(n log n) overall. For very large streams where N is small, a priority queue approach is more efficient, but sorted+limit is the idiomatic stream solution. If you only need the single maximum, prefer max(Comparator) which is O(n).",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> limit(long maxSize)",
+          "description": "Short-circuit intermediate op. Keeps only the first maxSize elements."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-025",
+    "topic": "streams",
+    "subtopic": "numeric",
+    "difficulty": "intermediate",
+    "title": "IntStream — sum, average, statistics",
+    "description": "Given a list of integers, compute sum, average, min, max, and count using IntStream.",
+    "starterCode": "List<Integer> nums = List.of(10, 20, 30, 40, 50);\n// Compute sum, average, min, max, count\n",
+    "hints": ["mapToInt, then summaryStatistics()", "Or use separate sum(), average() etc."],
+    "solution": {
+      "code": "IntSummaryStatistics stats = nums.stream()\n    .mapToInt(Integer::intValue)\n    .summaryStatistics();\nSystem.out.println(\"Sum:   \" + stats.getSum());     // 150\nSystem.out.println(\"Avg:   \" + stats.getAverage()); // 30.0\nSystem.out.println(\"Min:   \" + stats.getMin());     // 10\nSystem.out.println(\"Max:   \" + stats.getMax());     // 50\nSystem.out.println(\"Count: \" + stats.getCount());   // 5",
+      "explanation": "mapToInt() converts Stream<Integer> to IntStream, enabling primitive specialised operations. summaryStatistics() computes all five statistics in one pass — efficient since the stream is traversed once. Alternatively: .sum(), .average() (returns OptionalDouble), .min()/.max() (return OptionalInt).",
+      "methodSignatures": [
+        {
+          "method": "IntStream mapToInt(ToIntFunction<? super T> mapper)",
+          "description": "Returns an IntStream by applying the ToIntFunction to each element."
+        },
+        {
+          "method": "IntSummaryStatistics summaryStatistics()",
+          "description": "Terminal op on IntStream. Returns an object containing count, sum, min, max, and average."
+        },
+        {
+          "method": "int IntStream.sum()",
+          "description": "Terminal op. Returns the sum of elements in the IntStream."
+        },
+        {
+          "method": "OptionalDouble IntStream.average()",
+          "description": "Terminal op. Returns the average of elements as OptionalDouble."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-026",
+    "topic": "streams",
+    "subtopic": "numeric",
+    "difficulty": "intermediate",
+    "title": "IntStream.range and rangeClosed",
+    "description": "Generate a list of squares for numbers 1 to 10 using IntStream.range.",
+    "starterCode": "// Generate [1, 4, 9, 16, 25, 36, 49, 64, 81, 100] using IntStream\n",
+    "hints": ["IntStream.rangeClosed(1, 10)", "map(n -> n * n)", "boxed() to get Stream<Integer>"],
+    "solution": {
+      "code": "List<Integer> squares = IntStream.rangeClosed(1, 10)\n    .map(n -> n * n)\n    .boxed()\n    .collect(Collectors.toList());\nSystem.out.println(squares);\n// [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]",
+      "explanation": "IntStream.range(start, end) is exclusive of end; rangeClosed(start, end) is inclusive. boxed() converts IntStream to Stream<Integer> so you can use generic Collectors. Without boxed(), use IntStream.collect() or toArray(). These are the two most common IntStream factory methods.",
+      "methodSignatures": [
+        {
+          "method": "IntStream IntStream.range(int startInclusive, int endExclusive)",
+          "description": "Returns an ordered IntStream from startInclusive to endExclusive (exclusive end)."
+        },
+        {
+          "method": "IntStream IntStream.rangeClosed(int startInclusive, int endInclusive)",
+          "description": "Returns an ordered IntStream from start to end (inclusive both ends)."
+        },
+        {
+          "method": "Stream<Integer> IntStream.boxed()",
+          "description": "Returns a Stream<Integer> by boxing each int in an Integer."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-027",
+    "topic": "streams",
+    "subtopic": "numeric",
+    "difficulty": "intermediate",
+    "title": "Collectors.summarizingInt",
+    "description": "From a list of words, use summarizingInt to get length statistics (min/max/avg length) in one pass.",
+    "starterCode": "List<String> words = List.of(\"java\", \"streams\", \"are\", \"fantastic\", \"and\", \"powerful\");\n// Get length statistics in one pass\n",
+    "hints": ["Collectors.summarizingInt(String::length)"],
+    "solution": {
+      "code": "IntSummaryStatistics lengthStats = words.stream()\n    .collect(Collectors.summarizingInt(String::length));\nSystem.out.println(\"Max length: \" + lengthStats.getMax());     // 9\nSystem.out.println(\"Min length: \" + lengthStats.getMin());     // 3\nSystem.out.println(\"Avg length: \" + lengthStats.getAverage()); // 5.0\nSystem.out.println(\"Total chars: \" + lengthStats.getSum());    // 30",
+      "explanation": "Collectors.summarizingInt() is the collector equivalent of IntStream.summaryStatistics(). It maps each element to an int and collects all statistics in one traversal. It's more composable than mapToInt().summaryStatistics() because it can be used as a downstream collector inside groupingBy.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,IntSummaryStatistics> Collectors.summarizingInt(ToIntFunction<? super T> mapper)",
+          "description": "Returns a Collector that applies the mapper and produces IntSummaryStatistics."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-028",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Stream.generate — infinite random stream",
+    "description": "Generate 5 random numbers between 1 and 100 using Stream.generate.",
+    "starterCode": "// Generate 5 random ints between 1 and 100\n",
+    "hints": ["Stream.generate(() -> new Random().nextInt(100) + 1)", "limit(5)"],
+    "solution": {
+      "code": "Random random = new Random();\nList<Integer> randoms = Stream.generate(() -> random.nextInt(100) + 1)\n    .limit(5)\n    .collect(Collectors.toList());\nSystem.out.println(randoms);",
+      "explanation": "Stream.generate() creates an infinite stream using a Supplier<T>. The Supplier is called for each element. Always pair with limit() or other short-circuiting operations to prevent infinite execution. Unlike iterate(), generate() has no dependency between consecutive elements — each is generated independently.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Stream.generate(Supplier<? extends T> s)",
+          "description": "Creates an infinite sequential unordered stream where each element is generated by the Supplier."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-029",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Stream.iterate with predicate (Java 9+)",
+    "description": "Using Stream.iterate with a predicate (Java 9+), generate all powers of 2 less than 1000.",
+    "starterCode": "// Generate [1, 2, 4, 8, 16, 32, 64, 128, 256, 512] using Stream.iterate with predicate\n",
+    "hints": ["Stream.iterate(seed, predicate, nextFn) — Java 9 overload"],
+    "solution": {
+      "code": "List<Integer> powers = Stream.iterate(1, n -> n < 1000, n -> n * 2)\n    .collect(Collectors.toList());\nSystem.out.println(powers);\n// [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]",
+      "explanation": "Java 9 added a three-arg iterate(seed, hasNext, next) that acts like a for-loop: start at seed, continue while hasNext is true, apply next to get the next value. This is cleaner than iterate().takeWhile() and avoids the need for limit(). The two-arg version (Java 8) creates a truly infinite stream requiring limit().",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Stream.iterate(T seed, Predicate<? super T> hasNext, UnaryOperator<T> next)",
+          "description": "Java 9+. Creates a sequential stream like a for-loop: starts at seed, continues while hasNext, advances with next."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-030",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Collectors.toUnmodifiableList/Map (Java 10+)",
+    "description": "Collect a filtered stream into an unmodifiable list and an unmodifiable map.",
+    "starterCode": "List<String> words = List.of(\"alpha\", \"beta\", \"gamma\", \"delta\", \"epsilon\");\n// Collect words longer than 4 chars to unmodifiable list\n// Create unmodifiable map of word -> length\n",
+    "hints": ["Collectors.toUnmodifiableList()", "Collectors.toUnmodifiableMap()"],
+    "solution": {
+      "code": "List<String> unmodList = words.stream()\n    .filter(w -> w.length() > 4)\n    .collect(Collectors.toUnmodifiableList());\nSystem.out.println(unmodList); // [alpha, gamma, delta, epsilon]\n\nMap<String, Integer> unmodMap = words.stream()\n    .collect(Collectors.toUnmodifiableMap(w -> w, String::length));\nSystem.out.println(unmodMap);",
+      "explanation": "Java 10 added toUnmodifiableList(), toUnmodifiableSet(), and toUnmodifiableMap() — equivalent to wrapping with Collections.unmodifiableList() but more idiomatic in stream pipelines. Any attempt to modify the result throws UnsupportedOperationException. This is the preferred way to produce immutable collections from streams.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,List<T>> Collectors.toUnmodifiableList()",
+          "description": "Java 10+. Returns a Collector that accumulates to an unmodifiable List."
+        },
+        {
+          "method": "Collector<T,?,Map<K,U>> Collectors.toUnmodifiableMap(Function keyMapper, Function valueMapper)",
+          "description": "Java 10+. Returns a Collector that accumulates to an unmodifiable Map."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-031",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Collectors.teeing (Java 12+)",
+    "description": "Using Collectors.teeing, compute both the sum and count of a list of integers in a single pass, then compute the average.",
+    "starterCode": "List<Integer> nums = List.of(10, 20, 30, 40, 50);\n// Use teeing to get sum and count simultaneously, then compute average\n",
+    "hints": [
+      "Collectors.teeing(downstream1, downstream2, merger)",
+      "First downstream: summingInt(identity)",
+      "Second downstream: counting()"
+    ],
+    "solution": {
+      "code": "double average = nums.stream()\n    .collect(Collectors.teeing(\n        Collectors.summingInt(Integer::intValue),\n        Collectors.counting(),\n        (sum, count) -> (double) sum / count\n    ));\nSystem.out.println(average); // 30.0",
+      "explanation": "teeing() (Java 12+) feeds every element to two downstream collectors simultaneously, then merges their results with a BiFunction. This achieves two aggregations in a single stream traversal — useful when traversing the source twice would be expensive. Here: sum=150, count=5, merger computes 150/5=30.0.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,R> Collectors.teeing(Collector<? super T,?,R1> downstream1, Collector<? super T,?,R2> downstream2, BiFunction<? super R1,? super R2,R> merger)",
+          "description": "Java 12+. Feeds each element to both downstream collectors, then merges results with the BiFunction."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-032",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Custom Collector",
+    "description": "Implement a custom Collector<String, ?, String> that collects strings in reverse order, separated by ' | '.",
+    "starterCode": "List<String> words = List.of(\"one\", \"two\", \"three\", \"four\");\n// Build a custom Collector that reverses the list and joins with ' | '\n",
+    "hints": [
+      "Collector.of(supplier, accumulator, combiner, finisher)",
+      "Use a LinkedList or Deque as accumulator container"
+    ],
+    "solution": {
+      "code": "Collector<String, LinkedList<String>, String> reverseJoin =\n    Collector.of(\n        LinkedList::new,\n        (list, s) -> list.addFirst(s),\n        (left, right) -> { right.addAll(left); return right; },\n        list -> String.join(\" | \", list)\n    );\nString result = words.stream().collect(reverseJoin);\nSystem.out.println(result); // four | three | two | one",
+      "explanation": "Collector.of() takes: supplier (creates mutable container), accumulator (folds element into container), combiner (merges two containers for parallel), finisher (transforms container to result). Using addFirst() on a LinkedList builds the list in reverse. The combiner handles parallel stream merging.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,A,R> Collector.of(Supplier<A> supplier, BiConsumer<A,T> accumulator, BinaryOperator<A> combiner, Function<A,R> finisher, Characteristics... characteristics)",
+          "description": "Creates a Collector from its four functional components."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-033",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "flatMap with Optional (Java 9+)",
+    "description": "You have a list of strings that may or may not parse as integers. Use flatMap with Optional.stream() to collect only the valid integers.",
+    "starterCode": "List<String> inputs = List.of(\"42\", \"hello\", \"7\", \"world\", \"100\");\n// Parse valid integers and collect, skipping invalid ones\n",
+    "hints": [
+      "Write a helper: Optional<Integer> tryParse(String s)",
+      "Use flatMap(s -> tryParse(s).stream()) — requires Java 9+"
+    ],
+    "solution": {
+      "code": "// Helper method (define this in a class or as a lambda)\njava.util.function.Function<String, Optional<Integer>> tryParse = s -> {\n    try { return Optional.of(Integer.parseInt(s)); }\n    catch (NumberFormatException e) { return Optional.empty(); }\n};\n\nList<Integer> validNums = inputs.stream()\n    .flatMap(s -> tryParse.apply(s).stream())\n    .collect(Collectors.toList());\nSystem.out.println(validNums); // [42, 7, 100]",
+      "explanation": "Optional.stream() (Java 9+) converts an Optional to a 0-or-1 element stream. Combining it with flatMap turns 'maybe' results into a filtered stream — elements with present optionals pass through, empty optionals produce nothing. This is the idiomatic replacement for filter(Optional::isPresent).map(Optional::get).",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Optional.stream()",
+          "description": "Java 9+. Returns a stream of zero or one element (empty if optional is empty)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-034",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Parallel streams — word count",
+    "description": "Count total words across a large list of sentences using a parallel stream. Compare with sequential.",
+    "starterCode": "List<String> sentences = new ArrayList<>();\nfor (int i = 0; i < 100000; i++) sentences.add(\"the quick brown fox jumps over the lazy dog\");\n// Count total words using parallel stream\n",
+    "hints": ["parallelStream() or .parallel()", "mapToLong(s -> s.split(' ').length)", "sum()"],
+    "solution": {
+      "code": "long wordCount = sentences.parallelStream()\n    .mapToLong(s -> s.split(\" \").length)\n    .sum();\nSystem.out.println(\"Total words: \" + wordCount); // 900000\n\n// Sequential for comparison\nlong seqCount = sentences.stream()\n    .mapToLong(s -> s.split(\" \").length)\n    .sum();\nSystem.out.println(\"Sequential: \" + seqCount);",
+      "explanation": "parallelStream() uses the common ForkJoinPool to split work across CPU cores. It shines when: (1) data is large, (2) operations are CPU-intensive and stateless, (3) no shared mutable state. Avoid parallel streams for: IO operations, small data, stateful lambdas, or when order matters. The pipeline API is identical — just change stream() to parallelStream().",
+      "methodSignatures": [
+        {
+          "method": "Stream<E> Collection.parallelStream()",
+          "description": "Returns a possibly parallel Stream. Uses the common ForkJoinPool."
+        },
+        {
+          "method": "Stream<T> Stream.parallel()",
+          "description": "Returns an equivalent parallel stream. Can be called mid-pipeline."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-035",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "takeWhile and dropWhile (Java 9+)",
+    "description": "From an ordered list [1,2,3,4,5,6,7], take elements while they are less than 5, then separately get elements after dropping while less than 5.",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 3, 4, 5, 6, 7);\n// takeWhile < 5  => [1,2,3,4]\n// dropWhile < 5  => [5,6,7]\n",
+    "hints": ["takeWhile(predicate) — Java 9+", "dropWhile(predicate) — Java 9+"],
+    "solution": {
+      "code": "List<Integer> taken = nums.stream()\n    .takeWhile(n -> n < 5)\n    .collect(Collectors.toList());\nSystem.out.println(taken); // [1, 2, 3, 4]\n\nList<Integer> dropped = nums.stream()\n    .dropWhile(n -> n < 5)\n    .collect(Collectors.toList());\nSystem.out.println(dropped); // [5, 6, 7]",
+      "explanation": "takeWhile (Java 9+) yields elements from the front of an ordered stream while the predicate is true, then stops (unlike filter which checks every element). dropWhile discards from the front while true, then emits everything remaining. Both stop at the first failure — they do NOT skip/filter non-contiguous elements. filter() tests every element; takeWhile/dropWhile stop at the first non-matching.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> takeWhile(Predicate<? super T> predicate)",
+          "description": "Java 9+. Returns a stream of elements from the start while predicate holds; stops at first mismatch."
+        },
+        {
+          "method": "Stream<T> dropWhile(Predicate<? super T> predicate)",
+          "description": "Java 9+. Drops elements from the start while predicate holds; emits everything from first mismatch onward."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-036",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "peek — debug a pipeline",
+    "description": "Use peek() to print each element at two stages of a pipeline: after filter and after map.",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 3, 4, 5, 6);\n// Filter evens, peek after filter, map to squares, peek after map, collect\n",
+    "hints": ["peek() is an intermediate op that does not consume the stream"],
+    "solution": {
+      "code": "List<Integer> result = nums.stream()\n    .filter(n -> n % 2 == 0)\n    .peek(n -> System.out.println(\"After filter: \" + n))\n    .map(n -> n * n)\n    .peek(n -> System.out.println(\"After map: \" + n))\n    .collect(Collectors.toList());\nSystem.out.println(result);\n// After filter: 2 | After map: 4\n// After filter: 4 | After map: 16\n// After filter: 6 | After map: 36\n// [4, 16, 36]",
+      "explanation": "peek() is primarily a debugging tool. It applies a Consumer to each element without consuming the stream. Note how elements flow one by one (not batch) — after filtering 2, it is immediately mapped before 4 is filtered. This lazy per-element processing is the heart of streams. Never use peek() in production for side effects — use forEach() instead.",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> peek(Consumer<? super T> action)",
+          "description": "Intermediate op. Performs action on each element as it passes through; returns same stream. For debugging only."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-037",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Collectors.groupingBy with nested downstream",
+    "description": "Group a list of employees (name, department, salary) by department, and within each department get the average salary.",
+    "starterCode": "record Employee(String name, String dept, double salary) {}\nList<Employee> employees = List.of(\n    new Employee(\"Alice\", \"Engineering\", 95000),\n    new Employee(\"Bob\",   \"Engineering\", 88000),\n    new Employee(\"Carol\", \"Marketing\",   72000),\n    new Employee(\"Dave\",  \"Marketing\",   68000),\n    new Employee(\"Eve\",   \"HR\",           61000)\n);\n// Group by dept, average salary per dept\n",
+    "hints": ["groupingBy(Employee::dept, averagingDouble(Employee::salary))"],
+    "solution": {
+      "code": "Map<String, Double> avgSalaryByDept = employees.stream()\n    .collect(Collectors.groupingBy(\n        Employee::dept,\n        Collectors.averagingDouble(Employee::salary)\n    ));\nSystem.out.println(avgSalaryByDept);\n// {Engineering=91500.0, Marketing=70000.0, HR=61000.0}",
+      "explanation": "This is the power of composable collectors. groupingBy(classifier, downstream) applies the downstream collector to each group's elements. Collectors.averagingDouble(mapper) maps each element to a double and returns the average. Other useful downstream collectors: summingDouble, maxBy, minBy, toList, mapping.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,Double> Collectors.averagingDouble(ToDoubleFunction<? super T> mapper)",
+          "description": "Returns a Collector that averages the double values produced by the mapper."
+        },
+        {
+          "method": "Collector<T,?,Double> Collectors.summingDouble(ToDoubleFunction<? super T> mapper)",
+          "description": "Returns a Collector that sums the double values produced by the mapper."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-038",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "mapMulti (Java 16+)",
+    "description": "Use mapMulti() to expand each integer into itself and its square, replacing [1,2,3] with [1,1,2,4,3,9].",
+    "starterCode": "List<Integer> nums = List.of(1, 2, 3);\n// Expand each n -> [n, n*n] using mapMulti\n",
+    "hints": ["mapMulti((n, consumer) -> { consumer.accept(n); consumer.accept(n*n); })"],
+    "solution": {
+      "code": "List<Integer> expanded = nums.stream()\n    .<Integer>mapMulti((n, consumer) -> {\n        consumer.accept(n);\n        consumer.accept(n * n);\n    })\n    .collect(Collectors.toList());\nSystem.out.println(expanded); // [1, 1, 2, 4, 3, 9]",
+      "explanation": "mapMulti() (Java 16+) lets each element emit 0-N output elements via a Consumer, without the overhead of creating intermediate streams like flatMap does. It is more efficient for small expansions. The type witness <Integer> is often needed since the compiler cannot infer R from the BiConsumer.",
+      "methodSignatures": [
+        {
+          "method": "<R> Stream<R> mapMulti(BiConsumer<? super T, ? super Consumer<R>> mapper)",
+          "description": "Java 16+. Each element can push 0 or more elements into the downstream via the Consumer."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-039",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Stream.concat and merge streams",
+    "description": "Merge two lists of integers into one sorted stream without duplicates.",
+    "starterCode": "List<Integer> a = List.of(3, 1, 4, 1, 5);\nList<Integer> b = List.of(9, 2, 6, 5, 3);\n// Merge, deduplicate, sort\n",
+    "hints": ["Stream.concat(a.stream(), b.stream())", "Then distinct() and sorted()"],
+    "solution": {
+      "code": "List<Integer> merged = Stream.concat(a.stream(), b.stream())\n    .distinct()\n    .sorted()\n    .collect(Collectors.toList());\nSystem.out.println(merged); // [1, 2, 3, 4, 5, 6, 9]",
+      "explanation": "Stream.concat() creates a lazily concatenated stream from two streams. It is efficient — no intermediate collection is created. After concat, distinct() removes duplicates and sorted() orders the result. For merging more than two streams, use Stream.of(s1, s2, s3).flatMap(s -> s).",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Stream.concat(Stream<? extends T> a, Stream<? extends T> b)",
+          "description": "Creates a lazily concatenated stream from two streams. Elements of a precede elements of b."
+        }
+      ]
+    }
+  },
+  {
+    "id": "streams-040",
+    "topic": "streams",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Collectors.mapping as downstream",
+    "description": "Group employees by department, but instead of the full Employee object, collect only their names per department.",
+    "starterCode": "record Employee(String name, String dept) {}\nList<Employee> employees = List.of(\n    new Employee(\"Alice\", \"Engineering\"),\n    new Employee(\"Bob\",   \"Engineering\"),\n    new Employee(\"Carol\", \"Marketing\"),\n    new Employee(\"Dave\",  \"Marketing\")\n);\n// Group by dept, collect only names per dept\n",
+    "hints": ["groupingBy(Employee::dept, Collectors.mapping(Employee::name, toList()))"],
+    "solution": {
+      "code": "Map<String, List<String>> namesByDept = employees.stream()\n    .collect(Collectors.groupingBy(\n        Employee::dept,\n        Collectors.mapping(Employee::name, Collectors.toList())\n    ));\nSystem.out.println(namesByDept);\n// {Engineering=[Alice, Bob], Marketing=[Carol, Dave]}",
+      "explanation": "Collectors.mapping() adapts a downstream Collector to work on transformed values. It applies a mapper Function to each element before passing it to the downstream collector. This avoids an extra map() intermediate operation and is composable inside groupingBy, partitioningBy, and teeing.",
+      "methodSignatures": [
+        {
+          "method": "Collector<T,?,R> Collectors.mapping(Function<? super T,? extends U> mapper, Collector<? super U,A,R> downstream)",
+          "description": "Adapts a downstream Collector by applying a mapper to each input element before accumulating."
+        }
+      ]
+    }
+  }
+]

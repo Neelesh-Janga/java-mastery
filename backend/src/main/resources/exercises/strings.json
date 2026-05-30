@@ -1,0 +1,377 @@
+[
+  {
+    "id": "strings-001",
+    "topic": "strings",
+    "subtopic": "string-basics",
+    "difficulty": "beginner",
+    "title": "String Length, charAt, and indexOf",
+    "description": "Use String methods to inspect individual characters and find the position of substrings. Practice length(), charAt(int index), indexOf(String str), and lastIndexOf(String str).",
+    "starterCode": "public class StringBasics {\n    public static void main(String[] args) {\n        String sentence = \"Hello, Java World!\";\n\n        // TODO: Print the total number of characters in sentence\n\n        // TODO: Print the character at index 7\n\n        // TODO: Print the first index of 'o'\n\n        // TODO: Print the last index of 'o'\n\n        // TODO: Print the index of \"World\"\n\n        // TODO: Print -1 if \"Python\" is not found\n    }\n}",
+    "hints": [
+      "length() returns an int — the total number of chars including spaces and punctuation.",
+      "charAt(index) is zero-based; charAt(0) returns 'H' for \"Hello\".",
+      "indexOf returns -1 when the substring is not found — useful for existence checks."
+    ],
+    "solution": {
+      "code": "public class StringBasics {\n    public static void main(String[] args) {\n        String sentence = \"Hello, Java World!\";\n\n        System.out.println(sentence.length());           // 18\n        System.out.println(sentence.charAt(7));          // J\n        System.out.println(sentence.indexOf('o'));       // 4\n        System.out.println(sentence.lastIndexOf('o'));   // 13\n        System.out.println(sentence.indexOf(\"World\"));  // 12\n        System.out.println(sentence.indexOf(\"Python\")); // -1\n    }\n}",
+      "explanation": "length() counts all characters, including spaces, commas, and punctuation — 'Hello, Java World!' has 18. charAt(7) returns 'J' because indexing starts at 0: H(0) e(1) l(2) l(3) o(4) ,(5) (6) J(7). indexOf('o') scans left-to-right and stops at the first match (index 4 in 'Hello'). lastIndexOf('o') scans right-to-left, finding 'o' in 'World' at 13. indexOf returns -1 for any substring not present — this is the standard sentinel value Java uses for 'not found'.",
+      "methodSignatures": [
+        {"method": "int String.length()", "description": "Returns the number of characters in the string."},
+        {"method": "char String.charAt(int index)", "description": "Returns the char at the given zero-based index; throws StringIndexOutOfBoundsException if out of range."},
+        {"method": "int String.indexOf(String str)", "description": "Returns the index of the first occurrence of str, or -1 if not found."},
+        {"method": "int String.lastIndexOf(String str)", "description": "Returns the index of the last occurrence of str, or -1 if not found."}
+      ]
+    }
+  },
+  {
+    "id": "strings-002",
+    "topic": "strings",
+    "subtopic": "string-basics",
+    "difficulty": "beginner",
+    "title": "substring, contains, startsWith, endsWith",
+    "description": "Extract portions of strings with substring() and check membership/position with contains(), startsWith(), and endsWith().",
+    "starterCode": "public class StringSlicing {\n    public static void main(String[] args) {\n        String url = \"https://www.example.com/path?q=java\";\n\n        // TODO: Extract the protocol part (\"https\")\n        //       Hint: use indexOf(\"://\")\n\n        // TODO: Check if the URL contains \"example\"\n\n        // TODO: Check if it starts with \"https\"\n\n        // TODO: Check if it ends with \"java\"\n\n        // TODO: Extract the path segment \"/path?q=java\"\n        //       Hint: find the index of the third slash\n    }\n}",
+    "hints": [
+      "substring(start, end) extracts characters from start (inclusive) to end (exclusive).",
+      "substring(start) extracts from start to the end of the string.",
+      "Combine indexOf() with substring() to locate and extract dynamic portions."
+    ],
+    "solution": {
+      "code": "public class StringSlicing {\n    public static void main(String[] args) {\n        String url = \"https://www.example.com/path?q=java\";\n\n        int schemeEnd = url.indexOf(\"://\");\n        String protocol = url.substring(0, schemeEnd); // \"https\"\n        System.out.println(protocol);\n\n        System.out.println(url.contains(\"example\")); // true\n        System.out.println(url.startsWith(\"https\")); // true\n        System.out.println(url.endsWith(\"java\"));    // true\n\n        // Third slash: skip past \"://\" then find the next '/'\n        int pathStart = url.indexOf('/', schemeEnd + 3);\n        String path = url.substring(pathStart); // \"/path?q=java\"\n        System.out.println(path);\n    }\n}",
+      "explanation": "substring(0, schemeEnd) extracts characters at indices 0 through schemeEnd-1. Because indexOf(\"://\") returns 5 for 'https', substring(0,5) gives 'https'. contains(), startsWith(), and endsWith() all return booleans and are convenience wrappers — internally they use indexOf or char comparison. To find the path we skip past '://' (3 chars) so we don't accidentally match the slashes in the scheme, then look for the next '/' which starts the path. substring(pathStart) with one argument goes to the end of the string.",
+      "methodSignatures": [
+        {"method": "String String.substring(int beginIndex)", "description": "Returns a new string from beginIndex to end."},
+        {"method": "String String.substring(int beginIndex, int endIndex)", "description": "Returns a new string from beginIndex (inclusive) to endIndex (exclusive)."},
+        {"method": "boolean String.contains(CharSequence s)", "description": "Returns true if the string contains the given sequence."},
+        {"method": "boolean String.startsWith(String prefix)", "description": "Returns true if the string begins with the given prefix."},
+        {"method": "boolean String.endsWith(String suffix)", "description": "Returns true if the string ends with the given suffix."}
+      ]
+    }
+  },
+  {
+    "id": "strings-003",
+    "topic": "strings",
+    "subtopic": "string-basics",
+    "difficulty": "beginner",
+    "title": "isEmpty vs isBlank (Java 11)",
+    "description": "Understand the distinction between isEmpty() and isBlank(), and how they handle whitespace-only strings.",
+    "starterCode": "public class EmptyVsBlank {\n    public static void main(String[] args) {\n        String empty    = \"\";\n        String spaces   = \"   \";\n        String tab      = \"\\t\";\n        String content  = \"  hello  \";\n\n        // TODO: For each string above, print isEmpty() and isBlank()\n        // Expected output shows the difference between the two methods\n\n        // TODO: Print the trimmed length of 'content' to show isBlank works on trimmed view\n    }\n}",
+    "hints": [
+      "isEmpty() returns true only when length() == 0.",
+      "isBlank() (Java 11+) returns true when the string is empty OR contains only whitespace characters.",
+      "isBlank() uses Character.isWhitespace() which covers tabs, newlines, and Unicode spaces."
+    ],
+    "solution": {
+      "code": "public class EmptyVsBlank {\n    public static void main(String[] args) {\n        String empty   = \"\";\n        String spaces  = \"   \";\n        String tab     = \"\\t\";\n        String content = \"  hello  \";\n\n        System.out.println(empty.isEmpty()   + \" / \" + empty.isBlank());   // true / true\n        System.out.println(spaces.isEmpty()  + \" / \" + spaces.isBlank());  // false / true\n        System.out.println(tab.isEmpty()     + \" / \" + tab.isBlank());     // false / true\n        System.out.println(content.isEmpty() + \" / \" + content.isBlank()); // false / false\n\n        // isBlank is equivalent to: string.strip().isEmpty()\n        System.out.println(content.strip().isEmpty()); // false — 'hello' remains\n    }\n}",
+      "explanation": "isEmpty() is a simple length check: only the zero-length string returns true. isBlank() was introduced in Java 11 to fill a common need: detecting 'effectively empty' strings that contain only whitespace. A string of spaces or tabs is not empty (length > 0) but is blank (no visible content). isBlank() is equivalent to strip().isEmpty() — strip() uses Unicode-aware whitespace rules, unlike trim() which only strips ASCII control chars <= '\\u0020'. Always prefer isBlank() over isEmpty() when validating user input.",
+      "methodSignatures": [
+        {"method": "boolean String.isEmpty()", "description": "Returns true if and only if length() == 0."},
+        {"method": "boolean String.isBlank()", "description": "Java 11+. Returns true if the string is empty or contains only whitespace (Unicode-aware)."}
+      ]
+    }
+  },
+  {
+    "id": "strings-004",
+    "topic": "strings",
+    "subtopic": "string-manipulation",
+    "difficulty": "beginner",
+    "title": "Case Conversion: toUpperCase and toLowerCase",
+    "description": "Convert string casing using toUpperCase() and toLowerCase(), including locale-sensitive variants.",
+    "starterCode": "import java.util.Locale;\n\npublic class CaseConversion {\n    public static void main(String[] args) {\n        String mixed = \"Hello, Java World!\";\n\n        // TODO: Print the string in all uppercase\n\n        // TODO: Print the string in all lowercase\n\n        // TODO: Simulate title-casing by capitalising the first letter\n        //       and lowercasing the rest of each word — do it for \"hello world\"\n\n        // TODO: Print using Locale.ROOT (locale-invariant, safe for identifiers)\n        String tricky = \"istanbul\";\n        // In Turkish locale, toLowerCase('I') -> 'ı' (dotless i)\n        // With Locale.ROOT it stays 'i'\n    }\n}",
+    "hints": [
+      "toUpperCase() and toLowerCase() without arguments use the default JVM locale — safe for most English text.",
+      "For code identifiers or protocol strings, always pass Locale.ROOT to avoid locale-specific surprises.",
+      "To capitalise a single character: Character.toUpperCase(char c)."
+    ],
+    "solution": {
+      "code": "import java.util.Locale;\n\npublic class CaseConversion {\n    public static void main(String[] args) {\n        String mixed = \"Hello, Java World!\";\n\n        System.out.println(mixed.toUpperCase()); // HELLO, JAVA WORLD!\n        System.out.println(mixed.toLowerCase()); // hello, java world!\n\n        // Title-case each word\n        String[] words = \"hello world\".split(\" \");\n        StringBuilder sb = new StringBuilder();\n        for (String word : words) {\n            if (!word.isEmpty()) {\n                sb.append(Character.toUpperCase(word.charAt(0)))\n                  .append(word.substring(1).toLowerCase())\n                  .append(' ');\n            }\n        }\n        System.out.println(sb.toString().trim()); // Hello World\n\n        String tricky = \"istanbul\";\n        System.out.println(tricky.toUpperCase(new Locale(\"tr\")));  // İSTANBUL (dotted I)\n        System.out.println(tricky.toUpperCase(Locale.ROOT));       // ISTANBUL  (safe)\n    }\n}",
+      "explanation": "toUpperCase() and toLowerCase() produce new String objects; Strings in Java are immutable so no modification happens in place. The locale issue with Turkish 'I' is a real production bug: Turkish locale maps uppercase 'I' -> 'İ' (with dot) and 'i' -> 'İ', while lowercase 'I' -> 'ı' (no dot). Code that compares HTTP header names or XML tags using the default locale on a Turkish server will silently break. Always use Locale.ROOT for programmatic strings. Only use the default locale when displaying text to the user.",
+      "methodSignatures": [
+        {"method": "String String.toUpperCase()", "description": "Converts all characters to uppercase using the default locale."},
+        {"method": "String String.toUpperCase(Locale locale)", "description": "Converts all characters to uppercase using the specified locale."},
+        {"method": "String String.toLowerCase(Locale locale)", "description": "Converts all characters to lowercase using the specified locale."}
+      ]
+    }
+  },
+  {
+    "id": "strings-005",
+    "topic": "strings",
+    "subtopic": "string-manipulation",
+    "difficulty": "beginner",
+    "title": "trim() vs strip() — Whitespace Removal",
+    "description": "Understand the difference between legacy trim() and Java 11's strip() / stripLeading() / stripTrailing() for removing whitespace.",
+    "starterCode": "public class Stripping {\n    public static void main(String[] args) {\n        String padded = \"   hello world   \";\n\n        // TODO: Remove leading and trailing ASCII spaces with trim()\n\n        // TODO: Remove leading and trailing whitespace with strip() (Unicode-aware)\n\n        // TODO: Remove only leading whitespace with stripLeading()\n\n        // TODO: Remove only trailing whitespace with stripTrailing()\n\n        // Demonstrate the difference with a Unicode non-breaking space\n        String unicode = \"\\u00A0 hello \\u00A0\"; // \\u00A0 is non-breaking space\n        // TODO: Show that trim() does NOT remove \\u00A0 but strip() does\n    }\n}",
+    "hints": [
+      "trim() treats any character with code point <= '\\u0020' (space) as whitespace.",
+      "strip() uses Character.isWhitespace() which handles Unicode whitespace (\\u00A0, \\u2009, etc.).",
+      "stripLeading() and stripTrailing() are Java 11+ and allow asymmetric stripping."
+    ],
+    "solution": {
+      "code": "public class Stripping {\n    public static void main(String[] args) {\n        String padded = \"   hello world   \";\n\n        System.out.println(\"|\" + padded.trim()            + \"|\"); // |hello world|\n        System.out.println(\"|\" + padded.strip()           + \"|\"); // |hello world|\n        System.out.println(\"|\" + padded.stripLeading()    + \"|\"); // |hello world   |\n        System.out.println(\"|\" + padded.stripTrailing()   + \"|\"); // |   hello world|\n\n        String unicode = \"\\u00A0 hello \\u00A0\";\n        System.out.println(\"|\" + unicode.trim()  + \"|\"); // | hello | — \\u00A0 NOT removed\n        System.out.println(\"|\" + unicode.strip() + \"|\"); // |hello|  — \\u00A0 removed\n    }\n}",
+      "explanation": "trim() was written in Java 1.0 before Unicode was well understood. It removes everything with a code point <= 32 (the ASCII space). Non-breaking space (\\u00A0 = 160) is above that threshold, so trim() leaves it in place. strip() (Java 11) delegates to Character.isWhitespace() which correctly identifies all Unicode whitespace categories. For new code, always prefer strip(). stripLeading() and stripTrailing() are useful when you only want to normalise one side — for example, parsing indented config file lines where leading indentation is significant but a trailing newline is not.",
+      "methodSignatures": [
+        {"method": "String String.trim()", "description": "Removes leading and trailing characters with code point <= '\\u0020'."},
+        {"method": "String String.strip()", "description": "Java 11+. Removes leading and trailing Unicode whitespace."},
+        {"method": "String String.stripLeading()", "description": "Java 11+. Removes leading Unicode whitespace only."},
+        {"method": "String String.stripTrailing()", "description": "Java 11+. Removes trailing Unicode whitespace only."}
+      ]
+    }
+  },
+  {
+    "id": "strings-006",
+    "topic": "strings",
+    "subtopic": "string-manipulation",
+    "difficulty": "beginner",
+    "title": "replace, replaceAll, replaceFirst",
+    "description": "Replace substrings using literal replacement (replace) and regex-based replacement (replaceAll, replaceFirst).",
+    "starterCode": "public class StringReplacement {\n    public static void main(String[] args) {\n        String text = \"The cat sat on the mat. The cat is fat.\";\n\n        // TODO: Replace every 'cat' with 'dog' using replace()\n\n        // TODO: Replace every sequence of digits with '#' using replaceAll() and regex \\\\d+\n\n        // TODO: Replace only the first 'cat' with 'dog' using replaceFirst()\n\n        String csv = \"one,,two,,,three\";\n        // TODO: Collapse consecutive commas into a single comma using replaceAll()\n    }\n}",
+    "hints": [
+      "replace(CharSequence, CharSequence) does plain literal replacement, no regex.",
+      "replaceAll(String regex, String replacement) and replaceFirst() interpret the first argument as a regex.",
+      "In a regex passed to replaceAll, backslashes must be double-escaped: \\\\d means the regex \\d (digit)."
+    ],
+    "solution": {
+      "code": "public class StringReplacement {\n    public static void main(String[] args) {\n        String text = \"The cat sat on the mat. The cat is fat.\";\n\n        System.out.println(text.replace(\"cat\", \"dog\"));\n        // The dog sat on the mat. The dog is fat.\n\n        String digits = \"Phone: 123-456-7890, Ext: 42\";\n        System.out.println(digits.replaceAll(\"\\\\d+\", \"#\"));\n        // Phone: #-#-#, Ext: #\n\n        System.out.println(text.replaceFirst(\"cat\", \"dog\"));\n        // The dog sat on the mat. The cat is fat.\n\n        String csv = \"one,,two,,,three\";\n        System.out.println(csv.replaceAll(\",+\", \",\"));\n        // one,two,three\n    }\n}",
+      "explanation": "replace(CharSequence old, CharSequence new) treats both arguments as literal strings — no regex magic. This is safer when your replacement text might contain regex metacharacters like '$' or '\\'. replaceAll() compiles its first argument as a regex each call; for hot loops consider pre-compiling with Pattern.compile(). The regex \\\\d+ in a Java string literal becomes \\d+ at runtime, matching one or more digits. ,+ matches one or more consecutive commas, so replaceAll(\",+\", \",\") collapses runs of commas.",
+      "methodSignatures": [
+        {"method": "String String.replace(CharSequence target, CharSequence replacement)", "description": "Replaces all literal occurrences of target with replacement."},
+        {"method": "String String.replaceAll(String regex, String replacement)", "description": "Replaces every substring matching the regex with replacement."},
+        {"method": "String String.replaceFirst(String regex, String replacement)", "description": "Replaces the first substring matching the regex with replacement."}
+      ]
+    }
+  },
+  {
+    "id": "strings-007",
+    "topic": "strings",
+    "subtopic": "string-splitting",
+    "difficulty": "beginner",
+    "title": "split() with regex and limit",
+    "description": "Split strings using regex delimiters and control the number of parts with the limit parameter.",
+    "starterCode": "import java.util.Arrays;\n\npublic class StringSplitting {\n    public static void main(String[] args) {\n        String csv = \"apple,banana,,cherry,\";\n\n        // TODO: Split on comma — print how many parts you get and each part\n        //       Note trailing commas and empty tokens\n\n        // TODO: Split on comma with limit 3 — print results\n\n        String words = \"one   two\\tthree\\nfour\";\n        // TODO: Split on any whitespace sequence (\\\\s+)\n\n        // TODO: Split a dotted IP address \"192.168.1.1\" on '.'\n        //       Careful: '.' in regex means 'any character'!\n    }\n}",
+    "hints": [
+      "split() with no limit removes trailing empty strings; split(regex, -1) keeps them.",
+      "A limit of n means at most n parts; the last part contains the remainder (unsplit).",
+      "To split on a literal dot, escape it: split(\"\\\\.\") — a bare '.' matches any char."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\n\npublic class StringSplitting {\n    public static void main(String[] args) {\n        String csv = \"apple,banana,,cherry,\";\n\n        // Default: trailing empty strings removed\n        String[] parts = csv.split(\",\");\n        System.out.println(parts.length);          // 4 (trailing empty dropped)\n        System.out.println(Arrays.toString(parts)); // [apple, banana, , cherry]\n\n        // -1 keeps all tokens including trailing empty\n        String[] allParts = csv.split(\",\", -1);\n        System.out.println(allParts.length);           // 5\n        System.out.println(Arrays.toString(allParts)); // [apple, banana, , cherry, ]\n\n        // Limit 3\n        String[] limited = csv.split(\",\", 3);\n        System.out.println(Arrays.toString(limited)); // [apple, banana, ,cherry,]\n\n        // Split on whitespace\n        String words = \"one   two\\tthree\\nfour\";\n        System.out.println(Arrays.toString(words.split(\"\\\\s+\"))); // [one, two, three, four]\n\n        // Split IP — must escape dot!\n        String ip = \"192.168.1.1\";\n        System.out.println(Arrays.toString(ip.split(\"\\\\.\")));  // [192, 168, 1, 1]\n        // Wrong: ip.split(\".\") would split on any char\n        System.out.println(Arrays.toString(ip.split(\".\")));    // [] — every char matches\n    }\n}",
+      "explanation": "split() discards trailing empty tokens by default (limit=0). Passing -1 preserves them — important when parsing fixed-format CSV where trailing fields matter. A positive limit n caps the result at n parts; the last element holds the rest of the string unsplit. The dot pitfall is a very common bug: '.' is a regex wildcard matching any character, so \"192.168.1.1\".split(\".\") produces an empty array because every position matches. You must escape it as \"\\\\.\". Similarly, '|', '*', '+', '?' and other metacharacters need escaping when you mean them literally — or use Pattern.quote(str) to auto-escape.",
+      "methodSignatures": [
+        {"method": "String[] String.split(String regex)", "description": "Splits around matches of regex; trailing empty strings are discarded."},
+        {"method": "String[] String.split(String regex, int limit)", "description": "Splits with at most limit parts; negative limit keeps trailing empty strings."}
+      ]
+    }
+  },
+  {
+    "id": "strings-008",
+    "topic": "strings",
+    "subtopic": "string-splitting",
+    "difficulty": "beginner",
+    "title": "String.join() and String.format() / formatted()",
+    "description": "Join collections of strings with a delimiter using String.join(), and format strings using String.format() and the Java 15 instance method formatted().",
+    "starterCode": "import java.util.List;\n\npublic class JoinAndFormat {\n    public static void main(String[] args) {\n        // TODO: Join [\"Alice\", \"Bob\", \"Charlie\"] with \" | \" separator\n\n        // TODO: Join a List<String> of months with \", \"\n        List<String> months = List.of(\"January\", \"February\", \"March\");\n\n        // TODO: Format a product line: name (left-aligned, 15 chars), price (2 decimal places)\n        //       Product: \"Laptop\", price: 999.5\n\n        // TODO: Use the Java 15 formatted() instance method to do the same\n\n        // TODO: Pad an integer to 6 digits with leading zeros (e.g. order #42 -> \"000042\")\n    }\n}",
+    "hints": [
+      "String.join(delimiter, elements...) is a static method — it never produces a leading or trailing delimiter.",
+      "String.format() uses printf-style specifiers: %s (string), %d (int), %f (float), %n (newline).",
+      "%-15s means left-align in a 15-char field; %.2f means 2 decimal places; %06d means pad to 6 with zeros."
+    ],
+    "solution": {
+      "code": "import java.util.List;\n\npublic class JoinAndFormat {\n    public static void main(String[] args) {\n        // Varargs overload\n        String joined = String.join(\" | \", \"Alice\", \"Bob\", \"Charlie\");\n        System.out.println(joined); // Alice | Bob | Charlie\n\n        // Iterable overload\n        List<String> months = List.of(\"January\", \"February\", \"March\");\n        System.out.println(String.join(\", \", months)); // January, February, March\n\n        // String.format\n        String line = String.format(\"%-15s $%.2f\", \"Laptop\", 999.5);\n        System.out.println(line); // Laptop          $999.50\n\n        // Java 15: formatted() on a String literal\n        String line2 = \"%-15s $%.2f\".formatted(\"Laptop\", 999.5);\n        System.out.println(line2); // same output\n\n        // Leading zeros\n        System.out.println(String.format(\"%06d\", 42)); // 000042\n    }\n}",
+      "explanation": "String.join() is much cleaner than a StringBuilder loop with manual delimiter tracking. It handles empty arrays gracefully (returns \"\") and never adds a spurious leading or trailing delimiter. String.format() is equivalent to sprintf in C — the format string is compiled each call. The format specifiers: %-15s is left-aligned ('-') string in a 15-wide field; %.2f rounds and formats a float/double to 2 decimal places; %06d pads an integer to 6 characters with zeros. The Java 15 formatted() method does exactly the same as String.format(pattern, args) but reads more naturally as it's called on the format string itself — useful in fluent chains.",
+      "methodSignatures": [
+        {"method": "String String.join(CharSequence delimiter, CharSequence... elements)", "description": "Joins elements with delimiter between each pair."},
+        {"method": "String String.join(CharSequence delimiter, Iterable<? extends CharSequence> elements)", "description": "Joins an Iterable of strings with delimiter."},
+        {"method": "String String.format(String format, Object... args)", "description": "Returns a formatted string using printf-style specifiers."},
+        {"method": "String String.formatted(Object... args)", "description": "Java 15+. Instance method equivalent to String.format(this, args)."}
+      ]
+    }
+  },
+  {
+    "id": "strings-009",
+    "topic": "strings",
+    "subtopic": "stringbuilder",
+    "difficulty": "beginner",
+    "title": "StringBuilder: append, insert, delete, replace",
+    "description": "Build and modify strings efficiently using StringBuilder's mutable operations.",
+    "starterCode": "public class StringBuilderBasics {\n    public static void main(String[] args) {\n        StringBuilder sb = new StringBuilder(\"Hello World\");\n\n        // TODO: Append \" from Java\" to sb\n\n        // TODO: Insert \"Beautiful \" before \"World\" (find its index first)\n\n        // TODO: Delete the word \"Beautiful \" (including space)\n\n        // TODO: Replace \"World\" with \"Java Learner\"\n\n        // TODO: Print the current length and the result\n    }\n}",
+    "hints": [
+      "insert(int offset, String str) inserts at the given offset, shifting subsequent chars right.",
+      "delete(int start, int end) removes chars from start (inclusive) to end (exclusive).",
+      "replace(int start, int end, String str) replaces the range [start,end) with str."
+    ],
+    "solution": {
+      "code": "public class StringBuilderBasics {\n    public static void main(String[] args) {\n        StringBuilder sb = new StringBuilder(\"Hello World\");\n        System.out.println(sb); // Hello World\n\n        sb.append(\" from Java\");\n        System.out.println(sb); // Hello World from Java\n\n        int worldIdx = sb.indexOf(\"World\");\n        sb.insert(worldIdx, \"Beautiful \");\n        System.out.println(sb); // Hello Beautiful World from Java\n\n        // Delete \"Beautiful \" — it's 10 chars\n        int beautifulIdx = sb.indexOf(\"Beautiful \");\n        sb.delete(beautifulIdx, beautifulIdx + 10);\n        System.out.println(sb); // Hello World from Java\n\n        // Replace World -> Java Learner\n        int wStart = sb.indexOf(\"World\");\n        sb.replace(wStart, wStart + 5, \"Java Learner\");\n        System.out.println(sb); // Hello Java Learner from Java\n        System.out.println(sb.length()); // 27\n    }\n}",
+      "explanation": "StringBuilder is a mutable sequence of characters backed by a resizable char array. All mutating methods (append, insert, delete, replace) return 'this', so you can chain them: sb.append(\"a\").append(\"b\"). insert(offset, str) shifts all characters at or after offset to the right by str.length() — O(n) operation. delete(start, end) closes the gap in-place — also O(n). replace(start, end, str) removes [start, end) and inserts str at start — the replacement can be a different length, so the buffer may grow or shrink. indexOf() on StringBuilder works the same as on String.",
+      "methodSignatures": [
+        {"method": "StringBuilder StringBuilder.append(String str)", "description": "Appends str to the end; returns this for chaining."},
+        {"method": "StringBuilder StringBuilder.insert(int offset, String str)", "description": "Inserts str at the given position; shifts existing chars right."},
+        {"method": "StringBuilder StringBuilder.delete(int start, int end)", "description": "Removes chars from start (inclusive) to end (exclusive)."},
+        {"method": "StringBuilder StringBuilder.replace(int start, int end, String str)", "description": "Replaces [start, end) with str."}
+      ]
+    }
+  },
+  {
+    "id": "strings-010",
+    "topic": "strings",
+    "subtopic": "stringbuilder",
+    "difficulty": "intermediate",
+    "title": "StringBuilder Performance: Why Not Use + in Loops",
+    "description": "Demonstrate why string concatenation with '+' inside a loop is O(n²) and how StringBuilder reduces it to O(n). Includes reverse().",
+    "starterCode": "public class StringBuilderPerformance {\n\n    // Slow version: concatenate with + in loop\n    static String buildSlow(int n) {\n        // TODO: Build a string \"0,1,2,...,n-1\" using + in a loop\n        return \"\";\n    }\n\n    // Fast version: use StringBuilder\n    static String buildFast(int n) {\n        // TODO: Build the same string using StringBuilder\n        // Also remove the trailing comma at the end\n        return \"\";\n    }\n\n    public static void main(String[] args) {\n        int n = 100_000;\n\n        long t1 = System.currentTimeMillis();\n        buildSlow(n);\n        System.out.println(\"Slow: \" + (System.currentTimeMillis() - t1) + \" ms\");\n\n        long t2 = System.currentTimeMillis();\n        buildFast(n);\n        System.out.println(\"Fast: \" + (System.currentTimeMillis() - t2) + \" ms\");\n\n        // TODO: Reverse a string \"Hello, World!\" using StringBuilder.reverse()\n    }\n}",
+    "hints": [
+      "String is immutable: s += x creates a brand-new String object, copying all existing chars plus x.",
+      "For n iterations, the total characters copied is 0+1+2+...+(n-1) = O(n²).",
+      "StringBuilder pre-allocates a buffer and amortises resizing, giving O(n) total time.",
+      "StringBuilder.reverse() reverses the buffer in-place — easiest way to reverse a string in Java."
+    ],
+    "solution": {
+      "code": "public class StringBuilderPerformance {\n\n    static String buildSlow(int n) {\n        String result = \"\";\n        for (int i = 0; i < n; i++) {\n            result += i; // creates a new String each iteration!\n            if (i < n - 1) result += \",\";\n        }\n        return result;\n    }\n\n    static String buildFast(int n) {\n        StringBuilder sb = new StringBuilder(n * 4); // pre-size hint\n        for (int i = 0; i < n; i++) {\n            sb.append(i);\n            if (i < n - 1) sb.append(',');\n        }\n        return sb.toString();\n    }\n\n    public static void main(String[] args) {\n        int n = 100_000;\n\n        long t1 = System.currentTimeMillis();\n        buildSlow(n);\n        System.out.println(\"Slow: \" + (System.currentTimeMillis() - t1) + \" ms\");\n        // Typically several seconds\n\n        long t2 = System.currentTimeMillis();\n        buildFast(n);\n        System.out.println(\"Fast: \" + (System.currentTimeMillis() - t2) + \" ms\");\n        // Typically < 20 ms\n\n        // Reverse using StringBuilder\n        String reversed = new StringBuilder(\"Hello, World!\").reverse().toString();\n        System.out.println(reversed); // !dlroW ,olleH\n    }\n}",
+      "explanation": "Every string concatenation with '+' allocates a new char[] and copies all existing characters into it. After n iterations, the string has length proportional to n, so the total copy work is 1+2+...+n = n(n+1)/2 — classic O(n²) behaviour. For n=100,000 this means ~5 billion character copies. StringBuilder maintains a growing internal char[] (like ArrayList). Appending a short value is amortised O(1) — the buffer doubles when full, so total resizing work is O(n). Providing an initial capacity hint (new StringBuilder(n * 4)) avoids most resizing entirely. Note: the Java compiler optimises compile-time string concatenation (like \"Hello\" + \" World\") but NOT concatenation inside loops.",
+      "methodSignatures": [
+        {"method": "StringBuilder StringBuilder.reverse()", "description": "Reverses the character sequence in-place; returns this."},
+        {"method": "StringBuilder new StringBuilder(int capacity)", "description": "Creates a StringBuilder with a pre-allocated initial buffer of given capacity."},
+        {"method": "String StringBuilder.toString()", "description": "Returns the current contents as an immutable String."}
+      ]
+    }
+  },
+  {
+    "id": "strings-011",
+    "topic": "strings",
+    "subtopic": "string-comparison",
+    "difficulty": "beginner",
+    "title": "equals() vs == and compareTo()",
+    "description": "Understand why == compares references (not content) for Strings, and how equals(), equalsIgnoreCase(), and compareTo() work correctly.",
+    "starterCode": "public class StringComparison {\n    public static void main(String[] args) {\n        String a = new String(\"hello\"); // forces a new object\n        String b = new String(\"hello\"); // another new object\n        String c = \"hello\";             // from the string pool\n        String d = \"hello\";             // same pool entry as c\n\n        // TODO: Print a == b  (reference comparison)\n        // TODO: Print a == c  (reference comparison)\n        // TODO: Print c == d  (reference comparison)\n        // TODO: Print a.equals(b)  (content comparison)\n\n        // TODO: Compare \"Apple\" and \"banana\" with equals() and equalsIgnoreCase()\n\n        // TODO: Use compareTo() to sort [\"banana\", \"apple\", \"cherry\"] lexicographically\n        //       and print the result of comparing each adjacent pair\n    }\n}",
+    "hints": [
+      "== on objects compares memory addresses, not content. Two 'new String()' calls always produce different objects.",
+      "String literals are interned: \"hello\" always returns the same pooled object, so == may accidentally return true.",
+      "compareTo() returns 0 (equal), negative (this < other), or positive (this > other).",
+      "Never use == to compare String content — always use equals()."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\n\npublic class StringComparison {\n    public static void main(String[] args) {\n        String a = new String(\"hello\");\n        String b = new String(\"hello\");\n        String c = \"hello\";\n        String d = \"hello\";\n\n        System.out.println(a == b);       // false — different objects\n        System.out.println(a == c);       // false — a is not the pool instance\n        System.out.println(c == d);       // true  — both point to the same pool entry\n        System.out.println(a.equals(b));  // true  — content is the same\n\n        System.out.println(\"Apple\".equals(\"banana\"));           // false\n        System.out.println(\"Apple\".equalsIgnoreCase(\"apple\"));  // true\n\n        // compareTo: negative = comes before, 0 = equal, positive = comes after\n        String[] fruits = {\"banana\", \"apple\", \"cherry\"};\n        System.out.println(fruits[0].compareTo(fruits[1])); // positive (b > a)\n        System.out.println(fruits[1].compareTo(fruits[2])); // negative (a < c)\n        Arrays.sort(fruits);\n        System.out.println(Arrays.toString(fruits)); // [apple, banana, cherry]\n    }\n}",
+      "explanation": "Java strings are objects. == tests whether two variables point to the exact same object in memory. String literals are stored in the JVM string pool and interned, so c == d is true because both literals point to the same pooled 'hello'. But new String(\"hello\") explicitly bypasses the pool and creates a fresh heap object, so a == b is false even though the content is identical. This is why ALWAYS using equals() for string comparison is critical — pool internment is an implementation detail you should never rely on. compareTo() returns a negative integer if the receiver string would sort before the argument, zero if equal, and a positive integer if it would sort after. Arrays.sort uses this contract internally.",
+      "methodSignatures": [
+        {"method": "boolean String.equals(Object other)", "description": "Returns true if other is a String with the same characters."},
+        {"method": "boolean String.equalsIgnoreCase(String other)", "description": "Case-insensitive equality check."},
+        {"method": "int String.compareTo(String other)", "description": "Lexicographic comparison; returns <0, 0, or >0."},
+        {"method": "int String.compareToIgnoreCase(String other)", "description": "Case-insensitive lexicographic comparison."}
+      ]
+    }
+  },
+  {
+    "id": "strings-012",
+    "topic": "strings",
+    "subtopic": "string-comparison",
+    "difficulty": "intermediate",
+    "title": "String.intern() and the String Pool",
+    "description": "Understand how intern() moves a heap string into the pool to enable reference equality, and when this matters for memory and performance.",
+    "starterCode": "public class StringIntern {\n    public static void main(String[] args) {\n        String s1 = new String(\"java\");\n        String s2 = new String(\"java\");\n\n        // TODO: Show s1 == s2 is false\n\n        // TODO: Intern both and show the interned references are ==\n\n        // TODO: Show that a literal \"java\" is the same reference as the interned version\n\n        // TODO: Demonstrate a case where interning is useful:\n        //       Suppose you're loading 1 million strings from a file and 90% are duplicates.\n        //       Interning them collapses duplicates to a single object.\n        //       Simulate this with a small loop and show only one object is kept.\n    }\n}",
+    "hints": [
+      "intern() looks up the string in the pool; if found, returns the pooled reference; if not, adds it and returns it.",
+      "After interning, two strings with equal content will be the same reference (==).",
+      "Use intern() sparingly — it keeps strings in the pool (PermGen/Metaspace) until the JVM exits."
+    ],
+    "solution": {
+      "code": "public class StringIntern {\n    public static void main(String[] args) {\n        String s1 = new String(\"java\");\n        String s2 = new String(\"java\");\n\n        System.out.println(s1 == s2);      // false — different heap objects\n        System.out.println(s1.equals(s2)); // true  — same content\n\n        String i1 = s1.intern();\n        String i2 = s2.intern();\n        System.out.println(i1 == i2); // true — both point to the same pool entry\n\n        String literal = \"java\";\n        System.out.println(literal == i1); // true — literal was already the pool entry\n\n        // Simulated deduplication via intern\n        String[] raw = {\"status:OK\", \"status:OK\", \"status:ERROR\", \"status:OK\"};\n        String[] deduped = new String[raw.length];\n        for (int i = 0; i < raw.length; i++) {\n            deduped[i] = raw[i].intern(); // collapses duplicates\n        }\n        System.out.println(deduped[0] == deduped[1]); // true — same object!\n        System.out.println(deduped[0] == deduped[2]); // false — different content\n    }\n}",
+      "explanation": "The JVM maintains a string pool (part of Metaspace since Java 8). All string literals are automatically interned at class load time. intern() returns the canonical representation: if an equal string is already in the pool, that reference is returned; otherwise the string is added. After interning, == can safely compare string contents because all equal strings are the same object. This is useful for memory deduplication when loading large datasets with many repeated values (e.g. enum-like strings in log data). However, interned strings are GC roots and survive until the JVM exits, so over-interning unique strings wastes metaspace. Java 8 introduced String deduplication in G1GC (-XX:+UseStringDeduplication) as a lower-risk alternative.",
+      "methodSignatures": [
+        {"method": "String String.intern()", "description": "Returns the canonical pool representation of the string; equal strings will return the same object."}
+      ]
+    }
+  },
+  {
+    "id": "strings-013",
+    "topic": "strings",
+    "subtopic": "regex-basics",
+    "difficulty": "intermediate",
+    "title": "Pattern, Matcher: find(), group(), replaceAll()",
+    "description": "Use java.util.regex.Pattern and Matcher to compile regexes once, find all matches, extract groups, and perform replacements.",
+    "starterCode": "import java.util.regex.*;\n\npublic class RegexBasics {\n    public static void main(String[] args) {\n        String log = \"ERROR 2024-01-15: Disk full. WARN 2024-01-16: Low memory.\";\n\n        // TODO: Compile a pattern that matches dates in format YYYY-MM-DD\n        //       and find all dates in the log string\n\n        // TODO: Use a group to extract just the year from each date\n\n        // TODO: Validate an email address using matches()\n        String email = \"user.name+tag@example.co.uk\";\n\n        // TODO: Replace all digits in a string with '*' using Matcher.replaceAll()\n    }\n}",
+    "hints": [
+      "Pattern.compile(regex) compiles once; Matcher matcher = pattern.matcher(input) creates a stateful cursor.",
+      "matcher.find() advances and returns true on each successive match.",
+      "matcher.group(0) is the full match; matcher.group(1) is the first capturing group (...).",
+      "String.matches(regex) requires the ENTIRE string to match — it is anchored with ^ and $."
+    ],
+    "solution": {
+      "code": "import java.util.regex.*;\n\npublic class RegexBasics {\n    public static void main(String[] args) {\n        String log = \"ERROR 2024-01-15: Disk full. WARN 2024-01-16: Low memory.\";\n\n        // Pre-compile for reuse\n        Pattern datePattern = Pattern.compile(\"(\\\\d{4})-(\\\\d{2})-(\\\\d{2})\");\n        Matcher matcher = datePattern.matcher(log);\n\n        while (matcher.find()) {\n            System.out.println(\"Full date: \" + matcher.group(0)); // 2024-01-15\n            System.out.println(\"Year:      \" + matcher.group(1)); // 2024\n            System.out.println(\"Month:     \" + matcher.group(2)); // 01\n            System.out.println(\"Day:       \" + matcher.group(3)); // 15\n        }\n\n        // Email validation — matches() anchors to the whole string\n        String emailRegex = \"[a-zA-Z0-9._%+\\\\-]+@[a-zA-Z0-9.\\\\-]+\\\\.[a-zA-Z]{2,}\";\n        String email = \"user.name+tag@example.co.uk\";\n        System.out.println(email.matches(emailRegex)); // true\n        System.out.println(\"bad@\".matches(emailRegex)); // false\n\n        // Replace digits with *\n        String sensitive = \"Card: 4111-1111-1111-1111, CVV: 123\";\n        String masked = Pattern.compile(\"\\\\d\").matcher(sensitive).replaceAll(\"*\");\n        System.out.println(masked); // Card: ****-****-****-****, CVV: ***\n    }\n}",
+      "explanation": "Pattern.compile() parses and compiles the regex into an internal automaton — this is the expensive step. By compiling once and calling matcher() many times you avoid recompilation per call (unlike String.replaceAll() which recompiles each call). Matcher.find() advances through the input, returning true each time a match is found. group(0) returns the full match; group(n) returns the nth capturing group (parentheses in the pattern). String.matches() secretly wraps the pattern with ^ and $ so the entire input must match — it returns false if your pattern appears anywhere within a longer string. To check containment use Pattern/Matcher.find() instead. The email regex shown is simplified; RFC 5321 fully-compliant email validation is extremely complex.",
+      "methodSignatures": [
+        {"method": "Pattern Pattern.compile(String regex)", "description": "Compiles the regex into a Pattern for repeated use."},
+        {"method": "Matcher Pattern.matcher(CharSequence input)", "description": "Creates a Matcher that applies this pattern to input."},
+        {"method": "boolean Matcher.find()", "description": "Advances the cursor and returns true if the next match is found."},
+        {"method": "String Matcher.group(int group)", "description": "Returns the subsequence captured by the given group in the last match."},
+        {"method": "String Matcher.replaceAll(String replacement)", "description": "Replaces every match with replacement and returns the result."}
+      ]
+    }
+  },
+  {
+    "id": "strings-014",
+    "topic": "strings",
+    "subtopic": "string-algorithms",
+    "difficulty": "intermediate",
+    "title": "Reverse a String and Check Palindrome",
+    "description": "Implement string reversal and palindrome detection. A palindrome reads the same forwards and backwards (e.g. 'racecar', 'A man a plan a canal Panama').",
+    "starterCode": "public class PalindromeCheck {\n\n    // TODO: Reverse a string using StringBuilder\n    static String reverse(String s) {\n        return \"\";\n    }\n\n    // TODO: Check if a string is a palindrome (simple — case-sensitive, no cleaning)\n    static boolean isPalindrome(String s) {\n        return false;\n    }\n\n    // TODO: Check if a sentence is a palindrome ignoring case, spaces, and punctuation\n    static boolean isPalindromeIgnoringNonAlpha(String s) {\n        return false;\n    }\n\n    public static void main(String[] args) {\n        System.out.println(reverse(\"Hello\"));                             // olleH\n        System.out.println(isPalindrome(\"racecar\"));                      // true\n        System.out.println(isPalindrome(\"hello\"));                        // false\n        System.out.println(isPalindromeIgnoringNonAlpha(\"A man a plan a canal Panama\")); // true\n    }\n}",
+    "hints": [
+      "StringBuilder.reverse() is the easiest reversal approach.",
+      "For simple palindrome: check if s.equals(reverse(s)).",
+      "For the sentence variant: strip non-alpha chars with replaceAll(\"[^a-zA-Z]\", \"\"), lowercase, then check."
+    ],
+    "solution": {
+      "code": "public class PalindromeCheck {\n\n    static String reverse(String s) {\n        return new StringBuilder(s).reverse().toString();\n    }\n\n    static boolean isPalindrome(String s) {\n        // Two-pointer approach — O(n/2) comparisons, O(1) space\n        int left = 0, right = s.length() - 1;\n        while (left < right) {\n            if (s.charAt(left) != s.charAt(right)) return false;\n            left++;\n            right--;\n        }\n        return true;\n    }\n\n    static boolean isPalindromeIgnoringNonAlpha(String s) {\n        // Remove non-letters, lowercase, then two-pointer\n        String cleaned = s.replaceAll(\"[^a-zA-Z]\", \"\").toLowerCase();\n        return isPalindrome(cleaned);\n    }\n\n    public static void main(String[] args) {\n        System.out.println(reverse(\"Hello\"));       // olleH\n        System.out.println(isPalindrome(\"racecar\")); // true\n        System.out.println(isPalindrome(\"hello\"));   // false\n        System.out.println(isPalindromeIgnoringNonAlpha(\"A man a plan a canal Panama\")); // true\n        System.out.println(isPalindromeIgnoringNonAlpha(\"race a car\")); // false\n    }\n}",
+      "explanation": "The two-pointer approach avoids creating a reversed copy of the entire string — we compare the first and last characters, then move inward. If any pair doesn't match we return false immediately (short-circuit). This is O(n/2) time and O(1) extra space. The StringBuilder.reverse() approach is simpler to write and also O(n) time, but uses O(n) extra space for the reversed string. For the 'ignore non-alpha' variant, replaceAll(\"[^a-zA-Z]\", \"\") strips everything that is NOT a letter (the ^ inside [...] negates the character class), then we lowercase and run the same algorithm. This correctly handles 'A man a plan a canal Panama' (removing spaces) and ignores punctuation in strings like 'Was it a car or a cat I saw?'.",
+      "methodSignatures": [
+        {"method": "String String.replaceAll(String regex, String replacement)", "description": "Removes or replaces substrings matching the regex."}
+      ]
+    }
+  },
+  {
+    "id": "strings-015",
+    "topic": "strings",
+    "subtopic": "string-algorithms",
+    "difficulty": "intermediate",
+    "title": "Count Vowels, Word Frequency, Anagram Check, Most Frequent Character",
+    "description": "Implement four common string algorithms: counting vowels, counting word occurrences, checking if two strings are anagrams, and finding the most frequent character.",
+    "starterCode": "import java.util.*;\n\npublic class StringAlgorithms {\n\n    // TODO: Count vowels (a, e, i, o, u — case-insensitive) in a string\n    static int countVowels(String s) { return 0; }\n\n    // TODO: Return a map of word -> count for a sentence\n    //       Words are separated by whitespace; ignore case; strip punctuation\n    static Map<String, Integer> wordFrequency(String sentence) { return null; }\n\n    // TODO: Return true if s1 and s2 are anagrams (same chars, same count)\n    static boolean isAnagram(String s1, String s2) { return false; }\n\n    // TODO: Return the character that appears most often (ignoring spaces)\n    //       Break ties by the character that appears first in the string\n    static char mostFrequent(String s) { return 0; }\n\n    public static void main(String[] args) {\n        System.out.println(countVowels(\"Hello World\"));     // 3\n        System.out.println(wordFrequency(\"to be or not to be\"));\n        // {to=2, be=2, or=1, not=1}\n        System.out.println(isAnagram(\"listen\", \"silent\"));  // true\n        System.out.println(isAnagram(\"hello\", \"world\"));   // false\n        System.out.println(mostFrequent(\"aabbbcccc\"));      // c\n    }\n}",
+    "hints": [
+      "For vowels, use \"aeiou\".indexOf(ch) != -1 after converting the char to lowercase.",
+      "For word frequency, split on \\\\s+ and use a HashMap with getOrDefault.",
+      "For anagram check, sort both strings and compare — or use a frequency int[26] array.",
+      "For most frequent, iterate once to build a frequency map, then iterate again (or find max in one pass)."
+    ],
+    "solution": {
+      "code": "import java.util.*;\n\npublic class StringAlgorithms {\n\n    static int countVowels(String s) {\n        int count = 0;\n        for (char c : s.toLowerCase().toCharArray()) {\n            if (\"aeiou\".indexOf(c) >= 0) count++;\n        }\n        return count;\n    }\n\n    static Map<String, Integer> wordFrequency(String sentence) {\n        Map<String, Integer> freq = new LinkedHashMap<>();\n        for (String word : sentence.toLowerCase().split(\"\\\\s+\")) {\n            word = word.replaceAll(\"[^a-z]\", \"\"); // strip punctuation\n            if (!word.isEmpty()) {\n                freq.put(word, freq.getOrDefault(word, 0) + 1);\n            }\n        }\n        return freq;\n    }\n\n    static boolean isAnagram(String s1, String s2) {\n        if (s1.length() != s2.length()) return false;\n        int[] freq = new int[26];\n        for (char c : s1.toLowerCase().toCharArray()) freq[c - 'a']++;\n        for (char c : s2.toLowerCase().toCharArray()) freq[c - 'a']--;\n        for (int f : freq) if (f != 0) return false;\n        return true;\n    }\n\n    static char mostFrequent(String s) {\n        Map<Character, Integer> freq = new LinkedHashMap<>();\n        for (char c : s.toCharArray()) {\n            if (c != ' ') freq.put(c, freq.getOrDefault(c, 0) + 1);\n        }\n        return Collections.max(freq.entrySet(),\n            Comparator.comparingInt(Map.Entry::getValue)).getKey();\n    }\n\n    public static void main(String[] args) {\n        System.out.println(countVowels(\"Hello World\"));     // 3\n        System.out.println(wordFrequency(\"to be or not to be\"));\n        // {to=2, be=2, or=1, not=1}\n        System.out.println(isAnagram(\"listen\", \"silent\"));  // true\n        System.out.println(isAnagram(\"hello\", \"world\"));   // false\n        System.out.println(mostFrequent(\"aabbbcccc\"));      // c\n    }\n}",
+      "explanation": "countVowels: toCharArray() gives us a char[] to iterate; checking toLowerCase ensures 'A' and 'a' both count. wordFrequency: getOrDefault(key, 0) avoids a NullPointerException when the word is seen for the first time — it's the idiomatic alternative to if(!map.containsKey(key)) map.put(key, 0). LinkedHashMap preserves insertion order so the output is stable. isAnagram: The freq int[26] approach is O(n) time and O(1) space (26 fixed slots). We increment for each char in s1 and decrement for each char in s2; if any slot is non-zero the strings have different character counts. Sorting approach is O(n log n) and allocates new arrays — less optimal. mostFrequent: We use LinkedHashMap so that when two chars tie in count, Collections.max returns the first-encountered one (insertion order breaks ties). Collections.max iterates the entry set and finds the entry with the maximum value.",
+      "methodSignatures": [
+        {"method": "char[] String.toCharArray()", "description": "Returns a new char[] containing the characters of the string."},
+        {"method": "V Map.getOrDefault(Object key, V defaultValue)", "description": "Returns the mapped value, or defaultValue if the key is absent."},
+        {"method": "T Collections.max(Collection<T> coll, Comparator<T> comp)", "description": "Returns the maximum element according to the comparator."}
+      ]
+    }
+  },
+  {
+    "id": "strings-016",
+    "topic": "strings",
+    "subtopic": "regex-basics",
+    "difficulty": "intermediate",
+    "title": "Regex: Email Validation and Digit Extraction Patterns",
+    "description": "Build practical regex patterns for validating email addresses and extracting numeric sequences from text. Understand common character classes and quantifiers.",
+    "starterCode": "import java.util.*;\nimport java.util.regex.*;\n\npublic class PracticalRegex {\n\n    // TODO: Validate an email address — must have local@domain.tld structure\n    static boolean isValidEmail(String email) { return false; }\n\n    // TODO: Extract all integers (including negative) from a string like\n    //       \"Temperature -5, Humidity 80, Pressure 1013\"\n    static List<Integer> extractIntegers(String text) { return null; }\n\n    // TODO: Check if a string is a valid IPv4 address (e.g. \"192.168.0.1\")\n    //       Each octet is 0-255; simplified validation (exact digit ranges optional)\n    static boolean isValidIPv4(String ip) { return false; }\n\n    public static void main(String[] args) {\n        System.out.println(isValidEmail(\"alice@example.com\"));  // true\n        System.out.println(isValidEmail(\"bad-email\"));           // false\n        System.out.println(extractIntegers(\"Temperature -5, Humidity 80\"));\n        // [-5, 80]\n        System.out.println(isValidIPv4(\"192.168.0.1\"));  // true\n        System.out.println(isValidIPv4(\"999.0.0.1\"));    // false (simplified)\n    }\n}",
+    "hints": [
+      "Email: [\\w._%+-]+ matches the local part; [\\w.-]+ matches the domain; \\.[a-zA-Z]{2,} matches the TLD.",
+      "To extract signed integers: use pattern -?\\\\d+ and Matcher.find() in a loop.",
+      "IPv4: each octet is (25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?); four of them joined by escaped dots."
+    ],
+    "solution": {
+      "code": "import java.util.*;\nimport java.util.regex.*;\n\npublic class PracticalRegex {\n\n    private static final Pattern EMAIL_PATTERN =\n        Pattern.compile(\"^[\\\\w._%+\\\\-]+@[\\\\w.\\\\-]+\\\\.[a-zA-Z]{2,}$\");\n\n    private static final Pattern INT_PATTERN = Pattern.compile(\"-?\\\\d+\");\n\n    private static final String OCTET =\n        \"(25[0-5]|2[0-4]\\\\d|[01]?\\\\d{1,2})\";\n    private static final Pattern IPV4_PATTERN =\n        Pattern.compile(\"^\" + OCTET + \"\\\\.\" + OCTET + \"\\\\.\" + OCTET + \"\\\\.\" + OCTET + \"$\");\n\n    static boolean isValidEmail(String email) {\n        return EMAIL_PATTERN.matcher(email).matches();\n    }\n\n    static List<Integer> extractIntegers(String text) {\n        List<Integer> results = new ArrayList<>();\n        Matcher m = INT_PATTERN.matcher(text);\n        while (m.find()) results.add(Integer.parseInt(m.group()));\n        return results;\n    }\n\n    static boolean isValidIPv4(String ip) {\n        return IPV4_PATTERN.matcher(ip).matches();\n    }\n\n    public static void main(String[] args) {\n        System.out.println(isValidEmail(\"alice@example.com\"));   // true\n        System.out.println(isValidEmail(\"alice@.com\"));          // false\n        System.out.println(isValidEmail(\"bad-email\"));           // false\n        System.out.println(extractIntegers(\"Temperature -5, Humidity 80, Pressure 1013\"));\n        // [-5, 80, 1013]\n        System.out.println(isValidIPv4(\"192.168.0.1\"));  // true\n        System.out.println(isValidIPv4(\"999.0.0.1\"));   // false — 999 > 255\n        System.out.println(isValidIPv4(\"192.168.0\"));   // false — only 3 octets\n    }\n}",
+      "explanation": "EMAIL_PATTERN: ^ and $ anchor the match to the whole string. [\\\\w._%+\\\\-]+ matches the local part (word chars, dots, underscores, percent, plus, hyphen — all valid in local parts). @[\\\\w.\\\\-]+ matches the domain. \\\\.[a-zA-Z]{2,} requires a dot followed by at least 2 letters for the TLD. INT_PATTERN: -? makes the minus optional; \\\\d+ matches one or more digits. The pattern will match '5' in '5abc' which is fine for extraction. IPv4: The OCTET pattern uses alternation with the most specific branch first — 25[0-5] matches 250-255, 2[0-4]\\\\d matches 200-249, [01]?\\\\d{1,2} matches 0-199. If the least-specific were first, '250' might match as '2' then '50' separately. Compiling patterns as static final fields is best practice — compile once at class load time.",
+      "methodSignatures": [
+        {"method": "Matcher Pattern.matcher(CharSequence input)", "description": "Creates a Matcher to apply this pattern to the given input."},
+        {"method": "boolean Matcher.matches()", "description": "Returns true if the entire input matches the pattern."},
+        {"method": "String Matcher.group()", "description": "Returns the full matched subsequence from the last find()/matches() call."}
+      ]
+    }
+  }
+]

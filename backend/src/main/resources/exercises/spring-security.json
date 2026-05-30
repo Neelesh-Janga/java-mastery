@@ -1,0 +1,396 @@
+[
+  {
+    "id": "spring-security-001",
+    "topic": "spring-security",
+    "subtopic": "configuration",
+    "difficulty": "beginner",
+    "title": "Basic SecurityFilterChain Configuration",
+    "description": "Configure a SecurityFilterChain bean for a REST API. The chain should: disable CSRF, set session policy to STATELESS, permit all requests to /auth/**, require authentication for everything else, and disable form login and HTTP Basic.",
+    "starterCode": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Bean\n    public SecurityFilterChain securityFilterChain(HttpSecurity http)\n            throws Exception {\n        http\n            // TODO: disable CSRF\n            // TODO: set session management to STATELESS\n            // TODO: configure authorization rules:\n            //       - /auth/** → permitAll\n            //       - everything else → authenticated\n            // TODO: disable form login\n            // TODO: disable HTTP Basic\n            ;\n        return http.build();\n    }\n}",
+    "hints": [
+      "Use .csrf(csrf -> csrf.disable()) for the lambda DSL style used in Spring Security 6",
+      "SessionCreationPolicy.STATELESS is what you want for JWT APIs — it prevents any session from being created",
+      "Use .authorizeHttpRequests(auth -> auth.requestMatchers(...).permitAll().anyRequest().authenticated())",
+      "Disable form login with .formLogin(form -> form.disable()) and HTTP Basic with .httpBasic(basic -> basic.disable())"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Bean\n    public SecurityFilterChain securityFilterChain(HttpSecurity http)\n            throws Exception {\n        http\n            .csrf(csrf -> csrf.disable())\n            .sessionManagement(session -> session\n                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/auth/**\").permitAll()\n                .anyRequest().authenticated()\n            )\n            .formLogin(form -> form.disable())\n            .httpBasic(basic -> basic.disable());\n        return http.build();\n    }\n}",
+      "explanation": "This is the foundational SecurityFilterChain configuration for a stateless JWT REST API. csrf().disable() is safe here because stateless APIs use JWT in the Authorization header, not cookies — so cross-site request forgery is not applicable. STATELESS session policy prevents Hibernate from creating HttpSessions, enabling true horizontal scalability. requestMatchers(\"/auth/**\").permitAll() opens the login and registration endpoints without authentication. anyRequest().authenticated() serves as a catch-all, requiring authentication for any URL not previously matched. Disabling form login and HTTP Basic removes the default Spring Security login page and the basic auth challenge header.",
+      "methodSignatures": [
+        {"method": "csrf(Customizer<CsrfConfigurer>)", "description": "Configures CSRF protection; call csrf.disable() for stateless REST APIs"},
+        {"method": "sessionManagement(Customizer<SessionManagementConfigurer>)", "description": "Configures session creation policy; STATELESS prevents session creation"},
+        {"method": "authorizeHttpRequests(Customizer<AuthorizationManagerRequestMatcherRegistry>)", "description": "Defines URL authorization rules evaluated in order"},
+        {"method": "http.build()", "description": "Finalizes and creates the SecurityFilterChain bean"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-002",
+    "topic": "spring-security",
+    "subtopic": "configuration",
+    "difficulty": "intermediate",
+    "title": "Role-Based URL Authorization",
+    "description": "Configure URL authorization rules with role-based access. Rules: GET /products/** is public, POST/PUT/DELETE /products/** requires ROLE_ADMIN, /user/profile/** requires ROLE_USER or ROLE_ADMIN, /admin/** requires ROLE_ADMIN, and the auth endpoints are public. Everything else must be authenticated.",
+    "starterCode": "@Bean\npublic SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n    http\n        .csrf(csrf -> csrf.disable())\n        .sessionManagement(s -> s\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .authorizeHttpRequests(auth -> auth\n            // TODO: /auth/** → permitAll\n            // TODO: GET /products/** → permitAll\n            // TODO: POST, PUT, DELETE on /products/** → ADMIN only\n            // TODO: /user/profile/** → USER or ADMIN\n            // TODO: /admin/** → ADMIN only\n            // TODO: everything else → authenticated\n        );\n    return http.build();\n}",
+    "hints": [
+      "Use HttpMethod.GET as the first argument to requestMatchers() to restrict by HTTP method",
+      "hasRole('ADMIN') automatically checks for ROLE_ADMIN authority — the ROLE_ prefix is added for you",
+      "hasAnyRole('USER', 'ADMIN') checks for either role",
+      "Order matters! More specific rules must come before broader ones. /auth/** before anyRequest()"
+    ],
+    "solution": {
+      "code": "@Bean\npublic SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n    http\n        .csrf(csrf -> csrf.disable())\n        .sessionManagement(s -> s\n            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n        .authorizeHttpRequests(auth -> auth\n            .requestMatchers(\"/auth/**\").permitAll()\n            .requestMatchers(HttpMethod.GET, \"/products/**\").permitAll()\n            .requestMatchers(HttpMethod.POST, \"/products/**\").hasRole(\"ADMIN\")\n            .requestMatchers(HttpMethod.PUT, \"/products/**\").hasRole(\"ADMIN\")\n            .requestMatchers(HttpMethod.DELETE, \"/products/**\").hasRole(\"ADMIN\")\n            .requestMatchers(\"/user/profile/**\").hasAnyRole(\"USER\", \"ADMIN\")\n            .requestMatchers(\"/admin/**\").hasRole(\"ADMIN\")\n            .anyRequest().authenticated()\n        );\n    return http.build();\n}",
+      "explanation": "requestMatchers(HttpMethod.GET, \"/products/**\") matches only GET requests to /products/**, leaving POST/PUT/DELETE to be matched by subsequent rules. hasRole('ADMIN') is equivalent to hasAuthority('ROLE_ADMIN') — Spring Security prepends the ROLE_ prefix automatically when using hasRole(). hasAnyRole() checks if the user has at least one of the listed roles. The critical insight: rules are evaluated top-to-bottom and the FIRST matching rule wins. If you placed anyRequest().authenticated() before the /admin/** rule, the admin rule would never be reached. Always order from most specific to least specific.",
+      "methodSignatures": [
+        {"method": "requestMatchers(HttpMethod method, String... patterns)", "description": "Matches requests by HTTP method AND path pattern"},
+        {"method": "hasRole(String role)", "description": "Requires ROLE_ + role authority; equivalent to hasAuthority('ROLE_' + role)"},
+        {"method": "hasAnyRole(String... roles)", "description": "Requires at least one of the listed roles"},
+        {"method": "anyRequest()", "description": "Matches any request not matched by previous rules; must be last"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-003",
+    "topic": "spring-security",
+    "subtopic": "authentication",
+    "difficulty": "beginner",
+    "title": "Implement UserDetailsService",
+    "description": "Implement a UserDetailsService that loads a user from a UserRepository by username. Return a UserDetails object with the user's username, password, and roles mapped to GrantedAuthority objects. Throw UsernameNotFoundException if the user doesn't exist.",
+    "starterCode": "@Service\npublic class CustomUserDetailsService implements UserDetailsService {\n\n    @Autowired\n    private UserRepository userRepository;\n    // Assume UserRepository has: Optional<AppUser> findByUsername(String username)\n    // AppUser has: String username, String password, List<String> roles\n\n    @Override\n    public UserDetails loadUserByUsername(String username)\n            throws UsernameNotFoundException {\n        // TODO: find user by username from repository\n        // TODO: throw UsernameNotFoundException if not found\n        // TODO: map roles to List<GrantedAuthority>\n        // TODO: return a UserDetails object\n        return null;\n    }\n}",
+    "hints": [
+      "Use userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(...))",
+      "Map each role string to new SimpleGrantedAuthority(roleName)",
+      "Spring Security's built-in User class (org.springframework.security.core.userdetails.User) implements UserDetails — use its constructor",
+      "The User constructor takes: username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities"
+    ],
+    "solution": {
+      "code": "@Service\npublic class CustomUserDetailsService implements UserDetailsService {\n\n    @Autowired\n    private UserRepository userRepository;\n\n    @Override\n    public UserDetails loadUserByUsername(String username)\n            throws UsernameNotFoundException {\n        AppUser user = userRepository.findByUsername(username)\n            .orElseThrow(() ->\n                new UsernameNotFoundException(\"User not found: \" + username));\n\n        List<GrantedAuthority> authorities = user.getRoles().stream()\n            .map(role -> new SimpleGrantedAuthority(role))\n            .collect(Collectors.toList());\n\n        return new org.springframework.security.core.userdetails.User(\n            user.getUsername(),\n            user.getPassword(),\n            true,  // enabled\n            true,  // accountNonExpired\n            true,  // credentialsNonExpired\n            true,  // accountNonLocked\n            authorities\n        );\n    }\n}",
+      "explanation": "UserDetailsService is the bridge between Spring Security's authentication mechanism and your user storage. loadUserByUsername is called by DaoAuthenticationProvider during login. The UsernameNotFoundException message is technically visible in the 401 response for Spring Security's default behavior; to prevent username enumeration attacks in production, throw a generic AuthenticationException or configure hideUserNotFoundExceptions = false carefully. SimpleGrantedAuthority is the standard GrantedAuthority implementation for string-based roles. The boolean flags in the User constructor represent account status checks — all true here for simplicity, but in production these would check database flags like isEnabled, isAccountNonExpired, etc.",
+      "methodSignatures": [
+        {"method": "loadUserByUsername(String username)", "description": "Called by DaoAuthenticationProvider; must return UserDetails or throw UsernameNotFoundException"},
+        {"method": "SimpleGrantedAuthority(String role)", "description": "Creates a GrantedAuthority from a string; for roles, include the ROLE_ prefix"},
+        {"method": "new User(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities)", "description": "Spring Security's built-in UserDetails implementation"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-004",
+    "topic": "spring-security",
+    "subtopic": "authentication",
+    "difficulty": "beginner",
+    "title": "PasswordEncoder Bean and Registration",
+    "description": "Define a BCryptPasswordEncoder bean with a cost factor of 12. Write a register method in an AuthService that encodes the user's password before saving and throws an exception if the username is already taken.",
+    "starterCode": "@Configuration\npublic class SecurityConfig {\n    // TODO: define a BCryptPasswordEncoder bean with cost factor 12\n}\n\n@Service\npublic class AuthService {\n\n    @Autowired private UserRepository userRepository;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    public AppUser register(String username, String rawPassword) {\n        // TODO: check if username already exists, throw RuntimeException if so\n        // TODO: encode the password using passwordEncoder\n        // TODO: create and save the user with the encoded password\n        // TODO: return the saved user\n        return null;\n    }\n}",
+    "hints": [
+      "BCryptPasswordEncoder constructor accepts an integer strength (cost factor); 12 is a good production value",
+      "userRepository.existsByUsername(username) or findByUsername().isPresent() to check existence",
+      "passwordEncoder.encode(rawPassword) returns the BCrypt-hashed string",
+      "Never call passwordEncoder.matches() during registration — that's only for login verification"
+    ],
+    "solution": {
+      "code": "@Configuration\npublic class SecurityConfig {\n\n    @Bean\n    public PasswordEncoder passwordEncoder() {\n        return new BCryptPasswordEncoder(12);\n    }\n}\n\n@Service\npublic class AuthService {\n\n    @Autowired private UserRepository userRepository;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    public AppUser register(String username, String rawPassword) {\n        if (userRepository.existsByUsername(username)) {\n            throw new RuntimeException(\"Username already taken: \" + username);\n        }\n\n        String encodedPassword = passwordEncoder.encode(rawPassword);\n\n        AppUser user = new AppUser();\n        user.setUsername(username);\n        user.setPassword(encodedPassword);\n        user.setRoles(List.of(\"ROLE_USER\"));\n\n        return userRepository.save(user);\n    }\n}",
+      "explanation": "BCryptPasswordEncoder(12) sets the work factor to 12, meaning 2^12 = 4096 BCrypt iterations. This makes brute-force attacks expensive while still completing in under 300ms on modern hardware. As hardware improves, increase this factor. The passwordEncoder is a @Bean so it can be injected both here and into DaoAuthenticationProvider (which uses it to verify passwords during login). The raw password is NEVER stored — only the BCrypt hash. Each call to encode() produces a different hash for the same password because BCrypt generates a random salt internally; this is by design and why you use matches() for verification rather than comparing hash strings directly.",
+      "methodSignatures": [
+        {"method": "new BCryptPasswordEncoder(int strength)", "description": "Creates encoder with given work factor (4-31); 10-12 is recommended for production"},
+        {"method": "encode(CharSequence rawPassword)", "description": "Hashes the raw password with a random salt; produces a 60-character BCrypt string"},
+        {"method": "matches(CharSequence rawPassword, String encodedPassword)", "description": "Verifies raw password against the stored hash; used internally during login by DaoAuthenticationProvider"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-005",
+    "topic": "spring-security",
+    "subtopic": "authentication",
+    "difficulty": "intermediate",
+    "title": "Configure AuthenticationManager with DaoAuthenticationProvider",
+    "description": "Configure a DaoAuthenticationProvider using your CustomUserDetailsService and BCryptPasswordEncoder, then expose an AuthenticationManager bean. Write a login method that uses AuthenticationManager to authenticate and returns the Authentication object on success.",
+    "starterCode": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Autowired private CustomUserDetailsService userDetailsService;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    // TODO: create a DaoAuthenticationProvider bean\n\n    // TODO: expose an AuthenticationManager bean\n    // Hint: use AuthenticationManagerBuilder from HttpSecurity\n}\n\n@Service\npublic class AuthService {\n\n    @Autowired private AuthenticationManager authManager;\n\n    public Authentication login(String username, String password) {\n        // TODO: create an unauthenticated UsernamePasswordAuthenticationToken\n        // TODO: call authManager.authenticate() and return the result\n        // Note: authenticate() throws AuthenticationException on failure\n        return null;\n    }\n}",
+    "hints": [
+      "DaoAuthenticationProvider has setUserDetailsService() and setPasswordEncoder() methods",
+      "To expose AuthenticationManager as a bean: define a method with AuthenticationManagerBuilder parameter and call builder.authenticationProvider(daoProvider).build()",
+      "UsernamePasswordAuthenticationToken.unauthenticated(username, password) is the factory method for the pre-auth token in Spring Security 6",
+      "AuthenticationManager.authenticate() throws AuthenticationException (BadCredentialsException, etc.) on failure — let it propagate"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Autowired private CustomUserDetailsService userDetailsService;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    @Bean\n    public DaoAuthenticationProvider authenticationProvider() {\n        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();\n        provider.setUserDetailsService(userDetailsService);\n        provider.setPasswordEncoder(passwordEncoder);\n        return provider;\n    }\n\n    @Bean\n    public AuthenticationManager authenticationManager(HttpSecurity http)\n            throws Exception {\n        AuthenticationManagerBuilder builder =\n            http.getSharedObject(AuthenticationManagerBuilder.class);\n        builder.authenticationProvider(authenticationProvider());\n        return builder.build();\n    }\n}\n\n@Service\npublic class AuthService {\n\n    @Autowired private AuthenticationManager authManager;\n\n    public Authentication login(String username, String password) {\n        UsernamePasswordAuthenticationToken token =\n            UsernamePasswordAuthenticationToken.unauthenticated(username, password);\n        return authManager.authenticate(token);\n        // Throws: BadCredentialsException, DisabledException, LockedException\n        // Returns: fully populated Authentication with UserDetails as principal\n    }\n}",
+      "explanation": "DaoAuthenticationProvider is the bridge between Spring Security's authentication model and your user storage. It calls userDetailsService.loadUserByUsername(), gets the UserDetails, then calls passwordEncoder.matches(submittedPassword, storedHash). Only if both succeed does it create a fully authenticated Authentication object. The AuthenticationManager bean is exposed so it can be injected into controllers/services for programmatic authentication (like a login endpoint). UsernamePasswordAuthenticationToken.unauthenticated() is the Spring Security 6 API for creating a pre-authentication token — the older new UsernamePasswordAuthenticationToken(u, p) two-arg constructor still works but is less expressive.",
+      "methodSignatures": [
+        {"method": "DaoAuthenticationProvider.setUserDetailsService(UserDetailsService)", "description": "Sets the service for loading user data by username"},
+        {"method": "DaoAuthenticationProvider.setPasswordEncoder(PasswordEncoder)", "description": "Sets the encoder for password verification"},
+        {"method": "AuthenticationManager.authenticate(Authentication)", "description": "Attempts authentication; returns populated Authentication on success, throws AuthenticationException on failure"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-006",
+    "topic": "spring-security",
+    "subtopic": "jwt",
+    "difficulty": "intermediate",
+    "title": "JwtUtil — Generate and Validate Tokens",
+    "description": "Implement a JwtUtil utility class that generates JWT tokens (with username, roles, iat, and exp claims) and validates them. Use the jjwt library (io.jsonwebtoken). The signing key is injected from application.properties as a Base64-encoded string.",
+    "starterCode": "@Component\npublic class JwtUtil {\n\n    @Value(\"${jwt.secret}\")\n    private String base64Secret;\n\n    private static final long EXPIRATION_MS = 3_600_000L; // 1 hour\n\n    // TODO: implement getSigningKey() — decode base64Secret to a SecretKey\n\n    // TODO: implement generateToken(String username, List<String> roles)\n    //       Claims: sub=username, iat=now, exp=now+1h, roles=list\n\n    // TODO: implement extractUsername(String token) — get the sub claim\n\n    // TODO: implement validateToken(String token) — returns true if valid,\n    //       false if expired, tampered, or malformed\n}",
+    "hints": [
+      "Use Decoders.BASE64.decode(base64Secret) then Keys.hmacShaKeyFor(bytes) to get the SecretKey",
+      "Jwts.builder().subject(username).issuedAt(new Date()).expiration(...).claim('roles', roles).signWith(key).compact()",
+      "Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject() to extract claims",
+      "Wrap the parse in try-catch for JwtException and IllegalArgumentException to return false on any failure"
+    ],
+    "solution": {
+      "code": "@Component\npublic class JwtUtil {\n\n    @Value(\"${jwt.secret}\")\n    private String base64Secret;\n\n    private static final long EXPIRATION_MS = 3_600_000L;\n\n    private SecretKey getSigningKey() {\n        byte[] keyBytes = Decoders.BASE64.decode(base64Secret);\n        return Keys.hmacShaKeyFor(keyBytes);\n    }\n\n    public String generateToken(String username, List<String> roles) {\n        return Jwts.builder()\n            .subject(username)\n            .issuedAt(new Date())\n            .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))\n            .claim(\"roles\", roles)\n            .signWith(getSigningKey())\n            .compact();\n    }\n\n    public Claims extractAllClaims(String token) {\n        return Jwts.parser()\n            .verifyWith(getSigningKey())\n            .build()\n            .parseSignedClaims(token)\n            .getPayload();\n    }\n\n    public String extractUsername(String token) {\n        return extractAllClaims(token).getSubject();\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public List<String> extractRoles(String token) {\n        return extractAllClaims(token).get(\"roles\", List.class);\n    }\n\n    public boolean validateToken(String token) {\n        try {\n            extractAllClaims(token);\n            return true;\n        } catch (JwtException | IllegalArgumentException e) {\n            return false;\n        }\n    }\n}",
+      "explanation": "The signing key must be at least 256 bits (32 bytes) for HS256. Storing it as a Base64 string in application.properties (never in source code!) and decoding at runtime is the standard pattern. Keys.hmacShaKeyFor() creates a type-safe SecretKey from the raw bytes. Jwts.builder() uses the fluent jjwt API — subject(), issuedAt(), and expiration() set the registered claims; claim() adds custom claims like roles. parseSignedClaims() performs full validation: signature check, expiry check, and malformed-token check in one call. Catching JwtException (parent of ExpiredJwtException, SignatureException, MalformedJwtException) and IllegalArgumentException covers all failure modes. In production, log the specific exception type at DEBUG level for troubleshooting.",
+      "methodSignatures": [
+        {"method": "Jwts.builder().compact()", "description": "Builds and serializes the JWT to a compact URL-safe string"},
+        {"method": "Jwts.parser().verifyWith(key).build().parseSignedClaims(token)", "description": "Parses and fully validates a signed JWT; throws JwtException on any failure"},
+        {"method": "Claims.getSubject()", "description": "Returns the 'sub' claim value"},
+        {"method": "Claims.get(String claimName, Class<T> requiredType)", "description": "Returns a custom claim cast to the specified type"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-007",
+    "topic": "spring-security",
+    "subtopic": "jwt",
+    "difficulty": "intermediate",
+    "title": "JwtAuthenticationFilter — Protect Every Request",
+    "description": "Implement JwtAuthenticationFilter extending OncePerRequestFilter. It should: extract the Bearer token from the Authorization header, validate it using JwtUtil, load the UserDetails, and set the Authentication in the SecurityContextHolder. Skip processing if no token is present.",
+    "starterCode": "@Component\npublic class JwtAuthenticationFilter extends OncePerRequestFilter {\n\n    @Autowired private JwtUtil jwtUtil;\n    @Autowired private UserDetailsService userDetailsService;\n\n    @Override\n    protected void doFilterInternal(HttpServletRequest request,\n            HttpServletResponse response, FilterChain filterChain)\n            throws ServletException, IOException {\n\n        // TODO: extract Authorization header\n        // TODO: return early (continue chain) if header is null or doesn't start with 'Bearer '\n        // TODO: extract the token (substring after 'Bearer ')\n        // TODO: only process if SecurityContext has no Authentication yet\n        // TODO: validate the token with jwtUtil\n        // TODO: if valid, load UserDetails by username from token\n        // TODO: create UsernamePasswordAuthenticationToken with userDetails and authorities\n        // TODO: set WebAuthenticationDetails on the token\n        // TODO: set in SecurityContextHolder\n        // TODO: always continue the filter chain\n    }\n}",
+    "hints": [
+      "request.getHeader(\"Authorization\") gets the header; check != null && startsWith(\"Bearer \")",
+      "Check SecurityContextHolder.getContext().getAuthentication() == null before processing",
+      "new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()) — null credentials since JWT already verified",
+      "authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)) adds IP/session info"
+    ],
+    "solution": {
+      "code": "@Component\npublic class JwtAuthenticationFilter extends OncePerRequestFilter {\n\n    @Autowired private JwtUtil jwtUtil;\n    @Autowired private UserDetailsService userDetailsService;\n\n    @Override\n    protected void doFilterInternal(HttpServletRequest request,\n            HttpServletResponse response, FilterChain filterChain)\n            throws ServletException, IOException {\n\n        final String authHeader = request.getHeader(\"Authorization\");\n\n        if (authHeader == null || !authHeader.startsWith(\"Bearer \")) {\n            filterChain.doFilter(request, response);\n            return;\n        }\n\n        final String token = authHeader.substring(7);\n\n        if (SecurityContextHolder.getContext().getAuthentication() == null) {\n            try {\n                String username = jwtUtil.extractUsername(token);\n\n                if (username != null && jwtUtil.validateToken(token)) {\n                    UserDetails userDetails =\n                        userDetailsService.loadUserByUsername(username);\n\n                    UsernamePasswordAuthenticationToken authToken =\n                        new UsernamePasswordAuthenticationToken(\n                            userDetails, null, userDetails.getAuthorities());\n\n                    authToken.setDetails(\n                        new WebAuthenticationDetailsSource().buildDetails(request));\n\n                    SecurityContextHolder.getContext().setAuthentication(authToken);\n                }\n            } catch (JwtException | UsernameNotFoundException e) {\n                // Invalid token or unknown user — leave context unauthenticated\n                // Spring Security will return 401 via AuthenticationEntryPoint\n            }\n        }\n\n        filterChain.doFilter(request, response);\n    }\n}",
+      "explanation": "OncePerRequestFilter guarantees exactly one execution per request, even in dispatcher-include or forward scenarios. The null/Bearer check is the first gate: requests without a JWT token (like public endpoints) pass through immediately without any processing — no unnecessary work. The SecurityContext null check prevents re-processing if another filter (or a nested dispatch) already set authentication. Passing null as credentials to UsernamePasswordAuthenticationToken is correct for JWT: credentials were the token, already validated by jwtUtil — there's no need to re-expose the password. The three-argument constructor (principal, credentials, authorities) creates a trusted, already-authenticated token. Always call filterChain.doFilter() at the end — if you forget, the request is swallowed and no response is returned. The try-catch ensures invalid tokens result in a 401 (unauthenticated context hits the AuthenticationEntryPoint) rather than a 500.",
+      "methodSignatures": [
+        {"method": "OncePerRequestFilter.doFilterInternal(request, response, chain)", "description": "Override this method; guaranteed to run exactly once per request"},
+        {"method": "new UsernamePasswordAuthenticationToken(principal, credentials, authorities)", "description": "Three-arg constructor creates an already-authenticated token (isAuthenticated() returns true)"},
+        {"method": "SecurityContextHolder.getContext().setAuthentication(auth)", "description": "Sets the Authentication for the current request thread"},
+        {"method": "filterChain.doFilter(request, response)", "description": "Passes control to the next filter; MUST be called to avoid swallowing the request"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-008",
+    "topic": "spring-security",
+    "subtopic": "jwt",
+    "difficulty": "intermediate",
+    "title": "Register JWT Filter in Security Chain",
+    "description": "Update the SecurityFilterChain to add the JwtAuthenticationFilter before UsernamePasswordAuthenticationFilter. Also wire in a custom AuthenticationEntryPoint for 401 responses and configure the full security chain for a JWT REST API.",
+    "starterCode": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Autowired private JwtAuthenticationFilter jwtAuthFilter;\n    @Autowired private CustomAuthEntryPoint customAuthEntryPoint;\n    @Autowired private CustomAccessDeniedHandler accessDeniedHandler;\n    @Autowired private CustomUserDetailsService userDetailsService;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        http\n            // TODO: disable CSRF\n            // TODO: configure exception handling with customAuthEntryPoint and accessDeniedHandler\n            // TODO: set session policy to STATELESS\n            // TODO: configure URL rules: /auth/** permitAll, everything else authenticated\n            // TODO: set the authenticationProvider\n            // TODO: add jwtAuthFilter BEFORE UsernamePasswordAuthenticationFilter\n            ;\n        return http.build();\n    }\n\n    @Bean\n    public DaoAuthenticationProvider authenticationProvider() {\n        // TODO: configure and return DaoAuthenticationProvider\n        return null;\n    }\n}",
+    "hints": [
+      "http.addFilterBefore(filter, FilterClass.class) places your filter before the specified filter type",
+      "http.authenticationProvider(provider) registers the auth provider directly on HttpSecurity",
+      "exceptionHandling(e -> e.authenticationEntryPoint(entry).accessDeniedHandler(handler)) configures both exception handlers",
+      "DaoAuthenticationProvider needs setUserDetailsService() and setPasswordEncoder()"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Autowired private JwtAuthenticationFilter jwtAuthFilter;\n    @Autowired private CustomAuthEntryPoint customAuthEntryPoint;\n    @Autowired private CustomAccessDeniedHandler accessDeniedHandler;\n    @Autowired private CustomUserDetailsService userDetailsService;\n    @Autowired private PasswordEncoder passwordEncoder;\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        http\n            .csrf(csrf -> csrf.disable())\n            .exceptionHandling(ex -> ex\n                .authenticationEntryPoint(customAuthEntryPoint)\n                .accessDeniedHandler(accessDeniedHandler)\n            )\n            .sessionManagement(s -> s\n                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/auth/**\").permitAll()\n                .anyRequest().authenticated()\n            )\n            .authenticationProvider(authenticationProvider())\n            .addFilterBefore(jwtAuthFilter,\n                UsernamePasswordAuthenticationFilter.class);\n        return http.build();\n    }\n\n    @Bean\n    public DaoAuthenticationProvider authenticationProvider() {\n        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();\n        provider.setUserDetailsService(userDetailsService);\n        provider.setPasswordEncoder(passwordEncoder);\n        return provider;\n    }\n}",
+      "explanation": "addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) places the JWT filter at the right position in the chain: after SecurityContextPersistenceFilter (which sets up the empty context) but before UsernamePasswordAuthenticationFilter (which would try form-based login). This ordering ensures JWT tokens are validated before any default authentication attempt. The exceptionHandling configuration is critical for REST APIs: without it, Spring Security's default behavior for 401 is to redirect to /login — completely wrong for an API. The custom handlers return JSON bodies. authenticationProvider() is called so Spring Security knows which provider to use when AuthenticationManager.authenticate() is called from your login controller.",
+      "methodSignatures": [
+        {"method": "http.addFilterBefore(filter, FilterClass.class)", "description": "Inserts a filter before the specified filter type in the security filter chain"},
+        {"method": "http.authenticationProvider(provider)", "description": "Registers an AuthenticationProvider with the security filter chain's AuthenticationManager"},
+        {"method": "exceptionHandling(e -> e.authenticationEntryPoint(ep).accessDeniedHandler(adh))", "description": "Configures handlers for 401 (AuthenticationEntryPoint) and 403 (AccessDeniedHandler)"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-009",
+    "topic": "spring-security",
+    "subtopic": "authorization",
+    "difficulty": "intermediate",
+    "title": "Method Security with @PreAuthorize",
+    "description": "Enable method security and annotate service methods with @PreAuthorize. Implement: getAllUsers (admin only), getUserById (admin or the user themselves), updateUser (only the user themselves), and deleteUser (admin only). Use SpEL expressions.",
+    "starterCode": "// TODO: Enable method security in a @Configuration class\n\n@Service\npublic class UserService {\n\n    @Autowired private UserRepository userRepository;\n\n    // TODO: only ADMIN can call this\n    public List<AppUser> getAllUsers() {\n        return userRepository.findAll();\n    }\n\n    // TODO: ADMIN can call this, OR the authenticated user's id matches userId\n    // Hint: access principal.id where principal is your UserDetails\n    public AppUser getUserById(Long userId) {\n        return userRepository.findById(userId).orElseThrow();\n    }\n\n    // TODO: only the user themselves (authentication.name == the user's username)\n    public AppUser updateUser(Long userId, String newEmail) {\n        AppUser user = userRepository.findById(userId).orElseThrow();\n        user.setEmail(newEmail);\n        return userRepository.save(user);\n    }\n\n    // TODO: only ADMIN\n    public void deleteUser(Long userId) {\n        userRepository.deleteById(userId);\n    }\n}",
+    "hints": [
+      "Add @EnableMethodSecurity to your SecurityConfig or a dedicated @Configuration class",
+      "hasRole('ADMIN') checks for ROLE_ADMIN authority in the SecurityContext",
+      "authentication.principal.id references the id field on your custom UserDetails implementation",
+      "authentication.name returns the username (equivalent to authentication.principal.username)"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\n@EnableMethodSecurity  // activates @PreAuthorize, @PostAuthorize, etc.\npublic class SecurityConfig { /* ... */ }\n\n@Service\npublic class UserService {\n\n    @Autowired private UserRepository userRepository;\n\n    @PreAuthorize(\"hasRole('ADMIN')\")\n    public List<AppUser> getAllUsers() {\n        return userRepository.findAll();\n    }\n\n    @PreAuthorize(\"hasRole('ADMIN') or #userId == authentication.principal.id\")\n    public AppUser getUserById(Long userId) {\n        return userRepository.findById(userId).orElseThrow();\n    }\n\n    @PreAuthorize(\"#userId == authentication.principal.id\")\n    public AppUser updateUser(Long userId, String newEmail) {\n        AppUser user = userRepository.findById(userId).orElseThrow();\n        user.setEmail(newEmail);\n        return userRepository.save(user);\n    }\n\n    @PreAuthorize(\"hasRole('ADMIN')\")\n    public void deleteUser(Long userId) {\n        userRepository.deleteById(userId);\n    }\n}",
+      "explanation": "@EnableMethodSecurity (replacing deprecated @EnableGlobalMethodSecurity) activates the AOP interceptors that process @PreAuthorize annotations. The SpEL expression runs before the method — if it evaluates to false, Spring throws AccessDeniedException (403) without executing the method. #userId == authentication.principal.id is an ownership check: #userId refers to the method parameter named userId (requires -parameters compiler flag, which Spring Boot enables by default), and authentication.principal is your UserDetails object — its id field is accessed directly. Note that principal.id requires your UserDetails implementation to have a public getId() method. authentication.name is equivalent to principal.username. The compound hasRole('ADMIN') or #userId == ... allows either admins or the resource owner to access their own data.",
+      "methodSignatures": [
+        {"method": "@EnableMethodSecurity", "description": "Enables @PreAuthorize, @PostAuthorize, @PreFilter, @PostFilter; place on a @Configuration class"},
+        {"method": "@PreAuthorize(\"expression\")", "description": "Evaluates SpEL expression before method execution; throws AccessDeniedException if false"},
+        {"method": "@PostAuthorize(\"returnObject...\")", "description": "Evaluates after method returns; has access to returnObject variable"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-010",
+    "topic": "spring-security",
+    "subtopic": "exceptions",
+    "difficulty": "intermediate",
+    "title": "Custom AuthenticationEntryPoint (401 JSON Response)",
+    "description": "Implement a CustomAuthenticationEntryPoint that returns a JSON error response with HTTP 401 when an unauthenticated request hits a protected endpoint. The JSON body should contain 'status', 'error', 'message', and 'timestamp' fields.",
+    "starterCode": "@Component\npublic class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {\n\n    @Autowired\n    private ObjectMapper objectMapper;\n\n    @Override\n    public void commence(HttpServletRequest request,\n                         HttpServletResponse response,\n                         AuthenticationException authException)\n            throws IOException {\n        // TODO: set response status to 401\n        // TODO: set Content-Type to application/json\n        // TODO: build an error response map with:\n        //       status: 401, error: \"Unauthorized\",\n        //       message: authException.getMessage(), timestamp: current time\n        // TODO: write the map as JSON to the response\n    }\n}",
+    "hints": [
+      "response.setStatus(HttpServletResponse.SC_UNAUTHORIZED) sets the HTTP 401 status code",
+      "response.setContentType(MediaType.APPLICATION_JSON_VALUE) sets the Content-Type header",
+      "objectMapper.writeValue(response.getWriter(), errorBody) serializes a Map to JSON",
+      "Use Map.of() or a LinkedHashMap to build the error body with the required fields"
+    ],
+    "solution": {
+      "code": "@Component\npublic class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {\n\n    @Autowired\n    private ObjectMapper objectMapper;\n\n    @Override\n    public void commence(HttpServletRequest request,\n                         HttpServletResponse response,\n                         AuthenticationException authException)\n            throws IOException {\n        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);\n        response.setContentType(MediaType.APPLICATION_JSON_VALUE);\n\n        Map<String, Object> errorBody = new LinkedHashMap<>();\n        errorBody.put(\"status\", 401);\n        errorBody.put(\"error\", \"Unauthorized\");\n        errorBody.put(\"message\", authException.getMessage());\n        errorBody.put(\"path\", request.getRequestURI());\n        errorBody.put(\"timestamp\", LocalDateTime.now().toString());\n\n        objectMapper.writeValue(response.getWriter(), errorBody);\n    }\n}",
+      "explanation": "AuthenticationEntryPoint.commence() is called by ExceptionTranslationFilter when an AuthenticationException is thrown — meaning the request is unauthenticated. The 401 status code (SC_UNAUTHORIZED) is semantically correct for 'not authenticated'. Setting Content-Type to application/json is essential for REST API clients that expect JSON — without it, clients may misinterpret the response. Using ObjectMapper (Spring's auto-configured Jackson instance) ensures consistent JSON formatting with your application's settings. Including the request path helps clients and developers identify which endpoint triggered the error. Note: this entry point is also triggered when a JWT token is expired or malformed — your JwtAuthenticationFilter catches JwtException and simply doesn't set the SecurityContext, so the request arrives at ExceptionTranslationFilter as unauthenticated.",
+      "methodSignatures": [
+        {"method": "commence(HttpServletRequest, HttpServletResponse, AuthenticationException)", "description": "Called when unauthenticated request hits a secured endpoint; write your 401 response here"},
+        {"method": "response.setStatus(int sc)", "description": "Sets the HTTP response status code"},
+        {"method": "objectMapper.writeValue(Writer, Object)", "description": "Serializes the object to JSON and writes to the output stream"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-011",
+    "topic": "spring-security",
+    "subtopic": "exceptions",
+    "difficulty": "intermediate",
+    "title": "Custom AccessDeniedHandler (403 JSON Response)",
+    "description": "Implement a CustomAccessDeniedHandler that returns a JSON 403 Forbidden response when an authenticated user tries to access a resource they're not authorized for. Include the username of the denied user in the response.",
+    "starterCode": "@Component\npublic class CustomAccessDeniedHandler implements AccessDeniedHandler {\n\n    @Autowired\n    private ObjectMapper objectMapper;\n\n    @Override\n    public void handle(HttpServletRequest request,\n                       HttpServletResponse response,\n                       AccessDeniedException accessDeniedException)\n            throws IOException {\n        // TODO: set response status to 403\n        // TODO: set Content-Type to application/json\n        // TODO: extract the username of the authenticated user from SecurityContext\n        // TODO: build a JSON error response with status, error, message, username, path\n        // TODO: write to response\n    }\n}",
+    "hints": [
+      "response.setStatus(HttpServletResponse.SC_FORBIDDEN) sets HTTP 403",
+      "SecurityContextHolder.getContext().getAuthentication().getName() gives the username",
+      "The AccessDeniedException message is 'Access is denied' by default — use a friendlier message",
+      "Include request.getRequestURI() to show which path was forbidden"
+    ],
+    "solution": {
+      "code": "@Component\npublic class CustomAccessDeniedHandler implements AccessDeniedHandler {\n\n    @Autowired\n    private ObjectMapper objectMapper;\n\n    @Override\n    public void handle(HttpServletRequest request,\n                       HttpServletResponse response,\n                       AccessDeniedException accessDeniedException)\n            throws IOException {\n        response.setStatus(HttpServletResponse.SC_FORBIDDEN);\n        response.setContentType(MediaType.APPLICATION_JSON_VALUE);\n\n        String username = Optional.ofNullable(\n                SecurityContextHolder.getContext().getAuthentication())\n            .map(Authentication::getName)\n            .orElse(\"unknown\");\n\n        Map<String, Object> errorBody = new LinkedHashMap<>();\n        errorBody.put(\"status\", 403);\n        errorBody.put(\"error\", \"Forbidden\");\n        errorBody.put(\"message\",\n            \"You don't have permission to access this resource\");\n        errorBody.put(\"username\", username);\n        errorBody.put(\"path\", request.getRequestURI());\n        errorBody.put(\"timestamp\", LocalDateTime.now().toString());\n\n        objectMapper.writeValue(response.getWriter(), errorBody);\n    }\n}",
+      "explanation": "AccessDeniedHandler.handle() is called when an authenticated user is denied access due to insufficient authorities — the user is known (authenticated) but forbidden. This is fundamentally different from 401: a 403 response means 'I know who you are, but you can't do this.' Including the username in the response helps audit logs and debugging while not exposing sensitive data (the user knows their own username). The Optional.ofNullable guard around getAuthentication() is defensive coding — in practice, AccessDeniedHandler is only called for authenticated users, but it prevents a NullPointerException in edge cases. Never include stack traces or internal error details in the 403 response body — those should go to server logs only.",
+      "methodSignatures": [
+        {"method": "handle(HttpServletRequest, HttpServletResponse, AccessDeniedException)", "description": "Called when an authenticated user lacks required permissions; write your 403 response here"},
+        {"method": "SecurityContextHolder.getContext().getAuthentication()", "description": "Returns the Authentication of the current request; non-null when AccessDeniedHandler is called"},
+        {"method": "Authentication.getName()", "description": "Returns the principal's name (username)"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-012",
+    "topic": "spring-security",
+    "subtopic": "configuration",
+    "difficulty": "advanced",
+    "title": "CORS Configuration for React Frontend",
+    "description": "Configure CORS for a Spring Boot API that serves a React frontend at http://localhost:3000 (development) and https://myapp.com (production). Allow common HTTP methods, the Authorization header, and credentials. Register the CORS config in the SecurityFilterChain.",
+    "starterCode": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    // TODO: create a CorsConfigurationSource bean that:\n    //   - allows origins: http://localhost:3000 and https://myapp.com\n    //   - allows methods: GET, POST, PUT, DELETE, OPTIONS, PATCH\n    //   - allows headers: Authorization, Content-Type, Accept\n    //   - allows credentials\n    //   - sets max age to 3600 seconds\n    //   - registers for all paths (/**)\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        // TODO: enable CORS using the corsConfigurationSource bean\n        // TODO: disable CSRF, set STATELESS, configure auth rules\n        return http.build();\n    }\n}",
+    "hints": [
+      "CorsConfiguration config = new CorsConfiguration(); config.setAllowedOrigins(List.of(...))",
+      "allowCredentials = true + specific origins (NOT *) — can't combine credentials with wildcard origin",
+      "UrlBasedCorsConfigurationSource registers the config for a URL pattern using source.registerCorsConfiguration(\"/**\", config)",
+      "http.cors(cors -> cors.configurationSource(corsConfigurationSource())) wires CORS into the security chain"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Bean\n    public CorsConfigurationSource corsConfigurationSource() {\n        CorsConfiguration config = new CorsConfiguration();\n        config.setAllowedOrigins(List.of(\n            \"http://localhost:3000\",\n            \"https://myapp.com\"\n        ));\n        config.setAllowedMethods(List.of(\n            \"GET\", \"POST\", \"PUT\", \"DELETE\", \"OPTIONS\", \"PATCH\"\n        ));\n        config.setAllowedHeaders(List.of(\n            \"Authorization\", \"Content-Type\", \"Accept\"\n        ));\n        config.setAllowCredentials(true);\n        config.setMaxAge(3600L);\n\n        UrlBasedCorsConfigurationSource source =\n            new UrlBasedCorsConfigurationSource();\n        source.registerCorsConfiguration(\"/**\", config);\n        return source;\n    }\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        http\n            .cors(cors -> cors.configurationSource(corsConfigurationSource()))\n            .csrf(csrf -> csrf.disable())\n            .sessionManagement(s -> s\n                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/auth/**\").permitAll()\n                .anyRequest().authenticated()\n            );\n        return http.build();\n    }\n}",
+      "explanation": "CORS must be configured via Spring Security's cors() DSL rather than @CrossOrigin or a WebMvcConfigurer alone — Spring Security's CorsFilter needs to process CORS before authentication filters, otherwise preflight OPTIONS requests fail authentication and are rejected. allowCredentials(true) is necessary for the browser to include the Authorization header in cross-origin requests — but this combination requires explicit origins (not '*') because the spec prohibits wildcard origins with credentials. setMaxAge(3600L) tells browsers to cache the preflight response for 1 hour, reducing the number of preflight requests. In production, read allowed origins from @Value-injected properties rather than hardcoding them, enabling different origins per deployment environment.",
+      "methodSignatures": [
+        {"method": "CorsConfiguration.setAllowedOrigins(List<String>)", "description": "Exact origins allowed; use setAllowedOriginPatterns() for wildcard-like patterns with credentials"},
+        {"method": "CorsConfiguration.setAllowCredentials(boolean)", "description": "If true, browser includes credentials; requires non-wildcard origins"},
+        {"method": "UrlBasedCorsConfigurationSource.registerCorsConfiguration(pattern, config)", "description": "Applies CORS config to all requests matching the Ant-style pattern"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-013",
+    "topic": "spring-security",
+    "subtopic": "oauth2",
+    "difficulty": "advanced",
+    "title": "OAuth2 Resource Server with Custom Role Extraction",
+    "description": "Configure a Spring Security OAuth2 Resource Server that validates JWTs. The JWTs come from an Authorization Server and contain roles in a custom claim 'user_roles'. Configure a JwtAuthenticationConverter to map this custom claim to ROLE_* GrantedAuthority objects.",
+    "starterCode": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    // application.properties has:\n    // spring.security.oauth2.resourceserver.jwt.issuer-uri=https://auth.example.com\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        http\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/public/**\").permitAll()\n                .anyRequest().authenticated()\n            )\n            // TODO: configure oauth2ResourceServer with JWT support\n            // TODO: use a custom JwtAuthenticationConverter\n            ;\n        return http.build();\n    }\n\n    // TODO: create a JwtAuthenticationConverter that:\n    //   - reads authorities from the 'user_roles' claim\n    //   - prefixes each role with 'ROLE_'\n    //   - sets the principal claim name to 'sub'\n}",
+    "hints": [
+      ".oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter())))",
+      "JwtGrantedAuthoritiesConverter allows setting .setAuthoritiesClaimName('user_roles')",
+      "JwtGrantedAuthoritiesConverter.setAuthorityPrefix('ROLE_') adds the prefix",
+      "Wrap JwtGrantedAuthoritiesConverter in JwtAuthenticationConverter and set it as the granted authorities converter"
+    ],
+    "solution": {
+      "code": "@Configuration\n@EnableWebSecurity\npublic class SecurityConfig {\n\n    @Bean\n    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {\n        http\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\"/public/**\").permitAll()\n                .anyRequest().authenticated()\n            )\n            .oauth2ResourceServer(oauth2 -> oauth2\n                .jwt(jwt -> jwt\n                    .jwtAuthenticationConverter(jwtAuthenticationConverter())\n                )\n            );\n        return http.build();\n    }\n\n    @Bean\n    public JwtAuthenticationConverter jwtAuthenticationConverter() {\n        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter =\n            new JwtGrantedAuthoritiesConverter();\n        grantedAuthoritiesConverter.setAuthoritiesClaimName(\"user_roles\");\n        grantedAuthoritiesConverter.setAuthorityPrefix(\"ROLE_\");\n\n        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();\n        jwtConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);\n        jwtConverter.setPrincipalClaimName(\"sub\");\n        return jwtConverter;\n    }\n}",
+      "explanation": "oauth2ResourceServer().jwt() registers BearerTokenAuthenticationFilter, which extracts Bearer tokens and validates them using a JwtDecoder. When issuer-uri is configured, Spring Boot auto-creates a NimbusJwtDecoder that fetches the Authorization Server's JWKS endpoint to retrieve public keys — handling key rotation automatically. JwtGrantedAuthoritiesConverter maps JWT claims to GrantedAuthority objects. By default it reads the 'scope' or 'scp' claim with 'SCOPE_' prefix; we override both to match our custom token structure. JwtAuthenticationConverter wraps this into the Spring Security JwtAuthenticationToken (a subtype of AbstractAuthenticationToken). Setting the principal claim to 'sub' means authentication.getName() returns the subject claim — typically the user ID.",
+      "methodSignatures": [
+        {"method": "oauth2ResourceServer(Customizer)", "description": "Configures the resource server — registers BearerTokenAuthenticationFilter"},
+        {"method": "JwtGrantedAuthoritiesConverter.setAuthoritiesClaimName(String)", "description": "JWT claim name to read roles/authorities from"},
+        {"method": "JwtGrantedAuthoritiesConverter.setAuthorityPrefix(String)", "description": "Prefix prepended to each authority string; use 'ROLE_' for hasRole() compatibility"},
+        {"method": "JwtAuthenticationConverter.setPrincipalClaimName(String)", "description": "Which claim to use as the principal name returned by authentication.getName()"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-014",
+    "topic": "spring-security",
+    "subtopic": "authorization",
+    "difficulty": "advanced",
+    "title": "Custom Security Bean for Complex Business Rules",
+    "description": "Create a custom Spring Security bean called 'documentSecurity' that checks ownership and sharing rules. Use it in @PreAuthorize expressions to protect service methods: users can read a document if they own it or it's been shared with them; only admins can delete documents.",
+    "starterCode": "// TODO: Create a DocumentSecurityService Spring bean with:\n//   - canRead(Authentication auth, Long docId) — true if owner OR shared with user\n//   - canDelete(Authentication auth, Long docId) — true if ADMIN role\n//   Note: inject DocumentRepository to look up ownership/sharing info\n\n@Service\npublic class DocumentService {\n\n    @Autowired private DocumentRepository docRepo;\n\n    // TODO: protect with custom security bean — user can read if canRead\n    public Document getDocument(Long docId) {\n        return docRepo.findById(docId).orElseThrow();\n    }\n\n    // TODO: protect — only document owner can update\n    public Document updateDocument(Long docId, DocumentDto dto) {\n        Document doc = docRepo.findById(docId).orElseThrow();\n        doc.setContent(dto.getContent());\n        return docRepo.save(doc);\n    }\n\n    // TODO: protect with canDelete\n    public void deleteDocument(Long docId) {\n        docRepo.deleteById(docId);\n    }\n}",
+    "hints": [
+      "Name the bean 'documentSecurity' with @Component(\"documentSecurity\") or via @Bean method",
+      "@PreAuthorize(\"@documentSecurity.canRead(authentication, #docId)\") — @ prefix references a Spring bean",
+      "For update: check authentication.name equals the document's owner username",
+      "canDelete can be as simple as: auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(\"ROLE_ADMIN\"))"
+    ],
+    "solution": {
+      "code": "@Component(\"documentSecurity\")\npublic class DocumentSecurityService {\n\n    @Autowired private DocumentRepository documentRepository;\n\n    public boolean canRead(Authentication auth, Long docId) {\n        return documentRepository.findById(docId)\n            .map(doc ->\n                doc.getOwnerUsername().equals(auth.getName()) ||\n                doc.getSharedWithUsernames().contains(auth.getName())\n            )\n            .orElse(false);\n    }\n\n    public boolean canDelete(Authentication auth, Long docId) {\n        return auth.getAuthorities().stream()\n            .anyMatch(a -> a.getAuthority().equals(\"ROLE_ADMIN\"));\n    }\n}\n\n@Service\npublic class DocumentService {\n\n    @Autowired private DocumentRepository docRepo;\n\n    @PreAuthorize(\"@documentSecurity.canRead(authentication, #docId)\")\n    public Document getDocument(Long docId) {\n        return docRepo.findById(docId).orElseThrow();\n    }\n\n    @PreAuthorize(\"#docId != null and \"\n        + \"@documentRepository.findById(#docId)\"\n        + \".map(d -> d.getOwnerUsername().equals(authentication.name))\"\n        + \".orElse(false)\")\n    public Document updateDocument(Long docId, DocumentDto dto) {\n        Document doc = docRepo.findById(docId).orElseThrow();\n        doc.setContent(dto.getContent());\n        return docRepo.save(doc);\n    }\n\n    @PreAuthorize(\"@documentSecurity.canDelete(authentication, #docId)\")\n    public void deleteDocument(Long docId) {\n        docRepo.deleteById(docId);\n    }\n}",
+      "explanation": "The @ symbol in @PreAuthorize SpEL expressions references a Spring bean by name. This is the recommended pattern for any business-rule-based security logic: keep your @PreAuthorize annotations readable and delegate complex checks to a dedicated, testable security service. The canRead method queries the database to check ownership and sharing — this is a legitimate DB query in a security context. The canDelete method uses pure authority checking without a DB call. The owner-check approach avoids loading the entity twice (once in the security check, once in the business method) at the cost of a potentially redundant DB call — profile before optimizing. An alternative is @PostAuthorize with returnObject for cases where you need the loaded entity for authorization: @PostAuthorize(\"returnObject.ownerUsername == authentication.name\").",
+      "methodSignatures": [
+        {"method": "@Component(\"beanName\")", "description": "Registers the bean with a specific name for use in @PreAuthorize SpEL via @beanName"},
+        {"method": "@PreAuthorize(\"@bean.method(authentication, #param)\")", "description": "Calls a Spring bean method from SpEL; authentication is the current user, #param is a method parameter"}
+      ]
+    }
+  },
+  {
+    "id": "spring-security-015",
+    "topic": "spring-security",
+    "subtopic": "interview-questions",
+    "difficulty": "intermediate",
+    "title": "Authentication vs Authorization",
+    "description": "What is the difference between authentication and authorization in Spring Security? When does each happen, and how are they represented in the framework?",
+    "starterCode": "// Question: What is the difference between authentication and authorization?\n// Write your answer below:\n// Answer:",
+    "hints": [
+      "Think about WHO vs WHAT CAN",
+      "Where does Authentication object fit in? What about GrantedAuthority?",
+      "Which filters/components handle each?"
+    ],
+    "solution": {
+      "code": "// Authentication = WHO you are (verifying identity)\n// - Happens first; user provides credentials (username/password, JWT, etc.)\n// - Handled by: AuthenticationManager → AuthenticationProvider → UserDetailsService\n// - Result: Authentication object stored in SecurityContextHolder\n// - Failure: 401 Unauthorized (via AuthenticationEntryPoint)\n\n// Authorization = WHAT you are allowed to do (checking permissions)\n// - Happens after authentication; checks GrantedAuthority list\n// - Handled by: AuthorizationFilter for URL rules, AOP interceptor for method rules\n// - Rules defined in: requestMatchers().hasRole() or @PreAuthorize\n// - Failure: 403 Forbidden (via AccessDeniedHandler)\n\n// Key classes:\n// Authentication      → holds Principal, Credentials, GrantedAuthority list\n// SecurityContextHolder → thread-local storage for the current Authentication\n// GrantedAuthority    → represents a permission/role (e.g. ROLE_ADMIN)\n// UsernamePasswordAuthenticationToken → standard Authentication implementation\n\n// Flow:\n// Request → JwtFilter sets Authentication → AuthorizationFilter checks\n// if not authenticated → AuthenticationEntryPoint (401)\n// if authenticated but no permission → AccessDeniedHandler (403)",
+      "explanation": "Authentication and authorization are the two core concepts in Spring Security. Authentication establishes identity — it answers 'who is this user?' by verifying credentials. The result is stored as an Authentication object in the SecurityContextHolder. Authorization then decides what the authenticated user can do — it checks the GrantedAuthority list against the required permissions. The separation is fundamental to the architecture: authentication providers are pluggable (you can have JWT + form login simultaneously), and authorization rules are expressed separately in SecurityFilterChain config and @PreAuthorize annotations. The 401 vs 403 response codes reflect this distinction: 401 means 'tell me who you are first', 403 means 'I know who you are but you can't do this.'"
+    }
+  },
+  {
+    "id": "spring-security-016",
+    "topic": "spring-security",
+    "subtopic": "interview-questions",
+    "difficulty": "intermediate",
+    "title": "Why Disable CSRF for REST APIs?",
+    "description": "Interview question: Why do we typically disable CSRF protection for stateless JWT REST APIs? What is CSRF, how does Spring Security protect against it, and why is it unnecessary for JWT APIs?",
+    "starterCode": "// Question: Why is csrf().disable() appropriate for JWT REST APIs?\n// Explain what CSRF is, how Spring Security prevents it,\n// and why JWTs make it unnecessary.\n// Answer:",
+    "hints": [
+      "CSRF exploits the browser's automatic cookie behavior",
+      "JWT is stored in memory or localStorage, not cookies",
+      "The Same-Origin policy prevents malicious sites from reading your JWT"
+    ],
+    "solution": {
+      "code": "// CSRF (Cross-Site Request Forgery) Attack:\n// 1. User logs into bank.com — session cookie is set\n// 2. User visits evil.com in another tab\n// 3. evil.com has: <form action='https://bank.com/transfer' method='POST'>\n// 4. Browser automatically sends bank.com's session cookie with the request!\n// 5. Bank sees a valid session → processes the transfer\n\n// Spring Security's CSRF protection (Synchronizer Token Pattern):\n// - Server generates a random CSRF token, stores in session\n// - Includes token in all HTML forms as a hidden field\n// - Validates token on every POST/PUT/DELETE/PATCH request\n// - evil.com cannot read the CSRF token (Same-Origin Policy)\n// - So the forged request lacks the token → rejected\n\n// Why CSRF is NOT a threat for JWT REST APIs:\n// 1. JWTs are NOT stored in cookies by default\n//    (stored in localStorage or memory — not automatically sent by browser)\n// 2. evil.com's forged request won't have the Authorization: Bearer <token> header\n//    because the browser won't automatically add it\n// 3. Same-Origin Policy prevents evil.com from reading your JWT from localStorage\n// 4. So the forged request arrives WITHOUT the JWT → rejected as unauthenticated\n\n// Rule: If you use cookie-based auth → keep CSRF enabled\n//       If you use Bearer token auth (JWT in Authorization header) → safe to disable",
+      "explanation": "CSRF is a browser-level vulnerability that exploits the automatic sending of cookies. The browser's behavior of attaching cookies to every request, regardless of origin, is the root cause. Spring Security's CSRF token mechanism breaks this by requiring a secret value that only the legitimate origin can provide. However, this mechanism is irrelevant for JWT APIs because JWTs live in JavaScript-accessible storage (localStorage) or memory, not cookies. Since evil.com's forged request won't include the JWT Authorization header (the browser doesn't automatically attach custom headers to cross-site requests), the API simply sees an unauthenticated request and returns 401. Disabling CSRF removes unnecessary overhead and eliminates the need to handle CSRF tokens in your React/Angular frontend."
+    }
+  },
+  {
+    "id": "spring-security-017",
+    "topic": "spring-security",
+    "subtopic": "interview-questions",
+    "difficulty": "advanced",
+    "title": "SecurityFilterChain Internals",
+    "description": "Interview question: Explain how Spring Security's filter chain works internally. What is DelegatingFilterProxy, FilterChainProxy, and SecurityFilterChain? How does a request flow through them?",
+    "starterCode": "// Question: Explain the Spring Security filter chain architecture.\n// Walk through how a request flows from the Servlet container to your controller.\n// Answer:",
+    "hints": [
+      "Start with the Servlet container and how DelegatingFilterProxy bridges to Spring",
+      "FilterChainProxy holds multiple SecurityFilterChain instances",
+      "How does Spring select which SecurityFilterChain to apply?"
+    ],
+    "solution": {
+      "code": "// Request flow through Spring Security:\n\n// 1. Servlet Container (Tomcat/Jetty)\n//    - Has its own filter chain registered at startup\n//    - One of these filters is DelegatingFilterProxy named 'springSecurityFilterChain'\n\n// 2. DelegatingFilterProxy\n//    - Standard javax.servlet.Filter registered in the servlet container\n//    - Bridges the servlet world to Spring's ApplicationContext\n//    - Delegates all work to a Spring bean named 'springSecurityFilterChain'\n//    - This design lets Spring manage the actual security filters as beans\n\n// 3. FilterChainProxy (the actual 'springSecurityFilterChain' bean)\n//    - Holds a list of SecurityFilterChain instances\n//    - Finds the FIRST SecurityFilterChain whose requestMatcher matches the URL\n//    - Executes that chain's filters in order\n//    - Can have multiple chains for different URL patterns:\n//      Chain 1: /api/** → [CsrfFilter, JwtFilter, AuthorizationFilter]\n//      Chain 2: /admin/** → [CsrfFilter, SessionFilter, AuthorizationFilter]\n\n// 4. SecurityFilterChain (your @Bean)\n//    - A list of ordered Security filters to apply for matching requests\n//    - You configure which filters are active via HttpSecurity DSL\n//    - Key built-in filters (in order):\n//      SecurityContextHolderFilter   → loads/saves SecurityContext\n//      UsernamePasswordAuthenticationFilter → form login\n//      BearerTokenAuthenticationFilter → OAuth2/JWT\n//      ExceptionTranslationFilter    → catches AuthException/AccessDeniedException\n//      AuthorizationFilter           → enforces URL-based access rules\n\n// 5. Your custom filters (e.g., JwtAuthenticationFilter)\n//    - Inserted via addFilterBefore() at a specific position\n//    - JwtFilter runs before UsernamePasswordAuthFilter\n\n// Result: request either reaches your @Controller or is short-circuited\n// by a filter (e.g., 401 from ExceptionTranslationFilter)",
+      "explanation": "The layered architecture is designed for separation of concerns: the Servlet container knows about filters but not Spring; DelegatingFilterProxy bridges them; FilterChainProxy applies the correct chain per URL; SecurityFilterChain contains the actual security logic. The ability to have multiple SecurityFilterChain instances per application is powerful — microservices can have different security rules per API version or path. The key insight for interviews: Spring Security is entirely implemented as Servlet filters, not Spring MVC interceptors — it protects at the Servlet layer, before DispatcherServlet even sees the request."
+    }
+  }
+]

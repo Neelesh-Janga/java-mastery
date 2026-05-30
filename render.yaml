@@ -1,0 +1,14 @@
+services:
+  - name: java-mastery
+    type: web
+    env: docker
+    dockerfilePath: ./Dockerfile.render
+    # Render uses the repo root as build context when using render.yaml
+    plan: free          # 512 MB RAM, 0.1 CPU — sleeps after 15 min inactivity
+    healthCheckPath: /  # nginx serves index.html immediately; backend warms up in background
+    envVars:
+      - key: ALLOWED_ORIGIN
+        # Replace with your actual Render URL after first deploy, then add custom domain
+        value: https://java-mastery.onrender.com,https://java-aws.fillthesyntax.in
+      - key: JAVA_OPTS
+        value: -Xmx380m -Xms64m

@@ -1,0 +1,282 @@
+[
+  {
+    "id": "optional-001",
+    "topic": "optional",
+    "subtopic": "creation",
+    "difficulty": "beginner",
+    "title": "Create Optional — of, ofNullable, empty",
+    "description": "Create three Optionals: one wrapping a value, one from a potentially-null reference, and one empty. Explore what happens when you call Optional.of(null).",
+    "starterCode": "String value = \"Hello\";\nString nullValue = null;\n// Create Optional.of(value)\n// Create Optional.ofNullable(nullValue)\n// Create Optional.empty()\n// Try Optional.of(nullValue) — what happens?\n",
+    "hints": ["Optional.of(null) throws NullPointerException immediately", "Optional.ofNullable handles null safely"],
+    "solution": {
+      "code": "Optional<String> opt1 = Optional.of(\"Hello\");\nOptional<String> opt2 = Optional.ofNullable(null); // empty\nOptional<String> opt3 = Optional.empty();\n\nSystem.out.println(opt1); // Optional[Hello]\nSystem.out.println(opt2); // Optional.empty\nSystem.out.println(opt3); // Optional.empty\n\n// Optional.of(null) throws NullPointerException:\ntry {\n    Optional<String> bad = Optional.of(null);\n} catch (NullPointerException e) {\n    System.out.println(\"of(null) throws NPE!\");\n}",
+      "explanation": "Optional.of(T) creates a non-empty Optional — it throws NullPointerException immediately if you pass null. This makes the failure explicit at the creation site rather than later. Optional.ofNullable(T) creates an Optional that is empty if the argument is null, non-empty otherwise. Optional.empty() creates a reusable empty singleton. Rule: use ofNullable when the value may or may not be null; use of() when you are certain the value is non-null.",
+      "methodSignatures": [
+        {
+          "method": "Optional<T> Optional.of(T value)",
+          "description": "Creates a non-empty Optional. Throws NullPointerException if value is null."
+        },
+        {
+          "method": "Optional<T> Optional.ofNullable(T value)",
+          "description": "Creates an Optional that is empty if value is null, otherwise contains value."
+        },
+        {
+          "method": "Optional<T> Optional.empty()",
+          "description": "Returns an empty Optional singleton."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-002",
+    "topic": "optional",
+    "subtopic": "checking",
+    "difficulty": "beginner",
+    "title": "isPresent, isEmpty, and get",
+    "description": "Check whether Optionals are present or empty. Extract the value with get() and see what happens when you call get() on an empty Optional.",
+    "starterCode": "Optional<String> present = Optional.of(\"Java\");\nOptional<String> empty = Optional.empty();\n// Check isPresent/isEmpty for both\n// Call get() on present\n// Try get() on empty\n",
+    "hints": ["get() on empty throws NoSuchElementException", "isEmpty() is Java 11+"],
+    "solution": {
+      "code": "Optional<String> present = Optional.of(\"Java\");\nOptional<String> empty = Optional.empty();\n\nSystem.out.println(present.isPresent()); // true\nSystem.out.println(empty.isPresent());   // false\nSystem.out.println(present.isEmpty());   // false (Java 11+)\nSystem.out.println(empty.isEmpty());     // true  (Java 11+)\n\nSystem.out.println(present.get()); // Java\ntry {\n    empty.get(); // throws!\n} catch (java.util.NoSuchElementException e) {\n    System.out.println(\"get() on empty throws: \" + e.getClass().getSimpleName());\n}",
+      "explanation": "isPresent() returns true if a value is present. isEmpty() (Java 11+) is the negation — cleaner than !isPresent(). get() retrieves the value but throws NoSuchElementException on empty — this is considered an antipattern. Prefer the safer orElse/orElseGet/orElseThrow over naked get(). Think of get() as 'if I'm sure it's there, give it to me — crash otherwise'.",
+      "methodSignatures": [
+        {
+          "method": "boolean isPresent()",
+          "description": "Returns true if a value is present, false if empty."
+        },
+        {
+          "method": "boolean isEmpty()",
+          "description": "Java 11+. Returns true if no value is present. Negation of isPresent()."
+        },
+        {
+          "method": "T get()",
+          "description": "Returns the value if present. Throws NoSuchElementException if empty. Use sparingly."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-003",
+    "topic": "optional",
+    "subtopic": "retrieval",
+    "difficulty": "beginner",
+    "title": "orElse, orElseGet, orElseThrow",
+    "description": "Given an Optional<String>, demonstrate the three safe ways to extract a value with different fallback strategies.",
+    "starterCode": "Optional<String> present = Optional.of(\"Found!\");\nOptional<String> empty = Optional.empty();\n// Use orElse with a default string\n// Use orElseGet with a Supplier\n// Use orElseThrow with a custom exception\n",
+    "hints": [
+      "orElse always evaluates the default — even if the Optional is present",
+      "orElseGet only calls the Supplier if empty"
+    ],
+    "solution": {
+      "code": "// orElse — always evaluates the default expression\nString v1 = empty.orElse(\"default\");\nString v2 = present.orElse(\"default\"); // still returns \"Found!\"\nSystem.out.println(v1); // default\nSystem.out.println(v2); // Found!\n\n// orElseGet — Supplier only invoked if empty (lazy)\nString v3 = empty.orElseGet(() -> \"computed-\" + System.currentTimeMillis());\nSystem.out.println(v3);\n\n// orElseThrow — throw custom exception if empty\ntry {\n    empty.orElseThrow(() -> new IllegalStateException(\"Value required!\"));\n} catch (IllegalStateException e) {\n    System.out.println(\"Caught: \" + e.getMessage());\n}\nString v4 = present.orElseThrow(() -> new IllegalStateException(\"unreachable\"));\nSystem.out.println(v4); // Found!",
+      "explanation": "orElse(T): always evaluates its argument — even if Optional is present. Avoid for expensive computations or with side effects. orElseGet(Supplier): lazy — the Supplier is only called when the Optional is empty. This is the preferred alternative for costly defaults. orElseThrow(Supplier<X extends Throwable>): throws the exception from the Supplier if empty; otherwise returns the value. Use this to make missing-value bugs explicit and descriptive.",
+      "methodSignatures": [
+        {
+          "method": "T orElse(T other)",
+          "description": "Returns value if present, else returns other. other is always evaluated."
+        },
+        {
+          "method": "T orElseGet(Supplier<? extends T> supplier)",
+          "description": "Returns value if present, else invokes supplier and returns its result. Lazy evaluation."
+        },
+        {
+          "method": "T orElseThrow(Supplier<? extends X> exceptionSupplier)",
+          "description": "Returns value if present, else throws the exception from the supplier."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-004",
+    "topic": "optional",
+    "subtopic": "transformation",
+    "difficulty": "intermediate",
+    "title": "map — transform the value",
+    "description": "Given an Optional<String> representing a username, transform it to the username's length. Handle both present and empty cases.",
+    "starterCode": "Optional<String> username = Optional.of(\"alice_wonder\");\nOptional<String> noUser = Optional.empty();\n// Map to length\n",
+    "hints": ["map returns Optional.empty() if the original is empty"],
+    "solution": {
+      "code": "Optional<Integer> len1 = username.map(String::length);\nOptional<Integer> len2 = noUser.map(String::length);\n\nSystem.out.println(len1); // Optional[12]\nSystem.out.println(len2); // Optional.empty\n\n// Common chaining pattern:\nint length = username\n    .map(String::length)\n    .orElse(0);\nSystem.out.println(length); // 12",
+      "explanation": "map() applies a Function to the contained value and wraps the result in a new Optional. If the original Optional is empty, map() returns Optional.empty() without calling the mapper. The return type is Optional<R> where R is the mapper's return type. This allows chaining without null checks — each .map() in the chain short-circuits if any step is empty.",
+      "methodSignatures": [
+        {
+          "method": "<U> Optional<U> map(Function<? super T, ? extends U> mapper)",
+          "description": "If present, applies mapper and returns Optional.of(result). If empty, returns Optional.empty(). Mapper must not return null — use flatMap for that."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-005",
+    "topic": "optional",
+    "subtopic": "transformation",
+    "difficulty": "intermediate",
+    "title": "flatMap — avoid Optional<Optional<T>>",
+    "description": "You have a method getUser(String name) returning Optional<User>, and User has a method getEmail() returning Optional<String>. Chain them without getting Optional<Optional<String>>.",
+    "starterCode": "record User(String name, String email) {\n    Optional<String> getEmail() { return Optional.ofNullable(email); }\n}\njava.util.function.Function<String, Optional<User>> getUser = name ->\n    name.equals(\"alice\") ? Optional.of(new User(\"alice\", \"alice@example.com\")) : Optional.empty();\n// Get alice's email, and bob's email (doesn't exist)\n",
+    "hints": [
+      "map would give Optional<Optional<String>>",
+      "flatMap unwraps the nested Optional"
+    ],
+    "solution": {
+      "code": "Optional<String> aliceEmail = Optional.of(\"alice\")\n    .flatMap(getUser)\n    .flatMap(User::getEmail);\nSystem.out.println(aliceEmail); // Optional[alice@example.com]\n\nOptional<String> bobEmail = Optional.of(\"bob\")\n    .flatMap(getUser)\n    .flatMap(User::getEmail);\nSystem.out.println(bobEmail); // Optional.empty",
+      "explanation": "When your mapper Function already returns Optional<U>, using map() gives Optional<Optional<U>> — a nested structure. flatMap() applies the mapper and flattens the result: if the mapper returns Optional.of(x), you get Optional.of(x); if it returns Optional.empty(), you get Optional.empty(). This is identical to how Stream.flatMap() works. The chain short-circuits at the first empty Optional.",
+      "methodSignatures": [
+        {
+          "method": "<U> Optional<U> flatMap(Function<? super T, ? extends Optional<? extends U>> mapper)",
+          "description": "If present, applies mapper (which returns Optional) and returns it directly. Avoids Optional<Optional<T>>. If empty, returns Optional.empty()."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-006",
+    "topic": "optional",
+    "subtopic": "transformation",
+    "difficulty": "intermediate",
+    "title": "filter — conditional Optional",
+    "description": "Given an Optional<Integer> representing an age, keep it only if it represents an adult (>= 18). Otherwise return empty.",
+    "starterCode": "Optional<Integer> age1 = Optional.of(25);\nOptional<Integer> age2 = Optional.of(15);\nOptional<Integer> age3 = Optional.empty();\n// Filter to only keep adults\n",
+    "hints": ["filter returns empty if predicate is false OR if original is empty"],
+    "solution": {
+      "code": "Optional<Integer> adult1 = age1.filter(a -> a >= 18);\nOptional<Integer> adult2 = age2.filter(a -> a >= 18);\nOptional<Integer> adult3 = age3.filter(a -> a >= 18);\n\nSystem.out.println(adult1); // Optional[25]\nSystem.out.println(adult2); // Optional.empty  (15 < 18)\nSystem.out.println(adult3); // Optional.empty  (was already empty)",
+      "explanation": "filter() tests the value against a Predicate. If the Optional is present AND the predicate returns true, the same Optional is returned. If the predicate returns false, Optional.empty() is returned. If the original is already empty, filter() returns empty without calling the predicate. This is the optional equivalent of Stream.filter().",
+      "methodSignatures": [
+        {
+          "method": "Optional<T> filter(Predicate<? super T> predicate)",
+          "description": "If present and predicate matches, returns this Optional. Otherwise returns Optional.empty()."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-007",
+    "topic": "optional",
+    "subtopic": "consumption",
+    "difficulty": "beginner",
+    "title": "ifPresent and ifPresentOrElse",
+    "description": "Use ifPresent() to print a value if it exists, and ifPresentOrElse() (Java 9+) to handle both the present and empty cases.",
+    "starterCode": "Optional<String> present = Optional.of(\"Hello, Optional!\");\nOptional<String> empty = Optional.empty();\n// Use ifPresent on both\n// Use ifPresentOrElse on both\n",
+    "hints": ["ifPresentOrElse(consumer, emptyAction) — Java 9+"],
+    "solution": {
+      "code": "present.ifPresent(v -> System.out.println(\"Present: \" + v)); // prints\nempty.ifPresent(v -> System.out.println(\"Never printed\")); // no-op\n\n// Java 9+ ifPresentOrElse\npresent.ifPresentOrElse(\n    v -> System.out.println(\"Value: \" + v),\n    () -> System.out.println(\"No value\")\n);\n// prints: Value: Hello, Optional!\n\nempty.ifPresentOrElse(\n    v -> System.out.println(\"Value: \" + v),\n    () -> System.out.println(\"No value\")\n);\n// prints: No value",
+      "explanation": "ifPresent(Consumer) executes the Consumer if a value is present, otherwise does nothing. It is a concise replacement for if(opt.isPresent()) { ... }. ifPresentOrElse(Consumer, Runnable) handles both cases in one call — the Runnable runs when the Optional is empty. The Runnable takes no arguments (unlike Consumer) because there is no value to pass when empty.",
+      "methodSignatures": [
+        {
+          "method": "void ifPresent(Consumer<? super T> action)",
+          "description": "If present, performs action on the value. No-op if empty."
+        },
+        {
+          "method": "void ifPresentOrElse(Consumer<? super T> action, Runnable emptyAction)",
+          "description": "Java 9+. Performs action if present, or emptyAction if empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-008",
+    "topic": "optional",
+    "subtopic": "chaining",
+    "difficulty": "intermediate",
+    "title": "or() — fallback to another Optional (Java 9+)",
+    "description": "Use Optional.or() to provide a fallback Optional. Given a primary and fallback data source, return the first non-empty result.",
+    "starterCode": "Optional<String> primary = Optional.empty();\nOptional<String> secondary = Optional.of(\"fallback-value\");\n// Use or() to get secondary if primary is empty\n",
+    "hints": ["or() takes a Supplier<Optional<T>> — not a direct Optional"],
+    "solution": {
+      "code": "Optional<String> result = primary.or(() -> secondary);\nSystem.out.println(result); // Optional[fallback-value]\n\n// Chain multiple fallbacks:\nOptional<String> a = Optional.empty();\nOptional<String> b = Optional.empty();\nOptional<String> c = Optional.of(\"found in c!\");\n\nOptional<String> final1 = a.or(() -> b).or(() -> c);\nSystem.out.println(final1); // Optional[found in c!]",
+      "explanation": "or() (Java 9+) is the Optional equivalent of a null-coalescing chain. It takes a Supplier<Optional<T>> so the fallback Optional is computed lazily — only if the primary is empty. This is different from orElseGet() which returns a raw value T; or() stays inside the Optional monad, allowing further chaining of map/flatMap/filter. Great for cascading lookups from multiple sources.",
+      "methodSignatures": [
+        {
+          "method": "Optional<T> or(Supplier<? extends Optional<? extends T>> supplier)",
+          "description": "Java 9+. If present, returns this. If empty, returns the Optional produced by the supplier."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-009",
+    "topic": "optional",
+    "subtopic": "streams",
+    "difficulty": "intermediate",
+    "title": "Optional.stream() — integrate with streams",
+    "description": "Given a list of Optional<String> results, collect all present values into a single list using stream().",
+    "starterCode": "List<Optional<String>> results = List.of(\n    Optional.of(\"alpha\"),\n    Optional.empty(),\n    Optional.of(\"beta\"),\n    Optional.empty(),\n    Optional.of(\"gamma\")\n);\n// Collect all present values: [alpha, beta, gamma]\n",
+    "hints": ["flatMap(Optional::stream) — Java 9+"],
+    "solution": {
+      "code": "List<String> values = results.stream()\n    .flatMap(Optional::stream)\n    .collect(Collectors.toList());\nSystem.out.println(values); // [alpha, beta, gamma]",
+      "explanation": "Optional.stream() (Java 9+) converts an Optional to a Stream of zero or one element. When used with Stream.flatMap(), empty Optionals contribute nothing to the output while present Optionals contribute their value. This is the idiomatic Java 9+ way to filter-and-unwrap a stream of Optionals. The pre-Java-9 equivalent: .filter(Optional::isPresent).map(Optional::get).",
+      "methodSignatures": [
+        {
+          "method": "Stream<T> Optional.stream()",
+          "description": "Java 9+. Returns a single-element stream if present, or an empty stream if empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-010",
+    "topic": "optional",
+    "subtopic": "chaining",
+    "difficulty": "advanced",
+    "title": "Chaining Optional — safe navigation",
+    "description": "You have nested objects: Order -> Customer -> Address -> City (all nullable). Using Optional, safely extract the city name.",
+    "starterCode": "record Address(String city) {}\nrecord Customer(String name, Address address) {}\nrecord Order(String id, Customer customer) {}\n\nOrder order1 = new Order(\"O1\", new Customer(\"Alice\", new Address(\"London\")));\nOrder order2 = new Order(\"O2\", new Customer(\"Bob\", null)); // no address\nOrder order3 = new Order(\"O3\", null); // no customer\n\n// Extract city from all three orders safely\n",
+    "hints": [
+      "Optional.ofNullable(order.customer())",
+      "Chain .map(Customer::address).map(Address::city)"
+    ],
+    "solution": {
+      "code": "java.util.function.Function<Order, String> getCity = order ->\n    Optional.ofNullable(order.customer())\n        .map(Customer::address)\n        .map(Address::city)\n        .orElse(\"Unknown\");\n\nSystem.out.println(getCity.apply(order1)); // London\nSystem.out.println(getCity.apply(order2)); // Unknown\nSystem.out.println(getCity.apply(order3)); // Unknown",
+      "explanation": "This is Optional's killer use case: null-safe navigation through nested objects. Each .map() step safely handles null — if customer is null, the entire chain short-circuits to empty. This replaces deeply nested null checks (if customer != null && customer.address() != null && ...). The key: start with ofNullable for any potentially null root, then chain map() calls for each navigation step.",
+      "methodSignatures": [
+        {
+          "method": "<U> Optional<U> map(Function<? super T, ? extends U> mapper)",
+          "description": "If present, applies mapper; if mapper returns null, the result is Optional.empty(). If source is empty, returns empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "optional-011",
+    "topic": "optional",
+    "subtopic": "antipatterns",
+    "difficulty": "intermediate",
+    "title": "Optional Anti-patterns to avoid",
+    "description": "Identify and fix three Optional anti-patterns: (1) using Optional as a method parameter, (2) calling get() without isPresent(), (3) using Optional.of() where ofNullable is needed.",
+    "starterCode": "// Anti-pattern 1: Optional as parameter\nvoid greet(Optional<String> name) {\n    if (name.isPresent()) System.out.println(\"Hello \" + name.get());\n    else System.out.println(\"Hello stranger\");\n}\n\n// Anti-pattern 2: get() without guard\nOptional<String> opt = Optional.ofNullable(System.getenv(\"MY_VAR\"));\nString value = opt.get(); // may throw!\n\n// Anti-pattern 3: of() on nullable\nString s = null;\nOptional<String> bad = Optional.of(s); // NPE!\n",
+    "hints": ["Use method overloading instead of Optional param", "Use orElse/orElseGet instead of get()", "Use ofNullable for nullable sources"],
+    "solution": {
+      "code": "// Fix 1: Use overloading, not Optional param\nvoid greet(String name) { System.out.println(\"Hello \" + name); }\nvoid greet() { System.out.println(\"Hello stranger\"); }\n// Or: accept String directly, handle null inside\nvoid greetFixed(String name) {\n    System.out.println(\"Hello \" + Optional.ofNullable(name).orElse(\"stranger\"));\n}\n\n// Fix 2: Use orElse instead of get()\nString value = Optional.ofNullable(System.getenv(\"MY_VAR\"))\n    .orElse(\"default-value\");\nSystem.out.println(value);\n\n// Fix 3: Use ofNullable\nString s = null;\nOptional<String> safe = Optional.ofNullable(s); // OK, returns empty\nSystem.out.println(safe); // Optional.empty",
+      "explanation": "Anti-pattern 1: Optional is designed for return types, not parameters. Callers can pass Optional.empty(), null, or non-empty — adding complexity. Use overloading or @Nullable annotations. Anti-pattern 2: Calling get() without checking isPresent() first defeats the purpose of Optional. Always use orElse/orElseGet/orElseThrow. Anti-pattern 3: Optional.of(possiblyNull) throws NPE — use ofNullable() for any nullable source. Also: never store Optional in a field (it's not Serializable) and never use Optional<Collection> (return empty collection instead).",
+      "methodSignatures": []
+    }
+  },
+  {
+    "id": "optional-012",
+    "topic": "optional",
+    "subtopic": "advanced",
+    "difficulty": "advanced",
+    "title": "Full Optional pipeline",
+    "description": "Given a config map, safely look up a key, parse it as an integer, validate it's positive, and return it — or throw a custom exception if any step fails.",
+    "starterCode": "Map<String, String> config = Map.of(\"timeout\", \"30\", \"retries\", \"abc\", \"port\", \"-1\");\n// Get 'timeout' as positive integer or throw\n// Get 'retries' as positive integer or throw\n// Get 'missing' as positive integer or throw\n",
+    "hints": [
+      "Optional.ofNullable(config.get(key))",
+      "map with Integer::parseInt (may throw — wrap in try/catch)",
+      "filter for positive"
+    ],
+    "solution": {
+      "code": "java.util.function.Function<String, Optional<Integer>> parsePositiveInt = s -> {\n    try {\n        return Optional.of(Integer.parseInt(s)).filter(n -> n > 0);\n    } catch (NumberFormatException e) {\n        return Optional.empty();\n    }\n};\n\njava.util.function.Function<String, Integer> getPositiveConfig = key ->\n    Optional.ofNullable(config.get(key))\n        .flatMap(parsePositiveInt)\n        .orElseThrow(() -> new IllegalArgumentException(\n            \"Config '\" + key + \"' must be a positive integer\"));\n\nSystem.out.println(getPositiveConfig.apply(\"timeout\")); // 30\ntry { getPositiveConfig.apply(\"retries\"); } // abc not parseable\ncatch (IllegalArgumentException e) { System.out.println(e.getMessage()); }\ntry { getPositiveConfig.apply(\"port\"); }   // -1 not positive\ncatch (IllegalArgumentException e) { System.out.println(e.getMessage()); }\ntry { getPositiveConfig.apply(\"missing\"); } // not in map\ncatch (IllegalArgumentException e) { System.out.println(e.getMessage()); }",
+      "explanation": "This exercise combines all Optional operations: ofNullable (handle missing key), flatMap (chain a mapper returning Optional), filter (validate positive), orElseThrow (mandatory presence with a meaningful error). The flatMap with parsePositiveInt handles both parse failure and the negative case via filter. Each step is composable and the pipeline reads like a specification.",
+      "methodSignatures": [
+        {
+          "method": "<U> Optional<U> flatMap(Function<? super T, ? extends Optional<? extends U>> mapper)",
+          "description": "Apply a mapper that returns Optional; result is the mapper's Optional (not wrapped again)."
+        },
+        {
+          "method": "T orElseThrow(Supplier<? extends X> exceptionSupplier)",
+          "description": "Returns value if present; throws the supplied exception if empty."
+        }
+      ]
+    }
+  }
+]

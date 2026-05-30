@@ -1,0 +1,23 @@
+# Maven
+backend/target/
+backend/.mvn/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Docker
+*.tar

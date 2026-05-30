@@ -1,0 +1,299 @@
+[
+  {
+    "id": "datetime-001",
+    "topic": "datetime",
+    "subtopic": "local-date",
+    "difficulty": "beginner",
+    "title": "LocalDate: Creating, Querying, and Comparing Dates",
+    "description": "Create LocalDate instances using now(), of(), and parse(). Query fields with getYear(), getMonth(), getDayOfWeek(). Compare dates with isBefore(), isAfter(), and isEqual().",
+    "starterCode": "import java.time.*;\nimport java.time.format.DateTimeFormatter;\n\npublic class LocalDateBasics {\n    public static void main(String[] args) {\n        // TODO: Get today's date\n\n        // TODO: Create a specific date: March 15, 2024\n\n        // TODO: Parse \"2024-07-04\" from a string\n\n        // TODO: Print the year, month name, day-of-week for the parsed date\n\n        // TODO: Check if March 15 is before July 4 and print a message\n\n        // TODO: Check if 2024 is a leap year using the date object\n    }\n}",
+    "hints": [
+      "LocalDate.of(year, month, day) — month is 1-based (1=January).",
+      "LocalDate.parse(string) expects ISO format yyyy-MM-dd by default.",
+      "getMonth() returns a Month enum; getMonthValue() returns the int (1-12).",
+      "getDayOfWeek() returns a DayOfWeek enum with a getDisplayName() method."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.format.TextStyle;\nimport java.util.Locale;\n\npublic class LocalDateBasics {\n    public static void main(String[] args) {\n        LocalDate today  = LocalDate.now();\n        System.out.println(\"Today: \" + today);\n\n        LocalDate march15 = LocalDate.of(2024, 3, 15);\n        System.out.println(\"March 15: \" + march15); // 2024-03-15\n\n        LocalDate july4 = LocalDate.parse(\"2024-07-04\");\n        System.out.println(\"July 4:   \" + july4);   // 2024-07-04\n\n        System.out.println(\"Year:  \" + july4.getYear());        // 2024\n        System.out.println(\"Month: \" + july4.getMonth());       // JULY\n        System.out.println(\"Day:   \" + july4.getDayOfWeek()\n            .getDisplayName(TextStyle.FULL, Locale.ENGLISH));   // Thursday\n\n        System.out.println(march15.isBefore(july4));   // true\n        System.out.println(july4.isAfter(march15));    // true\n        System.out.println(march15.isEqual(july4));    // false\n\n        System.out.println(\"2024 is leap year: \" + march15.isLeapYear()); // true\n        System.out.println(\"2023 is leap year: \"\n            + LocalDate.of(2023, 1, 1).isLeapYear()); // false\n    }\n}",
+      "explanation": "LocalDate is an immutable, timezone-free date (year-month-day). It is the right type for birthdays, holidays, and business dates where time-of-day is irrelevant. LocalDate.now() queries the system clock using the default timezone for the date — if you need reproducible tests, pass a fixed Clock. LocalDate.of() is the factory for known dates; month argument is 1-based (unlike the old Calendar which was 0-based). parse() uses DateTimeFormatter.ISO_LOCAL_DATE by default, which expects yyyy-MM-dd. isLeapYear() follows the Gregorian rule: divisible by 4, but not by 100, unless also divisible by 400 — so 2000 and 2024 are leap years but 1900 is not.",
+      "methodSignatures": [
+        {"method": "LocalDate LocalDate.now()", "description": "Returns today's date in the system default timezone."},
+        {"method": "LocalDate LocalDate.of(int year, int month, int dayOfMonth)", "description": "Creates a date from year, 1-based month, and day."},
+        {"method": "LocalDate LocalDate.parse(CharSequence text)", "description": "Parses a date from ISO-8601 format (yyyy-MM-dd)."},
+        {"method": "boolean LocalDate.isBefore(ChronoLocalDate other)", "description": "Returns true if this date is strictly before other."},
+        {"method": "boolean LocalDate.isLeapYear()", "description": "Returns true if the year of this date is a leap year."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-002",
+    "topic": "datetime",
+    "subtopic": "local-date",
+    "difficulty": "beginner",
+    "title": "LocalDate Arithmetic: plusDays, minusMonths, until (ChronoUnit)",
+    "description": "Add and subtract days, weeks, and months from a LocalDate. Measure the difference between two dates in various units using ChronoUnit.between().",
+    "starterCode": "import java.time.*;\nimport java.time.temporal.ChronoUnit;\n\npublic class LocalDateArithmetic {\n    public static void main(String[] args) {\n        LocalDate start = LocalDate.of(2024, 1, 1);\n\n        // TODO: Add 90 days to start\n\n        // TODO: Subtract 2 months from start\n\n        // TODO: Add 1 year and 3 months using plusYears and plusMonths\n\n        LocalDate end = LocalDate.of(2024, 12, 31);\n\n        // TODO: Find how many days between start and end using ChronoUnit.DAYS.between()\n\n        // TODO: Find how many weeks between start and end\n\n        // TODO: Find how many months between start and end\n    }\n}",
+    "hints": [
+      "LocalDate is immutable — all arithmetic methods return NEW LocalDate objects.",
+      "ChronoUnit.DAYS.between(start, end) returns a long — works for large ranges.",
+      "You can also use start.until(end, ChronoUnit.MONTHS) — same result, different syntax."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.temporal.ChronoUnit;\n\npublic class LocalDateArithmetic {\n    public static void main(String[] args) {\n        LocalDate start = LocalDate.of(2024, 1, 1);\n\n        System.out.println(start.plusDays(90));         // 2024-03-31\n        System.out.println(start.minusMonths(2));       // 2023-11-01\n        System.out.println(start.plusYears(1).plusMonths(3)); // 2025-04-01\n\n        LocalDate end = LocalDate.of(2024, 12, 31);\n\n        long days   = ChronoUnit.DAYS.between(start, end);\n        long weeks  = ChronoUnit.WEEKS.between(start, end);\n        long months = ChronoUnit.MONTHS.between(start, end);\n\n        System.out.println(\"Days:   \" + days);   // 365\n        System.out.println(\"Weeks:  \" + weeks);  // 52\n        System.out.println(\"Months: \" + months); // 11\n\n        // Equivalent: using until()\n        System.out.println(start.until(end, ChronoUnit.DAYS)); // 365\n    }\n}",
+      "explanation": "LocalDate arithmetic methods always return new instances — LocalDate is immutable just like String. start.plusDays(90) does not modify start; you must capture the result. When adding months, Java handles month-length overflow: if you add 1 month to January 31, you get February 28/29 (the last valid day of February), not March 2 or 3. ChronoUnit.between() truncates to whole units: 365 days / 7 = 52.14... → 52 whole weeks. The months computation counts only complete calendar months — Dec 31 minus Jan 1 is 11 months and 30 days, so months=11. until(end, unit) is the instance-method variant of ChronoUnit.unit.between(this, end).",
+      "methodSignatures": [
+        {"method": "LocalDate LocalDate.plusDays(long days)", "description": "Returns a copy with the specified number of days added."},
+        {"method": "LocalDate LocalDate.minusMonths(long months)", "description": "Returns a copy with the specified months subtracted."},
+        {"method": "long ChronoUnit.between(Temporal t1, Temporal t2)", "description": "Calculates the amount of time between two temporals in this unit."},
+        {"method": "long LocalDate.until(ChronoLocalDate endDate, TemporalUnit unit)", "description": "Calculates the amount of time until another date in the given unit."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-003",
+    "topic": "datetime",
+    "subtopic": "local-datetime",
+    "difficulty": "beginner",
+    "title": "LocalDateTime: Creation, Component Access, and truncation",
+    "description": "Work with LocalDateTime — a date combined with a time. Create instances, extract components, and truncate to different time units.",
+    "starterCode": "import java.time.*;\nimport java.time.temporal.ChronoUnit;\n\npublic class LocalDateTimeBasics {\n    public static void main(String[] args) {\n        // TODO: Get the current date and time\n\n        // TODO: Create 2024-06-15 at 14:30:45\n\n        // TODO: Construct a LocalDateTime by combining a LocalDate and LocalTime\n        LocalDate date = LocalDate.of(2024, 6, 15);\n        LocalTime time = LocalTime.of(14, 30, 45);\n\n        // TODO: Extract date part and time part from a LocalDateTime\n\n        // TODO: Truncate to the nearest hour (drops minutes and seconds)\n\n        // TODO: Add 2 hours and 30 minutes and print the result\n    }\n}",
+    "hints": [
+      "LocalDateTime.of(date, time) combines a LocalDate and a LocalTime.",
+      "atTime(time) on a LocalDate returns a LocalDateTime; atDate(date) on a LocalTime does the same.",
+      "truncatedTo(ChronoUnit.HOURS) zeroes out minutes, seconds, and nanoseconds."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.temporal.ChronoUnit;\n\npublic class LocalDateTimeBasics {\n    public static void main(String[] args) {\n        LocalDateTime now = LocalDateTime.now();\n        System.out.println(\"Now: \" + now);\n\n        LocalDateTime meeting = LocalDateTime.of(2024, 6, 15, 14, 30, 45);\n        System.out.println(\"Meeting: \" + meeting); // 2024-06-15T14:30:45\n\n        // Combine LocalDate + LocalTime\n        LocalDate date = LocalDate.of(2024, 6, 15);\n        LocalTime time = LocalTime.of(14, 30, 45);\n        LocalDateTime combined = LocalDateTime.of(date, time);\n        // Equivalent: date.atTime(time)  or  time.atDate(date)\n        System.out.println(combined); // 2024-06-15T14:30:45\n\n        // Extract parts\n        System.out.println(meeting.toLocalDate()); // 2024-06-15\n        System.out.println(meeting.toLocalTime()); // 14:30:45\n        System.out.println(meeting.getHour());     // 14\n        System.out.println(meeting.getMinute());   // 30\n\n        // Truncate to hour\n        LocalDateTime hourOnly = meeting.truncatedTo(ChronoUnit.HOURS);\n        System.out.println(hourOnly); // 2024-06-15T14:00\n\n        // Arithmetic\n        System.out.println(meeting.plusHours(2).plusMinutes(30)); // 2024-06-15T17:00:45\n    }\n}",
+      "explanation": "LocalDateTime bundles a date and a time without any timezone information — it is useful for scheduling events where the context (timezone) is known implicitly, such as a local calendar. LocalDateTime.of(int year, int month, int day, int hour, int minute, int second) has a convenient flat overload. LocalDate.atTime(time) is the fluent way to compose a LocalDateTime from its parts. truncatedTo(ChronoUnit) zeroes all fields smaller than the specified unit: truncatedTo(HOURS) sets minutes=0, seconds=0, nanos=0. Note that LocalDateTime lacks timezone context, so it cannot represent a unique point in time across different time zones — use ZonedDateTime or Instant for that.",
+      "methodSignatures": [
+        {"method": "LocalDateTime LocalDateTime.of(LocalDate date, LocalTime time)", "description": "Combines a date and time into a LocalDateTime."},
+        {"method": "LocalDateTime LocalDate.atTime(LocalTime time)", "description": "Combines this date with a time to create a LocalDateTime."},
+        {"method": "LocalDateTime LocalDateTime.truncatedTo(TemporalUnit unit)", "description": "Returns a copy truncated to the specified unit."},
+        {"method": "LocalDate LocalDateTime.toLocalDate()", "description": "Extracts the date component."},
+        {"method": "LocalTime LocalDateTime.toLocalTime()", "description": "Extracts the time component."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-004",
+    "topic": "datetime",
+    "subtopic": "zoned-datetime",
+    "difficulty": "intermediate",
+    "title": "ZonedDateTime: Working Across Time Zones",
+    "description": "Create ZonedDateTime objects, convert between timezones, and understand the difference between withZoneSameInstant (converts the moment) and withZoneSameLocal (reinterprets the clock).",
+    "starterCode": "import java.time.*;\n\npublic class ZonedDateTimeBasics {\n    public static void main(String[] args) {\n        // TODO: Get the current date-time in New York timezone\n\n        // TODO: Get the current date-time in Tokyo timezone\n\n        // TODO: Create a specific ZonedDateTime: 2024-06-15 09:00 in London\n\n        // TODO: Convert the London time to New York time (same instant, different zone)\n        //       Use withZoneSameInstant\n\n        // TODO: Show withZoneSameLocal (same clock reading, different zone)\n        //       and explain why it gives a different instant\n\n        // TODO: Print all available timezone IDs that contain \"America\"\n        //       (print just the first 5 to avoid flooding the console)\n    }\n}",
+    "hints": [
+      "ZoneId.of(\"America/New_York\") uses IANA timezone IDs — never use 3-letter abbreviations like 'EST'.",
+      "withZoneSameInstant: converts the moment — the physical time doesn't change, just the display zone.",
+      "withZoneSameLocal: keeps the clock reading but changes the zone — shifts the underlying instant.",
+      "ZoneId.getAvailableZoneIds() returns a Set<String> of all available zone IDs."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.util.stream.Collectors;\n\npublic class ZonedDateTimeBasics {\n    public static void main(String[] args) {\n        ZonedDateTime nyNow  = ZonedDateTime.now(ZoneId.of(\"America/New_York\"));\n        ZonedDateTime tokNow = ZonedDateTime.now(ZoneId.of(\"Asia/Tokyo\"));\n        System.out.println(\"NY:    \" + nyNow);\n        System.out.println(\"Tokyo: \" + tokNow);\n\n        // Specific time in London\n        ZonedDateTime london = ZonedDateTime.of(\n            LocalDateTime.of(2024, 6, 15, 9, 0), ZoneId.of(\"Europe/London\"));\n        System.out.println(\"London: \" + london); // 2024-06-15T09:00+01:00[Europe/London]\n\n        // Convert to New York: SAME instant, different offset\n        ZonedDateTime newYork = london.withZoneSameInstant(ZoneId.of(\"America/New_York\"));\n        System.out.println(\"New York (same instant): \" + newYork); // 2024-06-15T04:00...\n\n        // withZoneSameLocal: same clock reading (09:00), but NOW in New York's zone\n        // This is a DIFFERENT instant — 5 hours later than the London time\n        ZonedDateTime nyLocal = london.withZoneSameLocal(ZoneId.of(\"America/New_York\"));\n        System.out.println(\"New York (same local):   \" + nyLocal); // 2024-06-15T09:00...\n        System.out.println(\"Same instant? \" + newYork.toInstant().equals(nyLocal.toInstant())); // false\n\n        // Available zones containing \"America\"\n        ZoneId.getAvailableZoneIds().stream()\n            .filter(z -> z.startsWith(\"America\"))\n            .sorted().limit(5)\n            .forEach(System.out::println);\n    }\n}",
+      "explanation": "ZonedDateTime = LocalDateTime + ZoneId + the current offset (which may change for DST). Always use full IANA zone IDs like 'America/New_York' — abbreviations like 'EST' are ambiguous (used by multiple zones) and not reliably parsed. withZoneSameInstant is the 'convert' operation: it takes the same absolute moment and changes how it is displayed — London 09:00 BST (UTC+1) is simultaneously New York 04:00 EDT (UTC-4), 13 hours apart. withZoneSameLocal is the 'reinterpret' operation: it keeps the clock reading (09:00) but stamps it with the new zone — this changes the underlying UTC instant. Use withZoneSameInstant for 'what time is it there right now?' and withZoneSameLocal almost never (it is a data transformation that should usually be avoided).",
+      "methodSignatures": [
+        {"method": "ZonedDateTime ZonedDateTime.now(ZoneId zone)", "description": "Returns the current date-time in the specified timezone."},
+        {"method": "ZonedDateTime ZonedDateTime.of(LocalDateTime ldt, ZoneId zone)", "description": "Creates a ZonedDateTime from a local date-time and zone."},
+        {"method": "ZonedDateTime ZonedDateTime.withZoneSameInstant(ZoneId zone)", "description": "Converts to the same instant in a different zone (the UTC moment is unchanged)."},
+        {"method": "ZonedDateTime ZonedDateTime.withZoneSameLocal(ZoneId zone)", "description": "Reinterprets the local time in a different zone (the UTC moment changes)."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-005",
+    "topic": "datetime",
+    "subtopic": "duration-period",
+    "difficulty": "intermediate",
+    "title": "Duration and Period: Measuring Time Gaps",
+    "description": "Use Duration (time-based: hours, minutes, seconds) and Period (date-based: years, months, days) to measure and represent gaps between temporal objects.",
+    "starterCode": "import java.time.*;\nimport java.time.temporal.ChronoUnit;\n\npublic class DurationAndPeriod {\n    public static void main(String[] args) {\n        // --- Duration ---\n        LocalTime start = LocalTime.of(9, 0);\n        LocalTime end   = LocalTime.of(17, 30);\n\n        // TODO: Calculate the Duration between start and end\n        // TODO: Print total hours, minutes, seconds from the Duration\n\n        Duration workday = Duration.ofHours(8).plusMinutes(30);\n        // TODO: Print workday in total minutes and total seconds\n\n        // --- Period ---\n        LocalDate birthday    = LocalDate.of(1990, 5, 20);\n        LocalDate today       = LocalDate.of(2024, 5, 20);\n\n        // TODO: Calculate the Period between birthday and today\n        // TODO: Print the years, months, days components of the Period\n\n        // TODO: Create a Period of 1 year, 6 months, 15 days and add it to today\n    }\n}",
+    "hints": [
+      "Duration.between() works on time-based temporals (LocalTime, LocalDateTime, Instant).",
+      "Period.between() works on date-based temporals (LocalDate, LocalDate).",
+      "Duration.toMinutes() returns TOTAL minutes, not just the minutes component.",
+      "Period.getYears() returns just the year component, not total years — use ChronoUnit.YEARS.between() for total."
+    ],
+    "solution": {
+      "code": "import java.time.*;\n\npublic class DurationAndPeriod {\n    public static void main(String[] args) {\n        // Duration\n        LocalTime start = LocalTime.of(9, 0);\n        LocalTime end   = LocalTime.of(17, 30);\n        Duration shift = Duration.between(start, end);\n        System.out.println(\"Hours:   \" + shift.toHours());   // 8\n        System.out.println(\"Minutes: \" + shift.toMinutes()); // 510  (total!)\n        System.out.println(\"Seconds: \" + shift.toSeconds()); // 30600 (total!)\n        System.out.println(\"Min part only: \" + shift.toMinutesPart()); // 30\n\n        Duration workday = Duration.ofHours(8).plusMinutes(30);\n        System.out.println(\"Workday total minutes: \" + workday.toMinutes()); // 510\n        System.out.println(\"Workday total seconds: \" + workday.toSeconds()); // 30600\n\n        // Period\n        LocalDate birthday = LocalDate.of(1990, 5, 20);\n        LocalDate today    = LocalDate.of(2024, 5, 20);\n        Period age = Period.between(birthday, today);\n        System.out.println(\"Years:  \" + age.getYears());  // 34\n        System.out.println(\"Months: \" + age.getMonths()); // 0\n        System.out.println(\"Days:   \" + age.getDays());   // 0\n\n        Period custom = Period.of(1, 6, 15);\n        System.out.println(today.plus(custom)); // 2025-12-05\n    }\n}",
+      "explanation": "Duration models an exact time span in nanoseconds — appropriate for time-of-day or instant differences. Period models a date-based span in years-months-days — appropriate for calendar differences where month lengths vary. The crucial gotcha: Duration.toMinutes() returns the TOTAL duration in minutes (e.g. 8h30m = 510 total minutes), NOT just the minutes component. Java 9 introduced toMinutesPart(), toSecondsPart() etc. which return only the component (30 for minutes in this case). Period.getYears() returns only the year part of the period, not the total number of years — use ChronoUnit.YEARS.between() if you need the total. Never mix Duration and Period — Duration cannot be added to a LocalDate (has no concept of 'a day') and Period cannot be added to a LocalTime.",
+      "methodSignatures": [
+        {"method": "Duration Duration.between(Temporal startInclusive, Temporal endExclusive)", "description": "Creates a Duration between two time-based temporals."},
+        {"method": "long Duration.toMinutes()", "description": "Returns the total duration in whole minutes."},
+        {"method": "int Duration.toMinutesPart()", "description": "Java 9+. Returns the minutes component (0-59) of the duration."},
+        {"method": "Period Period.between(LocalDate startDate, LocalDate endDate)", "description": "Obtains a Period of years, months, days between two dates."},
+        {"method": "int Period.getYears()", "description": "Returns the years part of the period (not total years)."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-006",
+    "topic": "datetime",
+    "subtopic": "formatting",
+    "difficulty": "beginner",
+    "title": "DateTimeFormatter: format() and parse()",
+    "description": "Format LocalDate and LocalDateTime to human-readable strings using pattern-based and built-in formatters. Parse strings back to date objects.",
+    "starterCode": "import java.time.*;\nimport java.time.format.*;\nimport java.util.Locale;\n\npublic class DateFormatting {\n    public static void main(String[] args) {\n        LocalDate date = LocalDate.of(2024, 7, 4);\n        LocalDateTime dateTime = LocalDateTime.of(2024, 7, 4, 14, 30, 0);\n\n        // TODO: Format date as \"July 4, 2024\" using pattern \"MMMM d, yyyy\"\n\n        // TODO: Format dateTime as \"04/07/2024 14:30\" using a custom pattern\n\n        // TODO: Format using a built-in ISO_LOCAL_DATE formatter\n\n        // TODO: Format with locale-aware: FULL date style in French\n\n        // TODO: Parse \"15-Mar-2024\" using a custom pattern\n\n        // TODO: Parse an ISO date-time string: \"2024-07-04T14:30:00\"\n    }\n}",
+    "hints": [
+      "DateTimeFormatter.ofPattern(\"MMMM d, yyyy\") creates a custom formatter; MMMM = full month name.",
+      "DateTimeFormatter is immutable and thread-safe — safe to store as a static final field.",
+      "DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(Locale.FRENCH) for locale-aware.",
+      "For parsing, use LocalDate.parse(string, formatter) or formatter.parse(string, LocalDate::from)."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.format.*;\nimport java.util.Locale;\n\npublic class DateFormatting {\n    public static void main(String[] args) {\n        LocalDate date     = LocalDate.of(2024, 7, 4);\n        LocalDateTime ldt  = LocalDateTime.of(2024, 7, 4, 14, 30, 0);\n\n        // Custom pattern\n        DateTimeFormatter longDate = DateTimeFormatter.ofPattern(\"MMMM d, yyyy\", Locale.ENGLISH);\n        System.out.println(date.format(longDate)); // July 4, 2024\n\n        DateTimeFormatter dtFmt = DateTimeFormatter.ofPattern(\"dd/MM/yyyy HH:mm\");\n        System.out.println(ldt.format(dtFmt)); // 04/07/2024 14:30\n\n        // Built-in ISO formatters\n        System.out.println(date.format(DateTimeFormatter.ISO_LOCAL_DATE)); // 2024-07-04\n        System.out.println(ldt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)); // 2024-07-04T14:30:00\n\n        // Locale-aware\n        DateTimeFormatter french = DateTimeFormatter\n            .ofLocalizedDate(FormatStyle.FULL)\n            .withLocale(Locale.FRENCH);\n        System.out.println(date.format(french)); // jeudi 4 juillet 2024\n\n        // Parsing\n        DateTimeFormatter parseFmt = DateTimeFormatter.ofPattern(\"d-MMM-yyyy\", Locale.ENGLISH);\n        LocalDate parsed = LocalDate.parse(\"15-Mar-2024\", parseFmt);\n        System.out.println(parsed); // 2024-03-15\n\n        LocalDateTime parsedDT = LocalDateTime.parse(\"2024-07-04T14:30:00\");\n        System.out.println(parsedDT); // 2024-07-04T14:30\n    }\n}",
+      "explanation": "DateTimeFormatter uses a pattern language similar to SimpleDateFormat but is immutable and thread-safe — SimpleDateFormat was notoriously NOT thread-safe. Pattern letters: M/MM/MMM/MMMM = 7/07/Jul/July; d/dd = 4/04; yyyy = 2024; HH:mm = 24-hour time. Format.FULL, LONG, MEDIUM, SHORT are locale-sensitive styles that delegate to the locale's date formatting rules — great for internationalised apps. Always specify a Locale with named patterns to avoid JVM default locale surprises: 'MMM' in German would produce 'Mär' instead of 'Mar'. ISO formatters are built-in constants and parse/format ISO-8601 strings without any pattern string — prefer them for data interchange (APIs, databases).",
+      "methodSignatures": [
+        {"method": "DateTimeFormatter DateTimeFormatter.ofPattern(String pattern)", "description": "Creates a formatter from a pattern string."},
+        {"method": "DateTimeFormatter DateTimeFormatter.ofLocalizedDate(FormatStyle dateStyle)", "description": "Creates a locale-sensitive formatter for dates."},
+        {"method": "String TemporalAccessor.format(DateTimeFormatter formatter)", "description": "Formats the date/time using the given formatter."},
+        {"method": "LocalDate LocalDate.parse(CharSequence text, DateTimeFormatter formatter)", "description": "Parses a date from text using the given formatter."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-007",
+    "topic": "datetime",
+    "subtopic": "formatting",
+    "difficulty": "intermediate",
+    "title": "Custom DateTimeFormatter with ofLocalizedDateTime and withResolverStyle",
+    "description": "Build formatters with optional sections, handle lenient vs strict parsing with ResolverStyle, and format zone-aware date-times.",
+    "starterCode": "import java.time.*;\nimport java.time.format.*;\nimport java.util.Locale;\n\npublic class AdvancedFormatting {\n    public static void main(String[] args) {\n        ZonedDateTime zdt = ZonedDateTime.of(\n            LocalDateTime.of(2024, 3, 15, 9, 30),\n            ZoneId.of(\"America/New_York\"));\n\n        // TODO: Format zdt with pattern \"EEE, dd MMM yyyy HH:mm z\"\n        //       (e.g. \"Fri, 15 Mar 2024 09:30 EDT\")\n\n        // TODO: Demonstrate STRICT resolver style:\n        //       Try to parse \"2024-02-30\" and catch the exception\n        //       Then parse \"2024-02-29\" (valid in leap year)\n\n        // TODO: Use LENIENT resolver to parse \"2024-02-30\"\n        //       (it rolls over to March 1)\n    }\n}",
+    "hints": [
+      "EEE = short day name (Mon, Tue...), EEEE = full day name.",
+      "z = timezone abbreviation (EDT), Z = numeric offset (+0000), VV = IANA zone ID.",
+      "DateTimeFormatter.ofPattern(pattern).withResolverStyle(ResolverStyle.STRICT).",
+      "STRICT mode rejects Feb-30; LENIENT mode rolls it over to Mar-01 or Mar-02."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.format.*;\nimport java.util.Locale;\n\npublic class AdvancedFormatting {\n    public static void main(String[] args) {\n        ZonedDateTime zdt = ZonedDateTime.of(\n            LocalDateTime.of(2024, 3, 15, 9, 30),\n            ZoneId.of(\"America/New_York\"));\n\n        DateTimeFormatter rfcStyle = DateTimeFormatter\n            .ofPattern(\"EEE, dd MMM yyyy HH:mm z\", Locale.ENGLISH);\n        System.out.println(zdt.format(rfcStyle)); // Fri, 15 Mar 2024 09:30 EDT\n\n        // STRICT parsing — rejects invalid dates\n        DateTimeFormatter strict = DateTimeFormatter\n            .ofPattern(\"uuuu-MM-dd\")\n            .withResolverStyle(ResolverStyle.STRICT);\n        try {\n            LocalDate.parse(\"2024-02-30\", strict); // throws\n        } catch (DateTimeException e) {\n            System.out.println(\"Strict rejected: \" + e.getMessage());\n        }\n        LocalDate leapDay = LocalDate.parse(\"2024-02-29\", strict);\n        System.out.println(\"Leap day OK: \" + leapDay); // 2024-02-29\n\n        // LENIENT parsing — rolls over invalid dates\n        DateTimeFormatter lenient = DateTimeFormatter\n            .ofPattern(\"uuuu-MM-dd\")\n            .withResolverStyle(ResolverStyle.LENIENT);\n        LocalDate rolled = LocalDate.parse(\"2024-02-30\", lenient);\n        System.out.println(\"Lenient rolled: \" + rolled); // 2024-03-01\n    }\n}",
+      "explanation": "ResolverStyle controls how the parsed field values are assembled into a date. STRICT: every field must be in range for the given month/year — Feb-30 is rejected. SMART (default): out-of-range day-of-month is clipped to the last valid day — Feb-30 becomes Feb-29 in a leap year or Feb-28 otherwise. LENIENT: overflows roll over — Feb-30 in 2024 becomes March 1 (Feb has 29 days in 2024, so +1 day overflows to March 1). Use STRICT for data validation (rejecting bad input), LENIENT when performing date calculations where overflow is intentional. Note: with STRICT you should use 'u' (proleptic year) instead of 'y' (year-of-era) to avoid ambiguity with BC years.",
+      "methodSignatures": [
+        {"method": "DateTimeFormatter DateTimeFormatter.withResolverStyle(ResolverStyle resolverStyle)", "description": "Returns a copy of this formatter with the specified resolver style."},
+        {"method": "LocalDate LocalDate.parse(CharSequence text, DateTimeFormatter formatter)", "description": "Parses a date from text using the given formatter and its resolver style."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-008",
+    "topic": "datetime",
+    "subtopic": "instant",
+    "difficulty": "intermediate",
+    "title": "Instant: Machine Time and Epoch Milliseconds",
+    "description": "Use Instant to represent a precise point on the UTC timeline. Convert between Instant and epoch milliseconds, and understand when to use Instant vs LocalDateTime.",
+    "starterCode": "import java.time.*;\n\npublic class InstantBasics {\n    public static void main(String[] args) {\n        // TODO: Get the current instant (UTC machine time)\n\n        // TODO: Get the epoch milliseconds from the instant\n\n        // TODO: Create an Instant from a known epoch millisecond value (e.g. 0 = Unix epoch)\n\n        // TODO: Convert an Instant to a ZonedDateTime in \"Asia/Kolkata\" to display it\n\n        // TODO: Add 24 hours to an Instant using plus()\n\n        // TODO: Print the difference in seconds between two instants\n    }\n}",
+    "hints": [
+      "Instant.now() always uses UTC — it has no timezone.",
+      "instant.toEpochMilli() returns milliseconds since 1970-01-01T00:00:00Z.",
+      "Instant.ofEpochMilli(ms) creates an Instant from epoch milliseconds.",
+      "To display an Instant in a human-readable way, convert: instant.atZone(zoneId)."
+    ],
+    "solution": {
+      "code": "import java.time.*;\n\npublic class InstantBasics {\n    public static void main(String[] args) {\n        Instant now = Instant.now();\n        System.out.println(\"Now (UTC): \" + now); // 2024-...-...Z\n\n        long epochMs = now.toEpochMilli();\n        System.out.println(\"Epoch ms:  \" + epochMs);\n\n        // Unix epoch: Jan 1, 1970 00:00:00 UTC\n        Instant epoch = Instant.ofEpochMilli(0);\n        System.out.println(\"Unix epoch: \" + epoch); // 1970-01-01T00:00:00Z\n\n        // Instant has no zone — convert to display\n        ZonedDateTime india = epoch.atZone(ZoneId.of(\"Asia/Kolkata\"));\n        System.out.println(\"Epoch in IST: \" + india); // 1970-01-01T05:30+05:30[Asia/Kolkata]\n\n        // Add 24 hours\n        Instant tomorrow = now.plus(Duration.ofHours(24));\n        System.out.println(\"Tomorrow:  \" + tomorrow);\n\n        // Difference in seconds\n        Instant t1 = Instant.ofEpochMilli(1_000_000_000_000L);\n        Instant t2 = Instant.ofEpochMilli(1_000_003_600_000L);\n        long diffSecs = Duration.between(t1, t2).toSeconds();\n        System.out.println(\"Diff: \" + diffSecs + \" seconds\"); // 3600\n    }\n}",
+      "explanation": "Instant represents a single point on the UTC timeline — the number of nanoseconds since the Unix epoch (1970-01-01T00:00:00Z). It has no timezone and cannot be formatted to show day/month/year without first converting to a ZonedDateTime. Instant is ideal for: logging timestamps, storing 'when did this happen' in databases (as a UTC value), measuring elapsed time, and comparing event order. LocalDateTime is NOT suitable for these because it lacks timezone context — the 'same' LocalDateTime means different instants in different timezones. Rule of thumb: if you're thinking about users and calendars, use LocalDate/LocalDateTime; if you're thinking about the machine, logging, or data storage, use Instant.",
+      "methodSignatures": [
+        {"method": "Instant Instant.now()", "description": "Returns the current UTC instant."},
+        {"method": "long Instant.toEpochMilli()", "description": "Returns milliseconds since the Unix epoch."},
+        {"method": "Instant Instant.ofEpochMilli(long epochMilli)", "description": "Creates an Instant from epoch milliseconds."},
+        {"method": "ZonedDateTime Instant.atZone(ZoneId zone)", "description": "Combines this Instant with a zone to create a ZonedDateTime."},
+        {"method": "Instant Instant.plus(Duration duration)", "description": "Returns a copy with the duration added."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-009",
+    "topic": "datetime",
+    "subtopic": "legacy-bridge",
+    "difficulty": "intermediate",
+    "title": "Bridging Legacy java.util.Date and java.util.Calendar",
+    "description": "Convert between the legacy java.util.Date/Calendar API and the modern java.time API. Essential when working with older libraries like JDBC, JPA, or Jackson that haven't fully migrated.",
+    "starterCode": "import java.time.*;\nimport java.util.Date;\nimport java.util.Calendar;\n\npublic class LegacyBridge {\n    public static void main(String[] args) {\n        // --- java.util.Date -> modern ---\n        Date legacyDate = new Date(); // represents current moment\n\n        // TODO: Convert legacyDate to Instant\n\n        // TODO: Convert Instant to LocalDate (using system default timezone)\n\n        // TODO: Convert Instant to LocalDateTime (using UTC)\n\n        // --- modern -> java.util.Date ---\n        LocalDateTime modern = LocalDateTime.of(2024, 6, 15, 12, 0);\n        // TODO: Convert modern LocalDateTime back to java.util.Date\n        //       (assumes system default timezone)\n\n        // --- java.util.Calendar ---\n        Calendar cal = Calendar.getInstance();\n        // TODO: Convert Calendar to ZonedDateTime\n    }\n}",
+    "hints": [
+      "Date.toInstant() is the bridge into modern API. java.util.Date.from(instant) goes the other way.",
+      "To get a LocalDate from an Instant: instant.atZone(ZoneId.systemDefault()).toLocalDate()",
+      "Calendar.toInstant() works the same as Date.toInstant().",
+      "LocalDateTime has no timezone — you must provide one when converting to Date: ldt.atZone(zone).toInstant()"
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.util.Date;\nimport java.util.Calendar;\n\npublic class LegacyBridge {\n    public static void main(String[] args) {\n        Date legacyDate = new Date();\n\n        // Date -> Instant\n        Instant instant = legacyDate.toInstant();\n        System.out.println(\"Instant: \" + instant);\n\n        // Instant -> LocalDate (in system timezone)\n        LocalDate localDate = instant\n            .atZone(ZoneId.systemDefault())\n            .toLocalDate();\n        System.out.println(\"LocalDate: \" + localDate);\n\n        // Instant -> LocalDateTime in UTC\n        LocalDateTime utcDT = instant\n            .atZone(ZoneOffset.UTC)\n            .toLocalDateTime();\n        System.out.println(\"UTC LocalDateTime: \" + utcDT);\n\n        // LocalDateTime -> Date (must specify a zone)\n        LocalDateTime modern = LocalDateTime.of(2024, 6, 15, 12, 0);\n        Date legacyBack = Date.from(\n            modern.atZone(ZoneId.systemDefault()).toInstant());\n        System.out.println(\"Back to Date: \" + legacyBack);\n\n        // Calendar -> ZonedDateTime\n        Calendar cal = Calendar.getInstance();\n        ZonedDateTime zdt = cal.toInstant()\n            .atZone(cal.getTimeZone().toZoneId());\n        System.out.println(\"From Calendar: \" + zdt);\n    }\n}",
+      "explanation": "java.util.Date is essentially a thin wrapper around a long (epoch milliseconds), and toInstant() exposes that directly. The conversion chain Date -> Instant -> ZonedDateTime -> LocalDate is the standard idiom. You MUST go through ZonedDateTime when extracting a LocalDate from an Instant because the calendar date depends on the timezone — the same Instant can be 'June 15' in New York but 'June 16' in Tokyo. ZoneId.systemDefault() uses the JVM's configured timezone — fine for user-facing apps, but for servers always prefer an explicit zone. Calendar.toInstant() was added in Java 8 as a convenience — previously you had to call cal.getTimeInMillis() and use ofEpochMilli(). For JDBC, use PreparedStatement.setTimestamp() with a Timestamp.from(instant) bridge.",
+      "methodSignatures": [
+        {"method": "Instant Date.toInstant()", "description": "Converts this Date to an Instant."},
+        {"method": "Date Date.from(Instant instant)", "description": "Creates a Date from an Instant."},
+        {"method": "Instant Calendar.toInstant()", "description": "Java 8+. Converts this Calendar to an Instant."},
+        {"method": "ZoneId TimeZone.toZoneId()", "description": "Converts a legacy TimeZone to a ZoneId."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-010",
+    "topic": "datetime",
+    "subtopic": "local-date",
+    "difficulty": "intermediate",
+    "title": "TemporalAdjusters: First/Last Day of Month, Next Weekday",
+    "description": "Use TemporalAdjusters to navigate to meaningful calendar positions like the first Monday of the month, last day of the month, or the next occurrence of a specific weekday.",
+    "starterCode": "import java.time.*;\nimport java.time.temporal.TemporalAdjusters;\n\npublic class TemporalAdjustersDemo {\n    public static void main(String[] args) {\n        LocalDate date = LocalDate.of(2024, 3, 15); // Friday, March 15 2024\n\n        // TODO: Find the first day of the same month\n\n        // TODO: Find the last day of the same month\n\n        // TODO: Find the first Monday of the same month\n\n        // TODO: Find the next Friday after this date (not including today)\n\n        // TODO: Find the next or same Monday (if today is Monday, return today)\n\n        // TODO: Find the last Sunday of the month\n    }\n}",
+    "hints": [
+      "TemporalAdjusters.firstDayOfMonth() / lastDayOfMonth() return the start/end of the month.",
+      "TemporalAdjusters.firstInMonth(DayOfWeek) returns the first occurrence of that day.",
+      "TemporalAdjusters.next(DayOfWeek) skips to the NEXT occurrence (never returns today).",
+      "TemporalAdjusters.nextOrSame(DayOfWeek) returns today if today matches, otherwise the next."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.time.temporal.TemporalAdjusters;\n\npublic class TemporalAdjustersDemo {\n    public static void main(String[] args) {\n        LocalDate date = LocalDate.of(2024, 3, 15); // Friday\n\n        System.out.println(date.with(TemporalAdjusters.firstDayOfMonth())); // 2024-03-01\n        System.out.println(date.with(TemporalAdjusters.lastDayOfMonth()));  // 2024-03-31\n\n        System.out.println(date.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY)));  // 2024-03-04\n        System.out.println(date.with(TemporalAdjusters.next(DayOfWeek.FRIDAY)));          // 2024-03-22\n        System.out.println(date.with(TemporalAdjusters.nextOrSame(DayOfWeek.FRIDAY)));    // 2024-03-15 (today!)\n        System.out.println(date.with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY)));   // 2024-03-18\n\n        System.out.println(date.with(TemporalAdjusters.lastInMonth(DayOfWeek.SUNDAY)));  // 2024-03-31\n\n        // Custom adjuster: next business day (Mon-Fri)\n        TemporalAdjusters.ofDateAdjuster(d -> {\n            DayOfWeek dow = d.getDayOfWeek();\n            int add = (dow == DayOfWeek.FRIDAY) ? 3 :\n                      (dow == DayOfWeek.SATURDAY) ? 2 : 1;\n            return d.plusDays(add);\n        });\n        System.out.println(\"Next biz after Fri: \" + date.with(\n            TemporalAdjusters.ofDateAdjuster(d -> {\n                DayOfWeek dow = d.getDayOfWeek();\n                int add = (dow == DayOfWeek.FRIDAY) ? 3 : (dow == DayOfWeek.SATURDAY) ? 2 : 1;\n                return d.plusDays(add);\n            })\n        )); // 2024-03-18 (Monday)\n    }\n}",
+      "explanation": "TemporalAdjusters is a utility class of factory methods that create TemporalAdjuster instances — functional interfaces that take a Temporal and return a new Temporal. LocalDate.with(adjuster) applies the adjuster and returns a new LocalDate. firstInMonth(DOW) finds the first occurrence of that day in the current month — March 2024 starts on a Friday so the first Monday is March 4. next(DOW) always moves forward at least one day, while nextOrSame(DOW) stays if the day already matches. lastInMonth(DOW) works backward from the end of the month. You can write custom adjusters with TemporalAdjusters.ofDateAdjuster(UnaryOperator<LocalDate>) — the example computes the next business day, correctly skipping the weekend after Friday.",
+      "methodSignatures": [
+        {"method": "LocalDate LocalDate.with(TemporalAdjuster adjuster)", "description": "Returns a copy adjusted by the given adjuster."},
+        {"method": "TemporalAdjuster TemporalAdjusters.firstDayOfMonth()", "description": "Adjusts to the first day of the month."},
+        {"method": "TemporalAdjuster TemporalAdjusters.firstInMonth(DayOfWeek dayOfWeek)", "description": "Adjusts to the first occurrence of the day in the month."},
+        {"method": "TemporalAdjuster TemporalAdjusters.next(DayOfWeek dayOfWeek)", "description": "Adjusts to the next occurrence of the day (excludes today)."},
+        {"method": "TemporalAdjuster TemporalAdjusters.ofDateAdjuster(UnaryOperator<LocalDate> op)", "description": "Creates a custom adjuster from a lambda."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-011",
+    "topic": "datetime",
+    "subtopic": "zoned-datetime",
+    "difficulty": "advanced",
+    "title": "DST Transitions: Handling Clock Changes Correctly",
+    "description": "Understand how Daylight Saving Time (DST) gaps and overlaps affect ZonedDateTime calculations, and why Duration.ofHours(1) across a DST transition doesn't always add 1 calendar hour.",
+    "starterCode": "import java.time.*;\n\npublic class DSTTransition {\n    // US Eastern: spring forward 2024-03-10 02:00 -> 03:00 (gap)\n    //             fall back   2024-11-03 02:00 -> 01:00 (overlap)\n\n    public static void main(String[] args) {\n        ZoneId eastern = ZoneId.of(\"America/New_York\");\n\n        // TODO: Create ZonedDateTime at 2024-03-10 01:30 EST (just before gap)\n\n        // TODO: Add 1 hour using Duration — observe what happens to the clock\n        //       (should be 03:30 EDT because 02:30 doesn't exist!)\n\n        // TODO: Add 1 hour using Period.ofDays(0).plusHours(1) vs Duration\n        //       Explain the difference in comments\n\n        // TODO: Create ZonedDateTime at 2024-11-03 01:30 — during the overlap,\n        //       there are TWO 01:30 times (one EDT, one EST)\n        //       Show how to specify which one using withEarlierOffsetAtOverlap()\n    }\n}",
+    "hints": [
+      "Adding Duration.ofHours(1) to a ZonedDateTime adds exactly 3600 seconds to the instant.",
+      "At a spring-forward gap, the result is automatically pushed forward past the missing hour.",
+      "withEarlierOffsetAtOverlap() and withLaterOffsetAtOverlap() disambiguate overlap times."
+    ],
+    "solution": {
+      "code": "import java.time.*;\n\npublic class DSTTransition {\n    public static void main(String[] args) {\n        ZoneId eastern = ZoneId.of(\"America/New_York\");\n\n        // Just before spring forward: 01:30 EST (UTC-5)\n        ZonedDateTime before = ZonedDateTime.of(\n            LocalDateTime.of(2024, 3, 10, 1, 30), eastern);\n        System.out.println(\"Before: \" + before); // 2024-03-10T01:30-05:00[America/New_York]\n\n        // Add 1 hour (3600 seconds): lands in the gap -> adjusted to 03:30 EDT (UTC-4)\n        ZonedDateTime after = before.plus(Duration.ofHours(1));\n        System.out.println(\"After +1h: \" + after); // 2024-03-10T03:30-04:00[America/New_York]\n        // Wall clock jumped from 01:30 to 03:30 — 2 clock hours advanced, not 1!\n\n        // Fall-back overlap: 01:30 is ambiguous — it occurs twice\n        ZonedDateTime overlap = ZonedDateTime.of(\n            LocalDateTime.of(2024, 11, 3, 1, 30), eastern);\n        System.out.println(\"\\nOverlap (default EDT): \" + overlap);\n\n        ZonedDateTime earlier = overlap.withEarlierOffsetAtOverlap();\n        ZonedDateTime later   = overlap.withLaterOffsetAtOverlap();\n        System.out.println(\"Earlier offset (EDT -04): \" + earlier);\n        System.out.println(\"Later  offset (EST -05): \" + later);\n        System.out.println(\"Instant difference: \" +\n            Duration.between(earlier.toInstant(), later.toInstant()).toHours() + \" hour(s)\"); // 1\n    }\n}",
+      "explanation": "DST creates two anomalies: gaps (spring forward, when a local time simply doesn't exist) and overlaps (fall back, when a local time occurs twice). Adding Duration to a ZonedDateTime always adds exact seconds to the underlying instant — it never 'skips' time. At the spring-forward gap, the instant lands in a non-existent local time window; ZonedDateTime automatically adjusts by applying the new offset, so the clock jumps from 01:30 to 03:30. At fall-back overlaps, ZonedDateTime defaults to the earlier (pre-clock-change) offset. withEarlierOffsetAtOverlap() explicitly picks the first occurrence (EDT, UTC-4) and withLaterOffsetAtOverlap() picks the second (EST, UTC-5). These two ZonedDateTimes represent instants that are exactly 1 hour apart. This matters for scheduling (recurring jobs, reminders) and for audit logs that need to distinguish which '01:30' was meant.",
+      "methodSignatures": [
+        {"method": "ZonedDateTime ZonedDateTime.plus(TemporalAmount amount)", "description": "Adds the amount (Duration or Period) to this date-time."},
+        {"method": "ZonedDateTime ZonedDateTime.withEarlierOffsetAtOverlap()", "description": "Adjusts to the earlier offset in a DST overlap (if applicable)."},
+        {"method": "ZonedDateTime ZonedDateTime.withLaterOffsetAtOverlap()", "description": "Adjusts to the later offset in a DST overlap (if applicable)."}
+      ]
+    }
+  },
+  {
+    "id": "datetime-012",
+    "topic": "datetime",
+    "subtopic": "local-datetime",
+    "difficulty": "intermediate",
+    "title": "Building a Meeting Scheduler with LocalDateTime",
+    "description": "Apply LocalDateTime arithmetic to schedule recurring weekly meetings, check for conflicts, and compute time until the next occurrence.",
+    "starterCode": "import java.time.*;\nimport java.time.temporal.*;\nimport java.util.*;\n\npublic class MeetingScheduler {\n\n    // TODO: Generate the next N occurrences of a weekly meeting\n    // starting from 'firstMeeting', repeating every 7 days\n    static List<LocalDateTime> generateWeekly(LocalDateTime firstMeeting, int count) {\n        return null;\n    }\n\n    // TODO: Given two meetings with durationMinutes each,\n    //       return true if they overlap\n    static boolean overlaps(LocalDateTime a, LocalDateTime b, int durationMinutes) {\n        return false;\n    }\n\n    // TODO: Return the duration until the next meeting from 'now'\n    //       If 'now' is after all meetings, return Duration.ZERO\n    static Duration timeUntilNext(LocalDateTime now, List<LocalDateTime> meetings) {\n        return null;\n    }\n\n    public static void main(String[] args) {\n        LocalDateTime first = LocalDateTime.of(2024, 1, 8, 10, 0); // Monday 10am\n        List<LocalDateTime> schedule = generateWeekly(first, 4);\n        schedule.forEach(System.out::println);\n\n        System.out.println(overlaps(\n            LocalDateTime.of(2024, 1, 8, 10, 0),\n            LocalDateTime.of(2024, 1, 8, 10, 30),\n            60)); // true — they overlap\n\n        LocalDateTime now = LocalDateTime.of(2024, 1, 8, 9, 45);\n        System.out.println(timeUntilNext(now, schedule)); // PT15M\n    }\n}",
+    "hints": [
+      "Generate with a loop: nextMeeting = firstMeeting.plusWeeks(i) for i in 0..n-1.",
+      "Two meetings a and b overlap if a.start < b.end AND b.start < a.end.",
+      "timeUntilNext: filter meetings where meeting.isAfter(now), find the min, return Duration.between(now, min)."
+    ],
+    "solution": {
+      "code": "import java.time.*;\nimport java.util.*;\n\npublic class MeetingScheduler {\n\n    static List<LocalDateTime> generateWeekly(LocalDateTime firstMeeting, int count) {\n        List<LocalDateTime> meetings = new ArrayList<>();\n        for (int i = 0; i < count; i++) {\n            meetings.add(firstMeeting.plusWeeks(i));\n        }\n        return meetings;\n    }\n\n    static boolean overlaps(LocalDateTime a, LocalDateTime b, int durationMinutes) {\n        LocalDateTime aEnd = a.plusMinutes(durationMinutes);\n        LocalDateTime bEnd = b.plusMinutes(durationMinutes);\n        // Overlap: each starts before the other ends\n        return a.isBefore(bEnd) && b.isBefore(aEnd);\n    }\n\n    static Duration timeUntilNext(LocalDateTime now, List<LocalDateTime> meetings) {\n        return meetings.stream()\n            .filter(m -> m.isAfter(now))\n            .min(Comparator.naturalOrder())\n            .map(m -> Duration.between(now, m))\n            .orElse(Duration.ZERO);\n    }\n\n    public static void main(String[] args) {\n        LocalDateTime first = LocalDateTime.of(2024, 1, 8, 10, 0);\n        List<LocalDateTime> schedule = generateWeekly(first, 4);\n        schedule.forEach(System.out::println);\n        // 2024-01-08T10:00, 2024-01-15T10:00, 2024-01-22T10:00, 2024-01-29T10:00\n\n        System.out.println(overlaps(\n            LocalDateTime.of(2024, 1, 8, 10, 0),\n            LocalDateTime.of(2024, 1, 8, 10, 30), 60)); // true\n        System.out.println(overlaps(\n            LocalDateTime.of(2024, 1, 8, 10, 0),\n            LocalDateTime.of(2024, 1, 8, 11, 0), 60)); // false (b starts at a's end)\n\n        LocalDateTime now = LocalDateTime.of(2024, 1, 8, 9, 45);\n        System.out.println(timeUntilNext(now, schedule)); // PT15M\n    }\n}",
+      "explanation": "plusWeeks(i) is equivalent to plusDays(7*i) but reads more clearly. The overlap test uses the standard interval intersection formula: [a, aEnd) overlaps [b, bEnd) if and only if a < bEnd AND b < aEnd. Note that touching (a == bEnd) is NOT an overlap (meetings back-to-back are fine). The Stream pipeline in timeUntilNext() filters to future meetings, finds the minimum (closest in time), and maps to a Duration — the Optional handles the case where all meetings are in the past. Duration.between(now, next) gives the exact time gap. The output 'PT15M' is ISO-8601 duration notation: P=period, T=time section, 15M=15 minutes. Use duration.toMinutes() to convert to a readable number if needed.",
+      "methodSignatures": [
+        {"method": "LocalDateTime LocalDateTime.plusWeeks(long weeks)", "description": "Returns a copy with the specified weeks added (= 7*days)."},
+        {"method": "boolean LocalDateTime.isAfter(ChronoLocalDateTime other)", "description": "Returns true if this is strictly after other."},
+        {"method": "Duration Duration.between(Temporal startInclusive, Temporal endExclusive)", "description": "Creates a Duration between two LocalDateTime or Instant values."}
+      ]
+    }
+  }
+]

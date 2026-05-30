@@ -1,0 +1,457 @@
+[
+  {
+    "id": "io-001",
+    "topic": "io",
+    "subtopic": "byte-streams",
+    "difficulty": "beginner",
+    "title": "FileOutputStream — write bytes to a file",
+    "description": "Write the string 'Hello, Java IO!' to a file called 'hello.txt' using FileOutputStream.",
+    "starterCode": "// Write \"Hello, Java IO!\" to hello.txt using FileOutputStream\n// Use getBytes() to convert String to byte[]\n",
+    "hints": ["new FileOutputStream(\"hello.txt\")", "fos.write(str.getBytes())"],
+    "solution": {
+      "code": "String content = \"Hello, Java IO!\";\ntry (FileOutputStream fos = new FileOutputStream(\"hello.txt\")) {\n    fos.write(content.getBytes());\n    System.out.println(\"Written to hello.txt\");\n} catch (IOException e) {\n    e.printStackTrace();\n}\n// Try-with-resources automatically closes fos",
+      "explanation": "FileOutputStream writes raw bytes to a file. getBytes() converts the String to a byte[] using the platform's default charset (use getBytes(StandardCharsets.UTF_8) for explicit encoding). The try-with-resources statement (Java 7+) automatically closes the stream even if an exception occurs — always use this pattern with IO resources. The file is created if it doesn't exist; it is truncated if it does (use FileOutputStream(file, true) to append).",
+      "methodSignatures": [
+        {
+          "method": "FileOutputStream(String name) throws FileNotFoundException",
+          "description": "Opens a FileOutputStream to the named file. Creates or truncates the file."
+        },
+        {
+          "method": "FileOutputStream(String name, boolean append) throws FileNotFoundException",
+          "description": "If append is true, bytes are written to the end of the file instead of truncating."
+        },
+        {
+          "method": "void write(byte[] b) throws IOException",
+          "description": "Writes all bytes in array b to the stream."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-002",
+    "topic": "io",
+    "subtopic": "byte-streams",
+    "difficulty": "beginner",
+    "title": "FileInputStream — read bytes from a file",
+    "description": "Read the contents of 'hello.txt' (created in the previous exercise) using FileInputStream and print it.",
+    "starterCode": "// Read hello.txt using FileInputStream\n// Convert byte[] back to String and print\n",
+    "hints": ["fis.read(buffer)", "new String(buffer, 0, bytesRead)"],
+    "solution": {
+      "code": "// First, create the file for this exercise\ntry (FileOutputStream fos = new FileOutputStream(\"hello.txt\")) {\n    fos.write(\"Hello, Java IO!\".getBytes());\n}\n\n// Now read it\ntry (FileInputStream fis = new FileInputStream(\"hello.txt\")) {\n    byte[] buffer = new byte[1024];\n    int bytesRead = fis.read(buffer);\n    String content = new String(buffer, 0, bytesRead);\n    System.out.println(content); // Hello, Java IO!\n} catch (IOException e) {\n    e.printStackTrace();\n}",
+      "explanation": "FileInputStream reads raw bytes from a file. read(byte[]) fills the buffer and returns the number of bytes actually read (-1 at end of file). Creating a String from a byte array: new String(bytes, offset, length) — always specify offset 0 and the actual bytesRead to avoid including leftover zeros in the buffer. For large files, use a loop checking bytesRead != -1. For modern code, prefer Files.readAllBytes() or Files.readString().",
+      "methodSignatures": [
+        {
+          "method": "int read(byte[] b) throws IOException",
+          "description": "Reads up to b.length bytes into b. Returns bytes read, or -1 at end of file."
+        },
+        {
+          "method": "int read(byte[] b, int off, int len) throws IOException",
+          "description": "Reads up to len bytes into b starting at offset off."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-003",
+    "topic": "io",
+    "subtopic": "byte-streams",
+    "difficulty": "intermediate",
+    "title": "BufferedInputStream/OutputStream — efficient byte copy",
+    "description": "Copy a file efficiently using BufferedInputStream and BufferedOutputStream. Buffering reduces system calls by reading/writing in large chunks.",
+    "starterCode": "// Create source file with some content\n// Copy source.txt to destination.txt using buffered byte streams\n",
+    "hints": ["Wrap FileInputStream in BufferedInputStream", "Default buffer size is 8192 bytes"],
+    "solution": {
+      "code": "// Create source\ntry (FileOutputStream src = new FileOutputStream(\"source.txt\")) {\n    src.write((\"Line 1\\nLine 2\\nLine 3\\n\").getBytes());\n}\n\n// Buffered copy\ntry (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(\"source.txt\"));\n     BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(\"destination.txt\"))) {\n    \n    byte[] buffer = new byte[4096];\n    int bytesRead;\n    while ((bytesRead = bis.read(buffer)) != -1) {\n        bos.write(buffer, 0, bytesRead);\n    }\n    System.out.println(\"File copied successfully\");\n} catch (IOException e) {\n    e.printStackTrace();\n}",
+      "explanation": "Wrapping a FileInputStream in a BufferedInputStream adds an in-memory buffer (default 8192 bytes). Each read() call fills the buffer from disk if needed, then serves subsequent reads from memory — dramatically reducing OS-level disk reads. The same applies to BufferedOutputStream which batches small writes into large disk writes. The Decorator pattern: Buffered wraps FileInput/Output without changing the API. Always close in reverse order of opening — try-with-resources handles this automatically.",
+      "methodSignatures": [
+        {
+          "method": "BufferedInputStream(InputStream in)",
+          "description": "Wraps an InputStream with an 8192-byte buffer."
+        },
+        {
+          "method": "BufferedInputStream(InputStream in, int size)",
+          "description": "Wraps with a custom buffer size."
+        },
+        {
+          "method": "BufferedOutputStream(OutputStream out)",
+          "description": "Wraps an OutputStream with an 8192-byte buffer. flush() writes buffered data."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-004",
+    "topic": "io",
+    "subtopic": "byte-streams",
+    "difficulty": "intermediate",
+    "title": "DataInputStream/DataOutputStream — primitive types",
+    "description": "Write an int, a double, and a boolean to a binary file using DataOutputStream. Read them back in the same order with DataInputStream.",
+    "starterCode": "// Write: int 42, double 3.14, boolean true\n// Read them back and verify\n",
+    "hints": ["writeInt, writeDouble, writeBoolean", "readInt, readDouble, readBoolean — order matters!"],
+    "solution": {
+      "code": "String file = \"data.bin\";\n\n// Write primitives\ntry (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {\n    dos.writeInt(42);\n    dos.writeDouble(3.14);\n    dos.writeBoolean(true);\n    dos.writeUTF(\"Hello Binary\");\n    System.out.println(\"Written primitives to \" + file);\n} catch (IOException e) { e.printStackTrace(); }\n\n// Read in SAME ORDER\ntry (DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {\n    int i = dis.readInt();\n    double d = dis.readDouble();\n    boolean b = dis.readBoolean();\n    String s = dis.readUTF();\n    System.out.printf(\"int=%d, double=%.2f, boolean=%b, string=%s%n\", i, d, b, s);\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "DataOutputStream writes Java primitives as fixed-size binary data: int=4 bytes, double=8 bytes, boolean=1 byte. DataInputStream reads them back. The critical rule: you MUST read in exactly the same order and types as written — there are no field names in the binary format. writeUTF/readUTF uses a modified UTF-8 encoding with a 2-byte length prefix. This is different from Java object serialization — it's manual but efficient.",
+      "methodSignatures": [
+        {
+          "method": "void DataOutputStream.writeInt(int v) throws IOException",
+          "description": "Writes an int as 4 bytes (big-endian)."
+        },
+        {
+          "method": "void DataOutputStream.writeDouble(double v) throws IOException",
+          "description": "Writes a double as 8 bytes."
+        },
+        {
+          "method": "void DataOutputStream.writeUTF(String s) throws IOException",
+          "description": "Writes a String in modified UTF-8 with a 2-byte length prefix."
+        },
+        {
+          "method": "int DataInputStream.readInt() throws IOException",
+          "description": "Reads 4 bytes and returns an int."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-005",
+    "topic": "io",
+    "subtopic": "object-streams",
+    "difficulty": "intermediate",
+    "title": "ObjectOutputStream — serialize a Java object",
+    "description": "Serialize a User object (name + age) to a file using ObjectOutputStream. The class must implement Serializable.",
+    "starterCode": "// Define a Serializable User class with name and age\n// Serialize a User to user.ser using ObjectOutputStream\n",
+    "hints": ["implements java.io.Serializable", "oos.writeObject(user)"],
+    "solution": {
+      "code": "// Define serializable class\nclass User implements java.io.Serializable {\n    private static final long serialVersionUID = 1L;\n    String name;\n    int age;\n    User(String name, int age) { this.name = name; this.age = age; }\n    public String toString() { return \"User{name='\" + name + \"', age=\" + age + \"}\"; }\n}\n\nUser user = new User(\"Alice\", 30);\n\ntry (ObjectOutputStream oos = new ObjectOutputStream(\n        new BufferedOutputStream(new FileOutputStream(\"user.ser\")))) {\n    oos.writeObject(user);\n    System.out.println(\"Serialized: \" + user);\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "Java serialization converts an object's state to a byte stream. The class must implement Serializable (a marker interface). serialVersionUID is a version identifier — always declare it explicitly to prevent InvalidClassException when the class changes. Fields marked transient are excluded from serialization. Wrap in BufferedOutputStream for efficiency. Modern alternatives: Jackson JSON, Protocol Buffers, or Java records with custom converters.",
+      "methodSignatures": [
+        {
+          "method": "ObjectOutputStream(OutputStream out) throws IOException",
+          "description": "Creates an ObjectOutputStream that writes to the given stream."
+        },
+        {
+          "method": "void writeObject(Object obj) throws IOException",
+          "description": "Serializes the object to the stream. The class must implement Serializable."
+        },
+        {
+          "method": "long serialVersionUID",
+          "description": "Static field: version identifier for the class. Declare explicitly to control compatibility."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-006",
+    "topic": "io",
+    "subtopic": "object-streams",
+    "difficulty": "intermediate",
+    "title": "ObjectInputStream — deserialize a Java object",
+    "description": "Read back the User object serialized in the previous exercise using ObjectInputStream.",
+    "starterCode": "// Deserialize User from user.ser using ObjectInputStream\n// Cast the result and print\n",
+    "hints": ["(User) ois.readObject()", "readObject throws ClassNotFoundException too"],
+    "solution": {
+      "code": "class User implements java.io.Serializable {\n    private static final long serialVersionUID = 1L;\n    String name; int age;\n    User(String name, int age) { this.name = name; this.age = age; }\n    public String toString() { return \"User{name='\" + name + \"', age=\" + age + \"}\"; }\n}\n\n// First create the file\ntry (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(\"user.ser\"))) {\n    oos.writeObject(new User(\"Alice\", 30));\n}\n\n// Now deserialize\ntry (ObjectInputStream ois = new ObjectInputStream(\n        new BufferedInputStream(new FileInputStream(\"user.ser\")))) {\n    User user = (User) ois.readObject();\n    System.out.println(\"Deserialized: \" + user);\n} catch (IOException | ClassNotFoundException e) {\n    e.printStackTrace();\n}",
+      "explanation": "readObject() reads and reconstructs the serialized object — it returns Object, so you must cast it. It declares ClassNotFoundException because the class definition might not be in the classpath. Security note: deserializing untrusted data is a known attack vector (Java deserialization exploits). For production, use ObjectInputFilter (Java 9+) to whitelist classes. The try-with-resources closes both streams properly.",
+      "methodSignatures": [
+        {
+          "method": "ObjectInputStream(InputStream in) throws IOException",
+          "description": "Creates an ObjectInputStream reading from the given stream."
+        },
+        {
+          "method": "Object readObject() throws IOException, ClassNotFoundException",
+          "description": "Reads and deserializes an object. Cast to the expected type."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-007",
+    "topic": "io",
+    "subtopic": "character-streams",
+    "difficulty": "beginner",
+    "title": "FileWriter and FileReader — character streams",
+    "description": "Write multiple lines of text to a file using FileWriter, then read them back using FileReader.",
+    "starterCode": "// Write 3 lines to notes.txt using FileWriter\n// Read them back using FileReader\n",
+    "hints": ["FileWriter(file) and FileReader(file)", "fr.read(charBuffer)"],
+    "solution": {
+      "code": "// Write\ntry (FileWriter fw = new FileWriter(\"notes.txt\")) {\n    fw.write(\"Line 1: Java IO\\n\");\n    fw.write(\"Line 2: Character Streams\\n\");\n    fw.write(\"Line 3: FileWriter rocks\\n\");\n    System.out.println(\"Written to notes.txt\");\n} catch (IOException e) { e.printStackTrace(); }\n\n// Read\ntry (FileReader fr = new FileReader(\"notes.txt\")) {\n    char[] buffer = new char[1024];\n    int charsRead = fr.read(buffer);\n    System.out.println(new String(buffer, 0, charsRead));\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "FileWriter and FileReader are character streams — they work with char, not byte. They use the platform default charset for encoding/decoding. For explicit charset: new FileWriter(file, StandardCharsets.UTF_8) (Java 11+). Character streams inherit from Writer/Reader, not OutputStream/InputStream. Use these for text files where you care about character encoding; use byte streams for binary data.",
+      "methodSignatures": [
+        {
+          "method": "FileWriter(String fileName) throws IOException",
+          "description": "Creates a FileWriter to the named file using default charset. Creates or truncates."
+        },
+        {
+          "method": "void Writer.write(String str) throws IOException",
+          "description": "Writes the entire string to the writer."
+        },
+        {
+          "method": "int Reader.read(char[] cbuf) throws IOException",
+          "description": "Reads chars into array, returns chars read or -1 at end."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-008",
+    "topic": "io",
+    "subtopic": "character-streams",
+    "difficulty": "intermediate",
+    "title": "BufferedReader — read file line by line",
+    "description": "Use BufferedReader to read a text file line by line and number each line in the output.",
+    "starterCode": "// Create a sample file with 5 lines\n// Use BufferedReader to read line by line with readLine()\n// Print: \"1: <line>\", \"2: <line>\", ...\n",
+    "hints": ["br.readLine() returns null at EOF", "Use a loop: String line; while ((line = br.readLine()) != null)"],
+    "solution": {
+      "code": "// Create sample file\ntry (PrintWriter pw = new PrintWriter(new FileWriter(\"sample.txt\"))) {\n    pw.println(\"Java is awesome\");\n    pw.println(\"Streams are powerful\");\n    pw.println(\"IO is fundamental\");\n    pw.println(\"Lambdas are elegant\");\n    pw.println(\"Optional prevents NPEs\");\n}\n\n// Read line by line\ntry (BufferedReader br = new BufferedReader(new FileReader(\"sample.txt\"))) {\n    String line;\n    int lineNum = 1;\n    while ((line = br.readLine()) != null) {\n        System.out.println(lineNum++ + \": \" + line);\n    }\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "BufferedReader adds buffering to a Reader, dramatically improving performance. readLine() reads one line at a time (strips the line terminator) and returns null at end-of-file. The while ((line = br.readLine()) != null) idiom is the canonical Java way to read a text file line by line. Modern alternative: Files.lines(path) returns a Stream<String> for functional processing. BufferedReader also has a lines() method returning Stream<String> (Java 8+).",
+      "methodSignatures": [
+        {
+          "method": "BufferedReader(Reader in)",
+          "description": "Wraps a Reader with an 8192-char buffer."
+        },
+        {
+          "method": "String readLine() throws IOException",
+          "description": "Reads a line of text, stripping the line terminator. Returns null at end of stream."
+        },
+        {
+          "method": "Stream<String> lines()",
+          "description": "Java 8+. Returns a Stream of lines from this BufferedReader. Must still be closed."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-009",
+    "topic": "io",
+    "subtopic": "character-streams",
+    "difficulty": "intermediate",
+    "title": "BufferedWriter and PrintWriter",
+    "description": "Write structured data to a file using BufferedWriter. Then do the same with PrintWriter's convenient println. Understand the difference between the two.",
+    "starterCode": "// Write 3 lines using BufferedWriter (manual newLine())\n// Write 3 lines using PrintWriter (auto println)\n",
+    "hints": ["bw.write(str); bw.newLine()", "PrintWriter.println() handles newline automatically"],
+    "solution": {
+      "code": "// BufferedWriter — manual newlines\ntry (BufferedWriter bw = new BufferedWriter(new FileWriter(\"bw-output.txt\"))) {\n    bw.write(\"BufferedWriter line 1\");\n    bw.newLine(); // OS-independent newline\n    bw.write(\"BufferedWriter line 2\");\n    bw.newLine();\n    bw.write(\"BufferedWriter line 3\");\n    System.out.println(\"Written with BufferedWriter\");\n} catch (IOException e) { e.printStackTrace(); }\n\n// PrintWriter — convenient println\ntry (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(\"pw-output.txt\")))) {\n    pw.println(\"PrintWriter line 1\");\n    pw.println(\"PrintWriter line 2\");\n    pw.printf(\"Formatted: %s = %.2f%n\", \"Pi\", Math.PI);\n    System.out.println(\"Written with PrintWriter\");\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "BufferedWriter wraps a Writer for efficiency. newLine() writes the OS-specific line separator (\\r\\n on Windows, \\n on Unix). PrintWriter builds on top — it adds println(), print(), printf() and crucially does NOT declare checked exceptions (errors are silent unless you check checkError()). Always wrap FileWriter in BufferedWriter before PrintWriter for efficiency. PrintWriter(String filename) is a shortcut that wraps it all.",
+      "methodSignatures": [
+        {
+          "method": "BufferedWriter(Writer out)",
+          "description": "Wraps a Writer with buffering."
+        },
+        {
+          "method": "void BufferedWriter.newLine() throws IOException",
+          "description": "Writes the OS-appropriate line separator."
+        },
+        {
+          "method": "PrintWriter(Writer out)",
+          "description": "Creates a PrintWriter that writes to the given Writer. Does not declare IOException."
+        },
+        {
+          "method": "void PrintWriter.println(String x)",
+          "description": "Prints the string followed by the line separator."
+        },
+        {
+          "method": "PrintWriter printf(String format, Object... args)",
+          "description": "Writes formatted text. Returns this PrintWriter for chaining."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-010",
+    "topic": "io",
+    "subtopic": "csv",
+    "difficulty": "intermediate",
+    "title": "Write a CSV file",
+    "description": "Write a list of Product objects (id, name, price) to a CSV file using PrintWriter.",
+    "starterCode": "record Product(int id, String name, double price) {}\nList<Product> products = List.of(\n    new Product(1, \"Laptop\", 999.99),\n    new Product(2, \"Mouse\", 29.99),\n    new Product(3, \"Keyboard\", 79.99)\n);\n// Write to products.csv with header row\n",
+    "hints": ["First write the header: id,name,price", "Then one line per product with comma separator"],
+    "solution": {
+      "code": "record Product(int id, String name, double price) {}\nList<Product> products = List.of(\n    new Product(1, \"Laptop\", 999.99),\n    new Product(2, \"Mouse\", 29.99),\n    new Product(3, \"Keyboard\", 79.99)\n);\n\ntry (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(\"products.csv\")))) {\n    pw.println(\"id,name,price\"); // header\n    for (Product p : products) {\n        pw.printf(\"%d,%s,%.2f%n\", p.id(), p.name(), p.price());\n    }\n    System.out.println(\"Written products.csv\");\n} catch (IOException e) { e.printStackTrace(); }\n\n// Verify: read back\ntry (BufferedReader br = new BufferedReader(new FileReader(\"products.csv\"))) {\n    br.lines().forEach(System.out::println);\n} catch (IOException e) { e.printStackTrace(); }",
+      "explanation": "CSV (Comma-Separated Values) is just plain text with commas as delimiters. Key points: (1) always include a header row for readability, (2) use printf for formatted numeric output, (3) if values can contain commas or newlines, wrap in quotes: '\"' + value + '\"'. For production use OpenCSV or Apache Commons CSV which handle quoting, escaping, and edge cases. PrintWriter.printf with %n is portable (uses OS line separator).",
+      "methodSignatures": [
+        {
+          "method": "PrintWriter printf(String format, Object... args)",
+          "description": "Formats and writes text. Use %s for strings, %d for int, %.2f for double, %n for newline."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-011",
+    "topic": "io",
+    "subtopic": "csv",
+    "difficulty": "intermediate",
+    "title": "Read and parse a CSV file",
+    "description": "Read the products.csv file line by line, skip the header, split each line by comma, and reconstruct Product objects.",
+    "starterCode": "// Read products.csv\n// Skip header line\n// Parse each data line: split by comma\n// Create Product objects and print\n",
+    "hints": ["readLine() for header skip", "line.split(\",\") for parsing", "Integer.parseInt and Double.parseDouble"],
+    "solution": {
+      "code": "// Recreate the CSV file\ntry (PrintWriter pw = new PrintWriter(\"products.csv\")) {\n    pw.println(\"id,name,price\");\n    pw.println(\"1,Laptop,999.99\");\n    pw.println(\"2,Mouse,29.99\");\n    pw.println(\"3,Keyboard,79.99\");\n}\n\nrecord Product(int id, String name, double price) {}\nList<Product> products = new ArrayList<>();\n\ntry (BufferedReader br = new BufferedReader(new FileReader(\"products.csv\"))) {\n    br.readLine(); // skip header\n    String line;\n    while ((line = br.readLine()) != null) {\n        String[] parts = line.split(\",\");\n        int id = Integer.parseInt(parts[0].trim());\n        String name = parts[1].trim();\n        double price = Double.parseDouble(parts[2].trim());\n        products.add(new Product(id, name, price));\n    }\n} catch (IOException e) { e.printStackTrace(); }\n\nproducts.forEach(System.out::println);",
+      "explanation": "Parsing CSV: split() on comma gives an array of fields. trim() removes whitespace. Parse numeric fields with Integer.parseInt()/Double.parseDouble(). Always skip the header with a single readLine() before the main loop. Edge cases: fields with commas need quoting (then don't use simple split). The .trim() is defensive coding for files with spaces after commas. Using streams: br.lines().skip(1).map(line -> ...).collect(toList()) is the modern approach.",
+      "methodSignatures": [
+        {
+          "method": "String[] String.split(String regex)",
+          "description": "Splits the string around matches of the regex. Returns String[]."
+        },
+        {
+          "method": "String String.trim()",
+          "description": "Returns a copy with leading and trailing whitespace removed."
+        },
+        {
+          "method": "int Integer.parseInt(String s)",
+          "description": "Parses the string as a decimal int. Throws NumberFormatException if invalid."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-012",
+    "topic": "io",
+    "subtopic": "csv",
+    "difficulty": "advanced",
+    "title": "CSV with Scanner",
+    "description": "Use Scanner to read a CSV file, using comma as the delimiter. Count how many products have price > 50.",
+    "starterCode": "// Create a CSV: id,name,price\n// Use Scanner with useDelimiter to parse fields directly\n// Count products with price > 50\n",
+    "hints": [
+      "new Scanner(new File(\"...\")).useDelimiter(\",|\\n\")",
+      "scanner.nextInt(), scanner.next(), scanner.nextDouble()"
+    ],
+    "solution": {
+      "code": "// Create CSV\ntry (PrintWriter pw = new PrintWriter(\"scan_products.csv\")) {\n    pw.println(\"1,Laptop,999.99\");\n    pw.println(\"2,Mouse,29.99\");\n    pw.println(\"3,Keyboard,79.99\");\n    pw.println(\"4,Monitor,349.99\");\n}\n\nint countExpensive = 0;\ntry (Scanner sc = new Scanner(new java.io.File(\"scan_products.csv\")).useDelimiter(\",|\\r?\\n\")) {\n    while (sc.hasNextInt()) {\n        int id = sc.nextInt();\n        String name = sc.next();\n        double price = sc.nextDouble();\n        System.out.printf(\"id=%d name=%-10s price=%.2f%n\", id, name, price);\n        if (price > 50) countExpensive++;\n    }\n} catch (java.io.FileNotFoundException e) { e.printStackTrace(); }\n\nSystem.out.println(\"Products > $50: \" + countExpensive); // 3",
+      "explanation": "Scanner is a versatile token-based parser. useDelimiter() sets a regex used to split input — here `,|\\r?\\n` matches comma or newline (handles Windows/Unix). nextInt(), next(), nextDouble() consume the next token as the respective type. hasNextInt() checks if the next token is an integer — stops cleanly when there are no more full rows. Scanner is convenient for simple CSVs but slower than BufferedReader for large files.",
+      "methodSignatures": [
+        {
+          "method": "Scanner useDelimiter(String pattern)",
+          "description": "Sets the delimiter pattern. Returns this Scanner for chaining."
+        },
+        {
+          "method": "boolean hasNextInt()",
+          "description": "Returns true if next token can be parsed as int."
+        },
+        {
+          "method": "double nextDouble()",
+          "description": "Scans the next token as a double. Throws InputMismatchException if not a double."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-013",
+    "topic": "io",
+    "subtopic": "json",
+    "difficulty": "intermediate",
+    "title": "Write a Java object to JSON using Jackson",
+    "description": "Serialize a Product object to a JSON file using Jackson's ObjectMapper.",
+    "starterCode": "// Requires Jackson in classpath (already available)\n// Create a Product and write it to product.json\n// Print the JSON string to console too\n",
+    "hints": [
+      "new ObjectMapper()",
+      "mapper.writeValue(file, object)",
+      "mapper.writeValueAsString(object) for string"
+    ],
+    "solution": {
+      "code": "import com.fasterxml.jackson.databind.ObjectMapper;\nimport com.fasterxml.jackson.databind.SerializationFeature;\n\npublic class Product {\n    public int id;\n    public String name;\n    public double price;\n    public Product() {}\n    public Product(int id, String name, double price) {\n        this.id = id; this.name = name; this.price = price;\n    }\n}\n\nObjectMapper mapper = new ObjectMapper();\nmapper.enable(SerializationFeature.INDENT_OUTPUT); // pretty print\n\nProduct product = new Product(1, \"Laptop\", 999.99);\n\n// Write to file\nmapper.writeValue(new java.io.File(\"product.json\"), product);\nSystem.out.println(\"Written to product.json\");\n\n// Write to String\nString json = mapper.writeValueAsString(product);\nSystem.out.println(json);\n// {\n//   \"id\" : 1,\n//   \"name\" : \"Laptop\",\n//   \"price\" : 999.99\n// }",
+      "explanation": "Jackson's ObjectMapper is the central serialization/deserialization engine. writeValue(File, Object) serializes the object to a file. writeValueAsString(Object) returns the JSON as a String. INDENT_OUTPUT enables pretty-printing (2-space indentation). By default Jackson uses public fields or public getters. For private fields add @JsonProperty or configure the mapper. ObjectMapper is thread-safe and expensive to create — typically a singleton.",
+      "methodSignatures": [
+        {
+          "method": "void ObjectMapper.writeValue(File resultFile, Object value) throws IOException",
+          "description": "Serializes value as JSON and writes to the file."
+        },
+        {
+          "method": "String ObjectMapper.writeValueAsString(Object value) throws JsonProcessingException",
+          "description": "Serializes value as a JSON string."
+        },
+        {
+          "method": "ObjectMapper enable(SerializationFeature feature)",
+          "description": "Enables a serialization feature (e.g. INDENT_OUTPUT for pretty printing)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-014",
+    "topic": "io",
+    "subtopic": "json",
+    "difficulty": "intermediate",
+    "title": "Read JSON into a Java object (deserialization)",
+    "description": "Deserialize the product.json file back into a Product object using Jackson's readValue.",
+    "starterCode": "// Read product.json and deserialize to Product object\n// Access fields and print\n",
+    "hints": ["mapper.readValue(file, Product.class)", "Requires a no-arg constructor"],
+    "solution": {
+      "code": "import com.fasterxml.jackson.databind.ObjectMapper;\n\npublic class Product {\n    public int id;\n    public String name;\n    public double price;\n    public Product() {} // required for Jackson\n    public Product(int id, String name, double price) {\n        this.id = id; this.name = name; this.price = price;\n    }\n    public String toString() { return \"Product{id=\" + id + \", name='\" + name + \"', price=\" + price + \"}\"; }\n}\n\n// Create the file first\nObjectMapper mapper = new ObjectMapper();\nmapper.writeValue(new java.io.File(\"product.json\"), new Product(1, \"Laptop\", 999.99));\n\n// Deserialize\nProduct product = mapper.readValue(new java.io.File(\"product.json\"), Product.class);\nSystem.out.println(product); // Product{id=1, name='Laptop', price=999.99}\nSystem.out.println(\"Price: \" + product.price); // 999.99",
+      "explanation": "readValue(source, Class<T>) deserializes JSON into an instance of the given class. Jackson requires a no-arg constructor for deserialization (or @JsonCreator on a constructor). The source can be a File, String, InputStream, URL, byte[], or Reader. If the JSON has extra fields not in the class, Jackson throws UnrecognizedPropertyException by default — configure FAIL_ON_UNKNOWN_PROPERTIES to false: mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).",
+      "methodSignatures": [
+        {
+          "method": "<T> T ObjectMapper.readValue(File src, Class<T> valueType) throws IOException",
+          "description": "Deserializes JSON from the file into an instance of valueType."
+        },
+        {
+          "method": "<T> T ObjectMapper.readValue(String content, Class<T> valueType) throws JsonProcessingException",
+          "description": "Deserializes JSON string into an instance of valueType."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-015",
+    "topic": "io",
+    "subtopic": "json",
+    "difficulty": "intermediate",
+    "title": "Read a JSON array into a List",
+    "description": "Deserialize a JSON array of products into a List<Product> using TypeReference.",
+    "starterCode": "// JSON: [{\"id\":1,\"name\":\"Laptop\",\"price\":999.99},{\"id\":2,\"name\":\"Mouse\",\"price\":29.99}]\n// Deserialize to List<Product>\n",
+    "hints": ["new TypeReference<List<Product>>() {}", "mapper.readValue(json, typeRef)"],
+    "solution": {
+      "code": "import com.fasterxml.jackson.core.type.TypeReference;\nimport com.fasterxml.jackson.databind.ObjectMapper;\n\npublic class Product {\n    public int id; public String name; public double price;\n    public Product() {}\n    public String toString() { return id + \":\" + name + \":\" + price; }\n}\n\nString json = \"[{\\\"id\\\":1,\\\"name\\\":\\\"Laptop\\\",\\\"price\\\":999.99},{\\\"id\\\":2,\\\"name\\\":\\\"Mouse\\\",\\\"price\\\":29.99}]\";\n\nObjectMapper mapper = new ObjectMapper();\nList<Product> products = mapper.readValue(json, new TypeReference<List<Product>>() {});\n\nSystem.out.println(\"Count: \" + products.size()); // 2\nproducts.forEach(System.out::println);\n// 1:Laptop:999.99\n// 2:Mouse:29.99",
+      "explanation": "For generic types like List<Product>, you can't pass List.class because of Java type erasure — the generic type info is lost at runtime. TypeReference<T> is Jackson's solution: it captures the generic type at compile time using an anonymous subclass pattern (the {} after the constructor). The new TypeReference<List<Product>>() {} creates an anonymous subclass whose type parameters are preserved and accessible via reflection.",
+      "methodSignatures": [
+        {
+          "method": "TypeReference<T>",
+          "description": "Captures generic type information at compile time. Use as: new TypeReference<List<Product>>() {}"
+        },
+        {
+          "method": "<T> T ObjectMapper.readValue(String content, TypeReference<T> valueTypeRef) throws JsonProcessingException",
+          "description": "Deserializes JSON into the generic type captured by TypeReference."
+        }
+      ]
+    }
+  },
+  {
+    "id": "io-016",
+    "topic": "io",
+    "subtopic": "json",
+    "difficulty": "advanced",
+    "title": "JSON to Map and tree navigation",
+    "description": "Deserialize a JSON object to Map<String, Object> (schema-free). Also use JsonNode for tree navigation without POJO classes.",
+    "starterCode": "String json = \"{\\\"order\\\":{\\\"id\\\":100,\\\"items\\\":[\\\"book\\\",\\\"pen\\\"],\\\"total\\\":45.5}}\";\n// Deserialize to Map<String,Object>\n// Navigate with JsonNode\n",
+    "hints": [
+      "new TypeReference<Map<String,Object>>() {}",
+      "mapper.readTree(json) -> JsonNode",
+      "node.get(\"order\").get(\"total\").asDouble()"
+    ],
+    "solution": {
+      "code": "import com.fasterxml.jackson.databind.JsonNode;\nimport com.fasterxml.jackson.databind.ObjectMapper;\nimport com.fasterxml.jackson.core.type.TypeReference;\n\nString json = \"{\\\"order\\\":{\\\"id\\\":100,\\\"items\\\":[\\\"book\\\",\\\"pen\\\"],\\\"total\\\":45.5}}\";\nObjectMapper mapper = new ObjectMapper();\n\n// 1. Schema-free Map\nMap<String, Object> map = mapper.readValue(json, new TypeReference<Map<String,Object>>() {});\nSystem.out.println(\"Map: \" + map);\n\n// 2. JsonNode tree navigation\nJsonNode root = mapper.readTree(json);\nJsonNode order = root.get(\"order\");\nint orderId = order.get(\"id\").asInt();\ndouble total = order.get(\"total\").asDouble();\nJsonNode items = order.get(\"items\");\nSystem.out.println(\"Order #\" + orderId + \", total: \" + total);\nSystem.out.print(\"Items: \");\nfor (JsonNode item : items) {\n    System.out.print(item.asText() + \" \");\n}\nSystem.out.println();\n// Order #100, total: 45.5\n// Items: book pen",
+      "explanation": "Map<String,Object> deserialization is schema-free: JSON objects become LinkedHashMaps, arrays become ArrayLists, numbers become Integer/Long/Double. JsonNode provides a DOM-like tree API. get(fieldName) navigates object fields; asInt()/asDouble()/asText() extract typed values. For arrays: iterate with for-each or get(index). Use path() instead of get() for safe navigation — path() returns MissingNode instead of null for non-existent fields.",
+      "methodSignatures": [
+        {
+          "method": "JsonNode ObjectMapper.readTree(String content) throws JsonProcessingException",
+          "description": "Parses JSON into a JsonNode tree. Does not require a POJO class."
+        },
+        {
+          "method": "JsonNode JsonNode.get(String fieldName)",
+          "description": "Returns the node for the given field name. Returns null if field doesn't exist."
+        },
+        {
+          "method": "JsonNode JsonNode.path(String fieldName)",
+          "description": "Like get() but returns MissingNode instead of null. Safe for chaining."
+        },
+        {
+          "method": "int JsonNode.asInt()",
+          "description": "Returns node value as int (0 if not a number)."
+        },
+        {
+          "method": "String JsonNode.asText()",
+          "description": "Returns node value as a string representation."
+        }
+      ]
+    }
+  }
+]

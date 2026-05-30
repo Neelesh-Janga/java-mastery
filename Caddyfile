@@ -1,0 +1,40 @@
+{java-aws.fillthesyntax.in} {
+    # ---------- security hardening ----------
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options            "DENY"
+        X-Content-Type-Options     "nosniff"
+        X-XSS-Protection           "1; mode=block"
+        Referrer-Policy            "strict-origin-when-cross-origin"
+        Permissions-Policy         "camera=(), microphone=(), geolocation=(), payment=()"
+        # Remove server identity
+        -Server
+        -X-Powered-By
+    }
+
+    # Redirect plain HTTP → HTTPS (Caddy does this automatically, but explicit is fine)
+    @http {
+        protocol http
+    }
+    redir @http https://{host}{uri} permanent
+
+    # ---------- reverse proxy to nginx frontend ----------
+    reverse_proxy frontend:80 {
+        header_up X-Real-IP         {remote_host}
+        header_up X-Forwarded-Proto https
+        transport http {
+            dial_timeout 5s
+            read_timeout 30s
+        }
+    }
+
+    # ---------- rate limit via Caddy (belt-and-suspenders alongside nginx) ----------
+    # Requires caddy-ratelimit module — plain Caddy alpine doesn't include it
+    # so we rely on nginx's rate limiting. This block is intentionally left minimal.
+
+    log {
+        output stdout
+        format json
+        level  WARN
+    }
+}

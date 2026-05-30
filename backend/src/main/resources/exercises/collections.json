@@ -1,0 +1,672 @@
+[
+  {
+    "id": "collections-001",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "beginner",
+    "title": "ArrayList: Add, Size, and Get",
+    "description": "Create an ArrayList of Strings, add at least 4 fruit names, print the size of the list, then print each element using its index with a for-loop.",
+    "starterCode": "import java.util.ArrayList;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> fruits = new ArrayList<>();\n        // Your code here\n    }\n}",
+    "hints": [
+      "Use list.add(\"value\") to append elements.",
+      "list.size() returns the number of elements; use list.get(i) inside a for-loop."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> fruits = new ArrayList<>();\n        fruits.add(\"Apple\");\n        fruits.add(\"Banana\");\n        fruits.add(\"Cherry\");\n        fruits.add(\"Durian\");\n        System.out.println(\"Size: \" + fruits.size());\n        for (int i = 0; i < fruits.size(); i++) {\n            System.out.println(i + \": \" + fruits.get(i));\n        }\n    }\n}",
+      "explanation": "ArrayList.add(E e) appends the element to the end of the list and always returns true. size() returns the current number of elements, which grows dynamically as items are added. get(int index) retrieves the element at the given zero-based index; accessing an index >= size() throws IndexOutOfBoundsException. The for-loop from 0 to size()-1 is the classic index-based traversal pattern for lists.",
+      "methodSignatures": [
+        {
+          "method": "boolean ArrayList<E>.add(E e)",
+          "description": "Appends the specified element to the end of this list."
+        },
+        {
+          "method": "int ArrayList<E>.size()",
+          "description": "Returns the number of elements in this list."
+        },
+        {
+          "method": "E ArrayList<E>.get(int index)",
+          "description": "Returns the element at the specified position in this list."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-002",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "beginner",
+    "title": "ArrayList: Remove by Index and by Object",
+    "description": "Given an ArrayList of integers [10, 20, 30, 40, 50], remove the element at index 2, then remove the value 40 (by object). Print the list after each removal.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<Integer> numbers = new ArrayList<>(Arrays.asList(10, 20, 30, 40, 50));\n        // Your code here\n    }\n}",
+    "hints": [
+      "remove(int index) removes by position; remove(Object o) removes by value.",
+      "To remove the Integer value 40 (not index 40), pass Integer.valueOf(40) or cast: (Integer) 40."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<Integer> numbers = new ArrayList<>(Arrays.asList(10, 20, 30, 40, 50));\n        numbers.remove(2); // removes element at index 2 (value 30)\n        System.out.println(\"After remove(2): \" + numbers); // [10, 20, 40, 50]\n        numbers.remove(Integer.valueOf(40)); // removes the object 40\n        System.out.println(\"After remove(40): \" + numbers); // [10, 20, 50]\n    }\n}",
+      "explanation": "ArrayList has two overloaded remove methods: remove(int index) removes by position and shifts subsequent elements left, while remove(Object o) searches for the first occurrence of that object and removes it. With a List<Integer>, calling remove(40) would be ambiguous since 40 is also a valid index, so you must box it with Integer.valueOf(40) to call the object-removal overload. This is a common pitfall when working with lists of integers.",
+      "methodSignatures": [
+        {
+          "method": "E ArrayList<E>.remove(int index)",
+          "description": "Removes the element at the specified position, shifting subsequent elements to the left."
+        },
+        {
+          "method": "boolean ArrayList<E>.remove(Object o)",
+          "description": "Removes the first occurrence of the specified element from this list, if it is present."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-003",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "beginner",
+    "title": "ArrayList: set, contains, and indexOf",
+    "description": "Given an ArrayList [\"cat\", \"dog\", \"bird\", \"dog\"], replace the element at index 1 with \"fish\", check whether \"bird\" is in the list, and find the first index of \"dog\".",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> animals = new ArrayList<>(Arrays.asList(\"cat\", \"dog\", \"bird\", \"dog\"));\n        // Your code here\n    }\n}",
+    "hints": [
+      "set(index, element) replaces the element at the given index and returns the old value.",
+      "contains returns a boolean; indexOf returns -1 if not found."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> animals = new ArrayList<>(Arrays.asList(\"cat\", \"dog\", \"bird\", \"dog\"));\n        String old = animals.set(1, \"fish\");\n        System.out.println(\"Replaced: \" + old + \" -> list is now: \" + animals);\n        System.out.println(\"Contains 'bird': \" + animals.contains(\"bird\"));\n        System.out.println(\"Index of 'dog': \" + animals.indexOf(\"dog\"));\n    }\n}",
+      "explanation": "set(int index, E element) overwrites the element at a given position and returns the element that was previously there, which is useful for auditing changes. contains(Object o) performs a linear scan using equals() and returns true if any element matches. indexOf(Object o) also uses a linear scan and returns the zero-based index of the first match, or -1 if the element is absent. Note that lastIndexOf exists for finding the last occurrence.",
+      "methodSignatures": [
+        {
+          "method": "E ArrayList<E>.set(int index, E element)",
+          "description": "Replaces the element at the specified position and returns the element previously at that position."
+        },
+        {
+          "method": "boolean ArrayList<E>.contains(Object o)",
+          "description": "Returns true if this list contains the specified element (uses equals())."
+        },
+        {
+          "method": "int ArrayList<E>.indexOf(Object o)",
+          "description": "Returns the index of the first occurrence of the specified element, or -1 if not present."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-004",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "intermediate",
+    "title": "ArrayList: subList and Iterator",
+    "description": "Given a list of integers 1–10, extract the subList from index 2 to 7 (exclusive), print it, then use an Iterator to remove all even numbers from the original list and print the result.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Iterator;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<Integer> numbers = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10));\n        // Your code here\n    }\n}",
+    "hints": [
+      "subList(fromIndex, toIndex) returns a view; changes to the sub-list affect the original.",
+      "Use iterator.remove() (not list.remove()) inside the loop to avoid ConcurrentModificationException."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Iterator;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<Integer> numbers = new ArrayList<>(Arrays.asList(1,2,3,4,5,6,7,8,9,10));\n        List<Integer> sub = numbers.subList(2, 7);\n        System.out.println(\"SubList [2,7): \" + sub); // [3, 4, 5, 6, 7]\n        Iterator<Integer> it = numbers.iterator();\n        while (it.hasNext()) {\n            if (it.next() % 2 == 0) {\n                it.remove();\n            }\n        }\n        System.out.println(\"Odds only: \" + numbers); // [1, 3, 5, 7, 9]\n    }\n}",
+      "explanation": "subList(fromIndex, toIndex) returns a live view of the portion [fromIndex, toIndex) — changes to this view are reflected in the backing list. Iterating and removing with a for-each loop would throw ConcurrentModificationException because the list's modCount changes; using an explicit Iterator and calling iterator.remove() is the safe, idiomatic way to delete during iteration. The iterator's remove() removes the last element returned by next(), ensuring the internal cursor stays consistent.",
+      "methodSignatures": [
+        {
+          "method": "List<E> ArrayList<E>.subList(int fromIndex, int toIndex)",
+          "description": "Returns a view of the portion of this list between fromIndex (inclusive) and toIndex (exclusive)."
+        },
+        {
+          "method": "Iterator<E> ArrayList<E>.iterator()",
+          "description": "Returns an iterator over the elements in proper sequence."
+        },
+        {
+          "method": "void Iterator<E>.remove()",
+          "description": "Removes from the underlying collection the last element returned by this iterator."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-005",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "intermediate",
+    "title": "ArrayList: Sort with Natural Order and Custom Comparator",
+    "description": "Given a list of strings [\"banana\", \"apple\", \"cherry\", \"date\"], sort it first in natural (alphabetical) order, print it, then sort by string length (ascending), and print again.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> words = new ArrayList<>(Arrays.asList(\"banana\", \"apple\", \"cherry\", \"date\"));\n        // Your code here\n    }\n}",
+    "hints": [
+      "Collections.sort(list) sorts in natural order; list.sort(Comparator) is the modern approach.",
+      "Use Comparator.comparingInt(String::length) to sort by length."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        ArrayList<String> words = new ArrayList<>(Arrays.asList(\"banana\", \"apple\", \"cherry\", \"date\"));\n        Collections.sort(words);\n        System.out.println(\"Natural order: \" + words); // [apple, banana, cherry, date]\n        words.sort(Comparator.comparingInt(String::length));\n        System.out.println(\"By length: \" + words); // [date, apple, banana, cherry]\n    }\n}",
+      "explanation": "Collections.sort(List<T>) uses the natural ordering defined by Comparable.compareTo() — for strings this is lexicographic order. The instance method list.sort(Comparator<? super E>) was added in Java 8 and is preferred over Collections.sort because it can be inlined with lambda expressions or method references. Comparator.comparingInt(String::length) builds a comparator that extracts an int key from each element and compares those keys, making it concise and readable. Both methods use a stable merge sort internally, preserving the relative order of equal elements.",
+      "methodSignatures": [
+        {
+          "method": "static <T extends Comparable<? super T>> void Collections.sort(List<T> list)",
+          "description": "Sorts the list into ascending order according to the natural ordering of its elements."
+        },
+        {
+          "method": "void List<E>.sort(Comparator<? super E> c)",
+          "description": "Sorts this list according to the order induced by the specified Comparator."
+        },
+        {
+          "method": "static <T> Comparator<T> Comparator.comparingInt(ToIntFunction<? super T> keyExtractor)",
+          "description": "Accepts a function extracting an int sort key and returns a Comparator comparing by that key."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-006",
+    "topic": "collections",
+    "subtopic": "linkedlist",
+    "difficulty": "beginner",
+    "title": "LinkedList: addFirst, addLast, removeFirst, removeLast",
+    "description": "Create a LinkedList of strings. Add \"B\" and \"C\" to the end, then add \"A\" to the front. Print the list. Then remove the first and last elements and print the final list.",
+    "starterCode": "import java.util.LinkedList;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        LinkedList<String> list = new LinkedList<>();\n        // Your code here\n    }\n}",
+    "hints": [
+      "addFirst inserts at index 0; addLast appends to the tail.",
+      "removeFirst and removeLast both return the removed element."
+    ],
+    "solution": {
+      "code": "import java.util.LinkedList;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        LinkedList<String> list = new LinkedList<>();\n        list.addLast(\"B\");\n        list.addLast(\"C\");\n        list.addFirst(\"A\");\n        System.out.println(\"List: \" + list); // [A, B, C]\n        String first = list.removeFirst();\n        String last = list.removeLast();\n        System.out.println(\"Removed first: \" + first + \", last: \" + last);\n        System.out.println(\"Remaining: \" + list); // [B]\n    }\n}",
+      "explanation": "LinkedList is a doubly-linked list, so addFirst and addLast both operate in O(1) time by adjusting head/tail pointers. removeFirst removes and returns the head node, while removeLast removes and returns the tail node — both also O(1). These operations are identical to the Deque interface methods offerFirst/pollFirst/peekFirst and their Last counterparts. If the list is empty, removeFirst/removeLast throw NoSuchElementException; the poll variants return null instead.",
+      "methodSignatures": [
+        {
+          "method": "void LinkedList<E>.addFirst(E e)",
+          "description": "Inserts the specified element at the beginning of this list."
+        },
+        {
+          "method": "void LinkedList<E>.addLast(E e)",
+          "description": "Appends the specified element to the end of this list."
+        },
+        {
+          "method": "E LinkedList<E>.removeFirst()",
+          "description": "Removes and returns the first element from this list."
+        },
+        {
+          "method": "E LinkedList<E>.removeLast()",
+          "description": "Removes and returns the last element from this list."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-007",
+    "topic": "collections",
+    "subtopic": "linkedlist",
+    "difficulty": "intermediate",
+    "title": "LinkedList as a Queue and Deque",
+    "description": "Use a LinkedList as a Queue: enqueue tasks \"task1\", \"task2\", \"task3\" using offer(), peek at the front without removing it, then dequeue all elements using poll() and print each one. Then demonstrate it as a Deque by pushing and popping.",
+    "starterCode": "import java.util.LinkedList;\nimport java.util.Queue;\nimport java.util.Deque;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Queue<String> queue = new LinkedList<>();\n        // Your code here (Queue section)\n\n        Deque<String> deque = new LinkedList<>();\n        // Your code here (Deque section)\n    }\n}",
+    "hints": [
+      "Queue: offer() enqueues, poll() dequeues (FIFO), peek() inspects without removing.",
+      "Deque: push() = addFirst(), pop() = removeFirst() — acts like a stack (LIFO)."
+    ],
+    "solution": {
+      "code": "import java.util.LinkedList;\nimport java.util.Queue;\nimport java.util.Deque;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Queue<String> queue = new LinkedList<>();\n        queue.offer(\"task1\");\n        queue.offer(\"task2\");\n        queue.offer(\"task3\");\n        System.out.println(\"Front (peek): \" + queue.peek()); // task1\n        while (!queue.isEmpty()) {\n            System.out.println(\"Dequeued: \" + queue.poll());\n        }\n\n        Deque<String> deque = new LinkedList<>();\n        deque.push(\"first\");\n        deque.push(\"second\");\n        deque.push(\"third\");\n        System.out.println(\"Stack pop: \" + deque.pop()); // third (LIFO)\n        System.out.println(\"Stack pop: \" + deque.pop()); // second\n    }\n}",
+      "explanation": "When typed as Queue<String>, a LinkedList behaves as a FIFO queue: offer() appends to the tail (enqueue), poll() removes from the head (dequeue), and peek() returns the head without removal. Unlike add/remove, the offer/poll/peek variants do not throw exceptions on failure — poll() and peek() return null for an empty queue, making them safer for conditional processing. When typed as Deque<String>, push()/pop() provide stack (LIFO) semantics by operating on the head, letting a single LinkedList serve as either data structure depending on which interface you use.",
+      "methodSignatures": [
+        {
+          "method": "boolean Queue<E>.offer(E e)",
+          "description": "Inserts the specified element into this queue (tail), returning true on success."
+        },
+        {
+          "method": "E Queue<E>.poll()",
+          "description": "Retrieves and removes the head of this queue, or returns null if the queue is empty."
+        },
+        {
+          "method": "E Queue<E>.peek()",
+          "description": "Retrieves, but does not remove, the head of this queue, or returns null if empty."
+        },
+        {
+          "method": "void Deque<E>.push(E e)",
+          "description": "Pushes an element onto the stack represented by this deque (inserts at the front)."
+        },
+        {
+          "method": "E Deque<E>.pop()",
+          "description": "Pops an element from the stack represented by this deque (removes from the front)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-008",
+    "topic": "collections",
+    "subtopic": "hashmap",
+    "difficulty": "beginner",
+    "title": "HashMap: put, get, getOrDefault",
+    "description": "Create a HashMap that counts how many times each word appears in the array [\"apple\",\"banana\",\"apple\",\"cherry\",\"banana\",\"apple\"]. Print each word and its count. Also print the count of \"durian\" using getOrDefault.",
+    "starterCode": "import java.util.HashMap;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String[] words = {\"apple\", \"banana\", \"apple\", \"cherry\", \"banana\", \"apple\"};\n        Map<String, Integer> counts = new HashMap<>();\n        // Your code here\n    }\n}",
+    "hints": [
+      "Use getOrDefault(word, 0) + 1 to safely increment without null checks.",
+      "Iterate the entry set with map.entrySet() to print key-value pairs."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String[] words = {\"apple\", \"banana\", \"apple\", \"cherry\", \"banana\", \"apple\"};\n        Map<String, Integer> counts = new HashMap<>();\n        for (String word : words) {\n            counts.put(word, counts.getOrDefault(word, 0) + 1);\n        }\n        for (Map.Entry<String, Integer> entry : counts.entrySet()) {\n            System.out.println(entry.getKey() + \": \" + entry.getValue());\n        }\n        System.out.println(\"durian count: \" + counts.getOrDefault(\"durian\", 0));\n    }\n}",
+      "explanation": "HashMap stores key-value pairs using a hash table for O(1) average-case get/put. getOrDefault(key, defaultValue) eliminates the need for an explicit null check — if the key is absent it returns the default, so the increment pattern getOrDefault(word, 0) + 1 works cleanly in a single line. The iteration over entrySet() is the most efficient way to access both keys and values simultaneously; iterating over keySet() and calling get() is less efficient because it does two lookups. HashMap does not guarantee insertion order; use LinkedHashMap if order matters.",
+      "methodSignatures": [
+        {
+          "method": "V HashMap<K,V>.put(K key, V value)",
+          "description": "Associates the specified value with the specified key; returns the previous value or null."
+        },
+        {
+          "method": "V HashMap<K,V>.get(Object key)",
+          "description": "Returns the value mapped to the key, or null if not present."
+        },
+        {
+          "method": "V HashMap<K,V>.getOrDefault(Object key, V defaultValue)",
+          "description": "Returns the value for the key, or defaultValue if the key is not in the map."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-009",
+    "topic": "collections",
+    "subtopic": "hashmap",
+    "difficulty": "intermediate",
+    "title": "HashMap: putIfAbsent, computeIfAbsent, computeIfPresent",
+    "description": "Given a Map<String, List<String>> that groups names by first letter, use computeIfAbsent to add names to the appropriate group without null checks. Then use computeIfPresent to append \" (verified)\" to an existing key's value (as a String map). Use putIfAbsent to set a default value only when missing.",
+    "starterCode": "import java.util.HashMap;\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, List<String>> groups = new HashMap<>();\n        String[] names = {\"Alice\", \"Bob\", \"Anna\", \"Brian\", \"Charlie\"};\n        // Part 1: group by first letter using computeIfAbsent\n        // Your code here\n\n        Map<String, String> statusMap = new HashMap<>();\n        statusMap.put(\"order1\", \"shipped\");\n        statusMap.put(\"order2\", \"pending\");\n        // Part 2: use putIfAbsent and computeIfPresent\n        // Your code here\n    }\n}",
+    "hints": [
+      "computeIfAbsent(key, k -> new ArrayList<>()) creates a list only if absent, then returns it.",
+      "computeIfPresent(key, (k, v) -> v + suffix) updates the value only if the key exists."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, List<String>> groups = new HashMap<>();\n        String[] names = {\"Alice\", \"Bob\", \"Anna\", \"Brian\", \"Charlie\"};\n        for (String name : names) {\n            String key = String.valueOf(name.charAt(0));\n            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(name);\n        }\n        System.out.println(\"Groups: \" + groups);\n        // e.g. {A=[Alice, Anna], B=[Bob, Brian], C=[Charlie]}\n\n        Map<String, String> statusMap = new HashMap<>();\n        statusMap.put(\"order1\", \"shipped\");\n        statusMap.put(\"order2\", \"pending\");\n        statusMap.putIfAbsent(\"order3\", \"new\");\n        statusMap.putIfAbsent(\"order1\", \"overwritten\"); // won't change\n        statusMap.computeIfPresent(\"order1\", (k, v) -> v + \" (verified)\");\n        statusMap.computeIfPresent(\"order99\", (k, v) -> v + \" (verified)\"); // no-op\n        System.out.println(\"Status map: \" + statusMap);\n    }\n}",
+      "explanation": "computeIfAbsent(key, mappingFunction) checks if the key is absent (or mapped to null); if so, it calls the function with the key to compute a new value, stores it, and returns it — the chained .add(name) is possible because the method returns the list. This is the idiomatic pattern for multi-value maps (map of lists). putIfAbsent(key, value) stores the value only when the key is absent, returning the existing value if present — useful for safe default initialization. computeIfPresent(key, remappingFunction) calls the function only when the key has a non-null mapping, so \"order99\" has no effect since it doesn't exist.",
+      "methodSignatures": [
+        {
+          "method": "V Map<K,V>.computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction)",
+          "description": "If the key is absent, computes its value using the mapping function, stores it, and returns it."
+        },
+        {
+          "method": "V Map<K,V>.putIfAbsent(K key, V value)",
+          "description": "Associates the value with the key only if the key is not already associated with a value."
+        },
+        {
+          "method": "V Map<K,V>.computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction)",
+          "description": "If the key has a non-null mapping, recomputes its value using the remapping function."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-010",
+    "topic": "collections",
+    "subtopic": "hashmap",
+    "difficulty": "intermediate",
+    "title": "HashMap: merge, forEach, and entrySet Iteration",
+    "description": "Use merge() to combine two word-count maps into one. Then use forEach() to print all entries. Finally, demonstrate removing entries while iterating using entrySet().iterator().",
+    "starterCode": "import java.util.HashMap;\nimport java.util.Iterator;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, Integer> map1 = new HashMap<>();\n        map1.put(\"apple\", 3);\n        map1.put(\"banana\", 2);\n        Map<String, Integer> map2 = new HashMap<>();\n        map2.put(\"banana\", 5);\n        map2.put(\"cherry\", 1);\n        // Your code here\n    }\n}",
+    "hints": [
+      "merge(key, value, remappingFunction) adds the value if key is absent, or merges if present.",
+      "Use entrySet().iterator() with iterator.remove() to safely delete during traversal."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.Iterator;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, Integer> map1 = new HashMap<>();\n        map1.put(\"apple\", 3);\n        map1.put(\"banana\", 2);\n        Map<String, Integer> map2 = new HashMap<>();\n        map2.put(\"banana\", 5);\n        map2.put(\"cherry\", 1);\n\n        // Merge map2 into map1, summing counts for duplicate keys\n        map2.forEach((k, v) -> map1.merge(k, v, Integer::sum));\n        System.out.println(\"Merged: \" + map1); // {apple=3, banana=7, cherry=1}\n\n        map1.forEach((k, v) -> System.out.println(k + \" => \" + v));\n\n        // Remove entries where count < 4\n        Iterator<Map.Entry<String, Integer>> it = map1.entrySet().iterator();\n        while (it.hasNext()) {\n            Map.Entry<String, Integer> e = it.next();\n            if (e.getValue() < 4) {\n                it.remove();\n            }\n        }\n        System.out.println(\"After removal: \" + map1); // {banana=7}\n    }\n}",
+      "explanation": "merge(key, value, remappingFunction) is perfect for aggregation: when the key is absent it stores the value directly; when present it calls the remapping function with the old and new values to produce the merged result. Integer::sum is a method reference that adds the two integer values together. forEach(BiConsumer) iterates all entries without creating an intermediate Entry set object, and is cleaner than a for-each loop. To remove entries during iteration, you must use the iterator obtained from entrySet().iterator() and call iterator.remove() — any other removal during iteration throws ConcurrentModificationException.",
+      "methodSignatures": [
+        {
+          "method": "V Map<K,V>.merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction)",
+          "description": "If absent, maps the key to value; if present, merges old and new values using the function."
+        },
+        {
+          "method": "void Map<K,V>.forEach(BiConsumer<? super K, ? super V> action)",
+          "description": "Performs the given action for each entry in this map."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-011",
+    "topic": "collections",
+    "subtopic": "treemap",
+    "difficulty": "intermediate",
+    "title": "TreeMap: Natural Order and floorKey/ceilingKey",
+    "description": "Create a TreeMap<Integer, String> mapping scores to grades (60->\"D\", 70->\"C\", 80->\"B\", 90->\"A\"). Print all entries in natural (ascending key) order. Then use floorKey and ceilingKey to find the nearest grade boundaries for a score of 75.",
+    "starterCode": "import java.util.TreeMap;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        TreeMap<Integer, String> gradeMap = new TreeMap<>();\n        gradeMap.put(60, \"D\");\n        gradeMap.put(70, \"C\");\n        gradeMap.put(80, \"B\");\n        gradeMap.put(90, \"A\");\n        // Your code here\n    }\n}",
+    "hints": [
+      "TreeMap is always sorted by key; iterating entrySet() gives ascending order automatically.",
+      "floorKey(75) returns the largest key <= 75; ceilingKey(75) returns the smallest key >= 75."
+    ],
+    "solution": {
+      "code": "import java.util.TreeMap;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        TreeMap<Integer, String> gradeMap = new TreeMap<>();\n        gradeMap.put(60, \"D\");\n        gradeMap.put(70, \"C\");\n        gradeMap.put(80, \"B\");\n        gradeMap.put(90, \"A\");\n\n        System.out.println(\"All grades (sorted):\");\n        gradeMap.forEach((score, grade) -> System.out.println(score + \" -> \" + grade));\n\n        int query = 75;\n        Integer floor = gradeMap.floorKey(query);\n        Integer ceiling = gradeMap.ceilingKey(query);\n        System.out.println(\"Score \" + query + \" -> floor: \" + floor + \" (\" + gradeMap.get(floor) + \"), ceiling: \" + ceiling + \" (\" + gradeMap.get(ceiling) + \")\");\n    }\n}",
+      "explanation": "TreeMap maintains its keys in sorted order using a Red-Black tree, giving O(log n) for get, put, and remove operations — more expensive than HashMap but with the benefit of sorted access. Iterating entrySet() always yields entries in ascending key order. floorKey(k) returns the greatest key less than or equal to k (null if none), and ceilingKey(k) returns the least key greater than or equal to k (null if none) — both are extremely useful for range queries, e.g., finding which grade bracket a score falls in.",
+      "methodSignatures": [
+        {
+          "method": "K TreeMap<K,V>.floorKey(K key)",
+          "description": "Returns the greatest key less than or equal to the given key, or null if there is no such key."
+        },
+        {
+          "method": "K TreeMap<K,V>.ceilingKey(K key)",
+          "description": "Returns the least key greater than or equal to the given key, or null if there is no such key."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-012",
+    "topic": "collections",
+    "subtopic": "treemap",
+    "difficulty": "intermediate",
+    "title": "TreeMap: Custom Comparator, subMap, headMap, tailMap",
+    "description": "Create a TreeMap<String, Integer> sorted in reverse alphabetical order using a custom Comparator. Add five words with their lengths. Then use subMap, headMap, and tailMap to print subranges.",
+    "starterCode": "import java.util.TreeMap;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        TreeMap<String, Integer> reverseMap = new TreeMap<>(Comparator.reverseOrder());\n        // Add: \"apple\", \"banana\", \"cherry\", \"date\", \"elderberry\" with their lengths\n        // Your code here\n    }\n}",
+    "hints": [
+      "Use Comparator.reverseOrder() as the TreeMap constructor argument.",
+      "subMap(fromKey, toKey) is exclusive of toKey; use subMap(from, true, to, true) for inclusive ranges."
+    ],
+    "solution": {
+      "code": "import java.util.TreeMap;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        TreeMap<String, Integer> reverseMap = new TreeMap<>(Comparator.reverseOrder());\n        reverseMap.put(\"apple\", 5);\n        reverseMap.put(\"banana\", 6);\n        reverseMap.put(\"cherry\", 6);\n        reverseMap.put(\"date\", 4);\n        reverseMap.put(\"elderberry\", 10);\n\n        System.out.println(\"Reverse order: \" + reverseMap.keySet());\n        // [elderberry, date, cherry, banana, apple]\n\n        System.out.println(\"headMap (before 'date' exclusive): \" + reverseMap.headMap(\"date\"));\n        // keys greater than 'date' in reverse order: [elderberry]\n        System.out.println(\"tailMap (from 'cherry' inclusive): \" + reverseMap.tailMap(\"cherry\"));\n        // [cherry, banana, apple]\n        System.out.println(\"subMap ('date' to 'apple' exclusive): \" + reverseMap.subMap(\"date\", \"apple\"));\n        // [date, cherry, banana]\n    }\n}",
+      "explanation": "Passing a Comparator to the TreeMap constructor replaces the natural ordering with a custom one; Comparator.reverseOrder() reverses the natural compareTo ordering so keys are stored Z→A. headMap(toKey) returns a view of all keys strictly less than toKey according to the map's order (with the reverse comparator, these are keys that come after toKey alphabetically). tailMap(fromKey) returns keys from fromKey inclusive onwards. subMap(fromKey, toKey) returns the range [fromKey, toKey) — all three methods return live views backed by the original map.",
+      "methodSignatures": [
+        {
+          "method": "SortedMap<K,V> TreeMap<K,V>.headMap(K toKey)",
+          "description": "Returns a view of the portion of this map whose keys are strictly less than toKey."
+        },
+        {
+          "method": "SortedMap<K,V> TreeMap<K,V>.tailMap(K fromKey)",
+          "description": "Returns a view of the portion of this map whose keys are greater than or equal to fromKey."
+        },
+        {
+          "method": "SortedMap<K,V> TreeMap<K,V>.subMap(K fromKey, K toKey)",
+          "description": "Returns a view of the portion of this map whose keys range from fromKey (inclusive) to toKey (exclusive)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-013",
+    "topic": "collections",
+    "subtopic": "hashset-treeset",
+    "difficulty": "beginner",
+    "title": "HashSet: add, contains, remove",
+    "description": "Create a HashSet of integers and add the values 1–5. Try adding 3 again (should fail silently). Check whether 4 and 10 are in the set, remove 2, and print the final set.",
+    "starterCode": "import java.util.HashSet;\nimport java.util.Set;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Set<Integer> set = new HashSet<>();\n        // Add 1, 2, 3, 4, 5\n        // Your code here\n    }\n}",
+    "hints": [
+      "add() returns false if the element already exists.",
+      "HashSet does not guarantee any iteration order."
+    ],
+    "solution": {
+      "code": "import java.util.HashSet;\nimport java.util.Set;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Set<Integer> set = new HashSet<>();\n        for (int i = 1; i <= 5; i++) set.add(i);\n        boolean added = set.add(3);\n        System.out.println(\"Added 3 again: \" + added); // false\n        System.out.println(\"Contains 4: \" + set.contains(4)); // true\n        System.out.println(\"Contains 10: \" + set.contains(10)); // false\n        set.remove(2);\n        System.out.println(\"After removing 2: \" + set);\n    }\n}",
+      "explanation": "HashSet is backed by a HashMap and stores only keys (values are a dummy constant). It enforces uniqueness via hashCode() and equals() — adding a duplicate returns false and leaves the set unchanged. contains() and remove() both run in O(1) average time. Because HashSet is unordered, the printed output order may vary across JVM runs; if you need consistent ordering use LinkedHashSet (insertion order) or TreeSet (sorted order).",
+      "methodSignatures": [
+        {
+          "method": "boolean Set<E>.add(E e)",
+          "description": "Adds the element if not already present; returns true if the set changed."
+        },
+        {
+          "method": "boolean Set<E>.contains(Object o)",
+          "description": "Returns true if this set contains the specified element."
+        },
+        {
+          "method": "boolean Set<E>.remove(Object o)",
+          "description": "Removes the specified element from this set if it is present."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-014",
+    "topic": "collections",
+    "subtopic": "hashset-treeset",
+    "difficulty": "intermediate",
+    "title": "Set Operations: Union, Intersection, and Difference",
+    "description": "Given setA = {1,2,3,4,5} and setB = {3,4,5,6,7}, compute and print the union (all elements), intersection (common elements), and difference (in A but not in B) using addAll, retainAll, and removeAll.",
+    "starterCode": "import java.util.HashSet;\nimport java.util.Set;\nimport java.util.Arrays;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Set<Integer> setA = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5));\n        Set<Integer> setB = new HashSet<>(Arrays.asList(3, 4, 5, 6, 7));\n        // Your code here - use copies so you don't destroy originals\n    }\n}",
+    "hints": [
+      "Use new HashSet<>(setA) to copy before mutating with retainAll/removeAll.",
+      "addAll = union; retainAll = intersection; removeAll = difference."
+    ],
+    "solution": {
+      "code": "import java.util.HashSet;\nimport java.util.Set;\nimport java.util.Arrays;\nimport java.util.TreeSet;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Set<Integer> setA = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5));\n        Set<Integer> setB = new HashSet<>(Arrays.asList(3, 4, 5, 6, 7));\n\n        Set<Integer> union = new TreeSet<>(setA);\n        union.addAll(setB);\n        System.out.println(\"Union: \" + union); // [1, 2, 3, 4, 5, 6, 7]\n\n        Set<Integer> intersection = new TreeSet<>(setA);\n        intersection.retainAll(setB);\n        System.out.println(\"Intersection: \" + intersection); // [3, 4, 5]\n\n        Set<Integer> difference = new TreeSet<>(setA);\n        difference.removeAll(setB);\n        System.out.println(\"Difference (A - B): \" + difference); // [1, 2]\n    }\n}",
+      "explanation": "addAll(collection) adds all elements from the collection and, on a Set, naturally deduplicates — this is the mathematical union. retainAll(collection) removes all elements NOT present in the argument collection, leaving only the intersection. removeAll(collection) removes every element that IS present in the argument, computing A minus B. These bulk operations mutate the receiving set, so you should always work on copies to preserve the originals. Using TreeSet for the results ensures sorted output for readability.",
+      "methodSignatures": [
+        {
+          "method": "boolean Collection<E>.addAll(Collection<? extends E> c)",
+          "description": "Adds all elements in the specified collection; returns true if this collection changed."
+        },
+        {
+          "method": "boolean Collection<E>.retainAll(Collection<?> c)",
+          "description": "Retains only elements contained in the specified collection (intersection)."
+        },
+        {
+          "method": "boolean Collection<E>.removeAll(Collection<?> c)",
+          "description": "Removes all elements that are also contained in the specified collection (difference)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-015",
+    "topic": "collections",
+    "subtopic": "hashset-treeset",
+    "difficulty": "intermediate",
+    "title": "TreeSet: Sorted Order and Custom Comparator",
+    "description": "Create a TreeSet<String> that sorts strings by length (ascending), with alphabetical order as a tiebreaker. Add [\"fig\", \"apple\", \"kiwi\", \"plum\", \"cherry\", \"date\"] and print the sorted result.",
+    "starterCode": "import java.util.TreeSet;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        // Create a TreeSet with a Comparator: sort by length, then alphabetically\n        TreeSet<String> sortedSet;\n        // Your code here\n    }\n}",
+    "hints": [
+      "Use Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()).",
+      "If comparator returns 0 for two elements, TreeSet treats them as duplicates and won't store both."
+    ],
+    "solution": {
+      "code": "import java.util.TreeSet;\nimport java.util.Arrays;\nimport java.util.Comparator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Comparator<String> byLengthThenAlpha = Comparator\n            .comparingInt(String::length)\n            .thenComparing(Comparator.naturalOrder());\n        TreeSet<String> sortedSet = new TreeSet<>(byLengthThenAlpha);\n        sortedSet.addAll(Arrays.asList(\"fig\", \"apple\", \"kiwi\", \"plum\", \"cherry\", \"date\"));\n        System.out.println(sortedSet);\n        // [fig, date, kiwi, plum, apple, cherry]\n    }\n}",
+      "explanation": "TreeSet uses its Comparator to determine both ordering and equality — if the comparator returns 0 for two elements, TreeSet considers them duplicates and won't store both, even if equals() says otherwise. thenComparing adds a secondary sort key that breaks ties when the primary comparator returns 0 (two strings of the same length), preventing accidental deduplication. The result orders words by length first (3, 4, 5, 6 characters), and within the same length alphabetically ('date' before 'kiwi' and 'kiwi' before 'plum').",
+      "methodSignatures": [
+        {
+          "method": "static <T> Comparator<T> Comparator.comparingInt(ToIntFunction<? super T> keyExtractor)",
+          "description": "Returns a Comparator that compares by an extracted int key."
+        },
+        {
+          "method": "Comparator<T> Comparator<T>.thenComparing(Comparator<? super T> other)",
+          "description": "Returns a composed comparator that uses the other comparator when this one considers two values equal."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-016",
+    "topic": "collections",
+    "subtopic": "priorityqueue",
+    "difficulty": "beginner",
+    "title": "PriorityQueue: Natural Order Min-Heap",
+    "description": "Create a PriorityQueue of integers and add [5, 1, 3, 2, 4]. Use peek() to see the smallest element, then poll() all elements in order. Show that the natural ordering gives a min-heap.",
+    "starterCode": "import java.util.PriorityQueue;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        PriorityQueue<Integer> pq = new PriorityQueue<>();\n        // Add 5, 1, 3, 2, 4\n        // Your code here\n    }\n}",
+    "hints": [
+      "peek() returns the head (smallest) without removing it.",
+      "poll() removes and returns the smallest element each time."
+    ],
+    "solution": {
+      "code": "import java.util.PriorityQueue;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        PriorityQueue<Integer> pq = new PriorityQueue<>();\n        pq.offer(5);\n        pq.offer(1);\n        pq.offer(3);\n        pq.offer(2);\n        pq.offer(4);\n        System.out.println(\"Peek (min): \" + pq.peek()); // 1\n        System.out.print(\"Poll order: \");\n        while (!pq.isEmpty()) {\n            System.out.print(pq.poll() + \" \");\n        }\n        System.out.println(); // 1 2 3 4 5\n    }\n}",
+      "explanation": "PriorityQueue maintains a binary heap internally — by default it is a min-heap, meaning the smallest element (by natural ordering) is always at the head. offer(e) and add(e) both insert in O(log n) time by sifting the element to its correct heap position. peek() reads the head in O(1). poll() removes the head in O(log n) by replacing it with the last element and sifting down. Note that iterating a PriorityQueue with a for-each loop does NOT give sorted order — you must repeatedly call poll() to drain elements in priority order.",
+      "methodSignatures": [
+        {
+          "method": "boolean PriorityQueue<E>.offer(E e)",
+          "description": "Inserts the specified element into this priority queue."
+        },
+        {
+          "method": "E PriorityQueue<E>.peek()",
+          "description": "Retrieves, but does not remove, the head (smallest) element, or returns null if empty."
+        },
+        {
+          "method": "E PriorityQueue<E>.poll()",
+          "description": "Retrieves and removes the head (smallest) element, or returns null if empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-017",
+    "topic": "collections",
+    "subtopic": "priorityqueue",
+    "difficulty": "intermediate",
+    "title": "PriorityQueue: Custom Comparator Max-Heap",
+    "description": "Create a max-heap PriorityQueue using a custom Comparator so that the largest element is polled first. Add [\"cherry\", \"apple\", \"elderberry\", \"banana\", \"date\"] and poll all elements to confirm max-to-min order. Also demonstrate a PriorityQueue of tasks sorted by priority integer (higher number = higher priority).",
+    "starterCode": "import java.util.PriorityQueue;\nimport java.util.Comparator;\n\npublic class Exercise {\n    static class Task {\n        String name;\n        int priority;\n        Task(String name, int priority) { this.name = name; this.priority = priority; }\n        public String toString() { return name + \"(\" + priority + \")\"; }\n    }\n\n    public static void main(String[] args) {\n        // Part 1: max-heap of strings\n        PriorityQueue<String> maxPQ;\n        // Your code here\n\n        // Part 2: task priority queue\n        PriorityQueue<Task> taskPQ;\n        // Your code here\n    }\n}",
+    "hints": [
+      "Pass Comparator.reverseOrder() to the PriorityQueue constructor for a max-heap.",
+      "For Task, use Comparator.comparingInt((Task t) -> t.priority).reversed()."
+    ],
+    "solution": {
+      "code": "import java.util.PriorityQueue;\nimport java.util.Comparator;\n\npublic class Exercise {\n    static class Task {\n        String name;\n        int priority;\n        Task(String name, int priority) { this.name = name; this.priority = priority; }\n        public String toString() { return name + \"(\" + priority + \")\"; }\n    }\n\n    public static void main(String[] args) {\n        PriorityQueue<String> maxPQ = new PriorityQueue<>(Comparator.reverseOrder());\n        maxPQ.offer(\"cherry\");\n        maxPQ.offer(\"apple\");\n        maxPQ.offer(\"elderberry\");\n        maxPQ.offer(\"banana\");\n        maxPQ.offer(\"date\");\n        System.out.print(\"Max-heap poll order: \");\n        while (!maxPQ.isEmpty()) System.out.print(maxPQ.poll() + \" \");\n        System.out.println();\n        // elderberry date cherry banana apple\n\n        PriorityQueue<Task> taskPQ = new PriorityQueue<>(\n            Comparator.comparingInt((Task t) -> t.priority).reversed()\n        );\n        taskPQ.offer(new Task(\"low\", 1));\n        taskPQ.offer(new Task(\"critical\", 10));\n        taskPQ.offer(new Task(\"medium\", 5));\n        System.out.print(\"Task order: \");\n        while (!taskPQ.isEmpty()) System.out.print(taskPQ.poll() + \" \");\n        System.out.println();\n        // critical(10) medium(5) low(1)\n    }\n}",
+      "explanation": "By passing a Comparator to the PriorityQueue constructor, you can invert the natural heap order — Comparator.reverseOrder() makes Java treat larger values as having higher priority (max-heap). For custom objects, build a Comparator with Comparator.comparingInt() pointing to your priority field, then call .reversed() to flip it so higher integers come out first. This pattern is essential in algorithms like Dijkstra's shortest path (min-heap on distance) or task scheduling (max-heap on priority). The Comparator only affects poll/peek order, not iteration order.",
+      "methodSignatures": [
+        {
+          "method": "PriorityQueue<E>(Comparator<? super E> comparator)",
+          "description": "Creates a PriorityQueue that orders its elements according to the specified comparator."
+        },
+        {
+          "method": "static <T> Comparator<T> Comparator.reverseOrder()",
+          "description": "Returns a comparator that imposes the reverse of the natural ordering."
+        },
+        {
+          "method": "Comparator<T> Comparator<T>.reversed()",
+          "description": "Returns a comparator that represents the reverse ordering of this comparator."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-018",
+    "topic": "collections",
+    "subtopic": "collections-utility",
+    "difficulty": "beginner",
+    "title": "Collections.sort, reverse, and shuffle",
+    "description": "Create a list of integers [3,1,4,1,5,9,2,6]. Sort it, print it. Reverse it, print it. Shuffle it, print it. Also use Collections.frequency to count how many times 1 appears.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> list = new ArrayList<>(Arrays.asList(3, 1, 4, 1, 5, 9, 2, 6));\n        // Your code here\n    }\n}",
+    "hints": [
+      "Collections.sort mutates the list in-place.",
+      "Collections.shuffle uses a default random seed; pass a Random object for reproducibility."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> list = new ArrayList<>(Arrays.asList(3, 1, 4, 1, 5, 9, 2, 6));\n        Collections.sort(list);\n        System.out.println(\"Sorted: \" + list); // [1, 1, 2, 3, 4, 5, 6, 9]\n        Collections.reverse(list);\n        System.out.println(\"Reversed: \" + list); // [9, 6, 5, 4, 3, 2, 1, 1]\n        Collections.shuffle(list);\n        System.out.println(\"Shuffled: \" + list);\n        System.out.println(\"Frequency of 1: \" + Collections.frequency(list, 1)); // 2\n    }\n}",
+      "explanation": "Collections is a utility class (all static methods) that operates on Collection instances. sort() uses a modified merge sort (TimSort) stable for objects; it works on any List<T extends Comparable>. reverse() reverses the list in place in O(n) time by swapping elements from both ends towards the center. shuffle() randomly permutes the list using an internal Random — pass Collections.shuffle(list, new Random(seed)) for reproducible results. frequency(collection, object) does a linear scan counting elements equal to the given object, working on any Collection including non-lists.",
+      "methodSignatures": [
+        {
+          "method": "static <T extends Comparable<? super T>> void Collections.sort(List<T> list)",
+          "description": "Sorts the list in ascending natural order."
+        },
+        {
+          "method": "static void Collections.reverse(List<?> list)",
+          "description": "Reverses the order of elements in the specified list."
+        },
+        {
+          "method": "static void Collections.shuffle(List<?> list)",
+          "description": "Randomly permutes the specified list using a default source of randomness."
+        },
+        {
+          "method": "static int Collections.frequency(Collection<?> c, Object o)",
+          "description": "Returns the number of elements in the specified collection equal to the specified object."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-019",
+    "topic": "collections",
+    "subtopic": "collections-utility",
+    "difficulty": "intermediate",
+    "title": "Collections.unmodifiableList and synchronizedList",
+    "description": "Demonstrate Collections.unmodifiableList by creating a mutable list, wrapping it, and verifying that modifications through the original list are visible but direct modifications to the wrapper throw UnsupportedOperationException. Then wrap a list with synchronizedList and explain its use case.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> mutable = new ArrayList<>(Arrays.asList(\"a\", \"b\", \"c\"));\n        List<String> unmod = Collections.unmodifiableList(mutable);\n        List<String> synced = Collections.synchronizedList(new ArrayList<>());\n        // Your code here\n    }\n}",
+    "hints": [
+      "Wrap a try-catch around unmod.add() to catch UnsupportedOperationException.",
+      "Changes to 'mutable' after wrapping ARE visible through 'unmod' — it's a view, not a copy."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> mutable = new ArrayList<>(Arrays.asList(\"a\", \"b\", \"c\"));\n        List<String> unmod = Collections.unmodifiableList(mutable);\n        System.out.println(\"Unmodifiable view: \" + unmod); // [a, b, c]\n\n        mutable.add(\"d\"); // modifying original is fine\n        System.out.println(\"After adding to mutable: \" + unmod); // [a, b, c, d]\n\n        try {\n            unmod.add(\"e\"); // throws!\n        } catch (UnsupportedOperationException e) {\n            System.out.println(\"Cannot modify via unmodifiable view: \" + e.getClass().getSimpleName());\n        }\n\n        List<String> synced = Collections.synchronizedList(new ArrayList<>());\n        synced.add(\"x\");\n        synced.add(\"y\");\n        synchronized (synced) {\n            for (String s : synced) {\n                System.out.println(\"Synced element: \" + s);\n            }\n        }\n    }\n}",
+      "explanation": "Collections.unmodifiableList(list) wraps the list in a decorator that throws UnsupportedOperationException for all mutating methods (add, remove, set, etc.) while delegating read methods to the backing list. Crucially, it is a live view — changes to the original backing list ARE visible through the wrapper, so for a truly immutable snapshot you should copy before wrapping, or use List.copyOf() (Java 10+). Collections.synchronizedList(list) wraps a list so that each method call is synchronized on the wrapper object itself; however, compound operations (like iteration) still require external synchronization using a synchronized block on the list, as shown.",
+      "methodSignatures": [
+        {
+          "method": "static <T> List<T> Collections.unmodifiableList(List<? extends T> list)",
+          "description": "Returns an unmodifiable view of the specified list; mutations throw UnsupportedOperationException."
+        },
+        {
+          "method": "static <T> List<T> Collections.synchronizedList(List<T> list)",
+          "description": "Returns a synchronized (thread-safe) list backed by the specified list."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-020",
+    "topic": "collections",
+    "subtopic": "collections-utility",
+    "difficulty": "intermediate",
+    "title": "Collections.min, max, disjoint, and nCopies",
+    "description": "Use Collections.min and max to find the smallest and largest elements in a list. Use Collections.disjoint to check if two lists share no common elements. Use Collections.nCopies to create a list of repeated values.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> nums = new ArrayList<>(Arrays.asList(4, 7, 1, 9, 3, 6));\n        List<Integer> setA = Arrays.asList(1, 2, 3);\n        List<Integer> setB = Arrays.asList(4, 5, 6);\n        List<Integer> setC = Arrays.asList(3, 4, 5);\n        // Your code here\n    }\n}",
+    "hints": [
+      "Collections.min/max uses natural ordering; both run in O(n).",
+      "disjoint returns true if the two collections have NO elements in common."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Collections;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> nums = new ArrayList<>(Arrays.asList(4, 7, 1, 9, 3, 6));\n        System.out.println(\"Min: \" + Collections.min(nums)); // 1\n        System.out.println(\"Max: \" + Collections.max(nums)); // 9\n\n        List<Integer> setA = Arrays.asList(1, 2, 3);\n        List<Integer> setB = Arrays.asList(4, 5, 6);\n        List<Integer> setC = Arrays.asList(3, 4, 5);\n        System.out.println(\"A disjoint B: \" + Collections.disjoint(setA, setB)); // true\n        System.out.println(\"A disjoint C: \" + Collections.disjoint(setA, setC)); // false (3 is common)\n\n        List<String> fiveHellos = Collections.nCopies(5, \"hello\");\n        System.out.println(\"nCopies: \" + fiveHellos); // [hello, hello, hello, hello, hello]\n        System.out.println(\"Is immutable: \" + (fiveHellos.getClass().getSimpleName()));\n    }\n}",
+      "explanation": "Collections.min(collection) and max(collection) iterate the entire collection and return the minimum/maximum element by natural ordering in O(n). Collections.disjoint(c1, c2) returns true if the two collections have no elements in common — internally it converts the smaller collection to a Set for efficient lookup, so it's faster than a naive nested loop. Collections.nCopies(n, obj) returns an immutable List backed by a single object reference (very memory-efficient), useful for initializing lists with a default value or as a fill argument; attempting to modify it throws UnsupportedOperationException.",
+      "methodSignatures": [
+        {
+          "method": "static <T extends Object & Comparable<? super T>> T Collections.min(Collection<? extends T> coll)",
+          "description": "Returns the minimum element of the collection according to natural ordering."
+        },
+        {
+          "method": "static boolean Collections.disjoint(Collection<?> c1, Collection<?> c2)",
+          "description": "Returns true if the two collections have no elements in common."
+        },
+        {
+          "method": "static <T> List<T> Collections.nCopies(int n, T o)",
+          "description": "Returns an immutable list consisting of n copies of the specified object."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-021",
+    "topic": "collections",
+    "subtopic": "arraylist",
+    "difficulty": "advanced",
+    "title": "ArrayList: removeIf and replaceAll",
+    "description": "Given a list of integers [1..10], use removeIf to remove all even numbers. Then use replaceAll to square every remaining element. Print the final list.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = new ArrayList<>();\n        for (int i = 1; i <= 10; i++) numbers.add(i);\n        // Your code here\n    }\n}",
+    "hints": [
+      "removeIf(Predicate) removes all elements matching the predicate in one pass.",
+      "replaceAll(UnaryOperator) replaces each element with the result of applying the operator."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.List;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = new ArrayList<>();\n        for (int i = 1; i <= 10; i++) numbers.add(i);\n        numbers.removeIf(n -> n % 2 == 0);\n        System.out.println(\"After removeIf (odds): \" + numbers); // [1, 3, 5, 7, 9]\n        numbers.replaceAll(n -> n * n);\n        System.out.println(\"After replaceAll (squared): \" + numbers); // [1, 9, 25, 49, 81]\n    }\n}",
+      "explanation": "removeIf(Predicate<? super E> filter) iterates the list once and removes all elements for which the predicate returns true — it uses an iterator internally, so it avoids ConcurrentModificationException and is more efficient than manually using an iterator. replaceAll(UnaryOperator<E> operator) iterates the list and replaces each element with the result of applying the operator, modifying the list in place. Both methods were added in Java 8 and use functional interfaces, making the code concise and expressive without any explicit loops.",
+      "methodSignatures": [
+        {
+          "method": "boolean List<E>.removeIf(Predicate<? super E> filter)",
+          "description": "Removes all elements satisfying the given predicate; returns true if any were removed."
+        },
+        {
+          "method": "void List<E>.replaceAll(UnaryOperator<E> operator)",
+          "description": "Replaces each element with the result of applying the operator to that element."
+        }
+      ]
+    }
+  },
+  {
+    "id": "collections-022",
+    "topic": "collections",
+    "subtopic": "hashmap",
+    "difficulty": "advanced",
+    "title": "HashMap: compute and replaceAll",
+    "description": "Use compute() to build a character frequency map from the string \"programming\". Then use Map.replaceAll() to convert all counts to their square. Print both stages.",
+    "starterCode": "import java.util.HashMap;\nimport java.util.Map;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String input = \"programming\";\n        Map<Character, Integer> freq = new HashMap<>();\n        // Your code here\n    }\n}",
+    "hints": [
+      "compute(key, (k, v) -> ...) receives the key and current value (null if absent); return the new value.",
+      "Map.replaceAll((k, v) -> ...) is like List.replaceAll but for map values."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.Map;\nimport java.util.TreeMap;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String input = \"programming\";\n        Map<Character, Integer> freq = new HashMap<>();\n        for (char c : input.toCharArray()) {\n            freq.compute(c, (k, v) -> v == null ? 1 : v + 1);\n        }\n        System.out.println(\"Frequencies: \" + new TreeMap<>(freq));\n        // {a=1, g=2, i=1, m=2, n=1, o=1, p=1, r=2}\n\n        freq.replaceAll((k, v) -> v * v);\n        System.out.println(\"Squared: \" + new TreeMap<>(freq));\n        // {a=1, g=4, i=1, m=4, n=1, o=1, p=1, r=4}\n    }\n}",
+      "explanation": "compute(key, BiFunction<K, V, V>) is the most flexible map update method: it always calls the function regardless of whether the key is present, passing null as the second argument when absent. The lambda (k, v) -> v == null ? 1 : v + 1 handles both the absent and present cases in one expression. Map.replaceAll(BiFunction<K, V, V>) visits every entry and replaces the value with the function's return value — equivalent to iterating all entries and calling put, but done in a single method call with no risk of ConcurrentModificationException.",
+      "methodSignatures": [
+        {
+          "method": "V Map<K,V>.compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction)",
+          "description": "Computes a mapping for the key using the remapping function (old value may be null); removes the entry if the function returns null."
+        },
+        {
+          "method": "void Map<K,V>.replaceAll(BiFunction<? super K, ? super V, ? extends V> function)",
+          "description": "Replaces each entry's value with the result of invoking the given function on that entry."
+        }
+      ]
+    }
+  }
+]

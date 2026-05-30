@@ -1,0 +1,310 @@
+[
+  {
+    "id": "exceptions-001",
+    "topic": "exceptions",
+    "subtopic": "checked-unchecked",
+    "difficulty": "beginner",
+    "title": "Catching NumberFormatException (Unchecked)",
+    "description": "Write a method parseIntSafely(String s) that attempts to parse a string as an integer and returns the integer on success, or -1 if the string is not a valid number. Test with valid and invalid inputs.",
+    "starterCode": "public class Exercise {\n    public static int parseIntSafely(String s) {\n        // Your code here\n        return -1;\n    }\n\n    public static void main(String[] args) {\n        String[] inputs = {\"42\", \"hello\", \"100\", \"\", \"3.14\"};\n        // Your code here\n    }\n}",
+    "hints": [
+      "Wrap Integer.parseInt(s) in a try-catch(NumberFormatException e).",
+      "NumberFormatException is unchecked (extends RuntimeException) — no throws declaration needed."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    public static int parseIntSafely(String s) {\n        try {\n            return Integer.parseInt(s);\n        } catch (NumberFormatException e) {\n            System.out.println(\"Invalid number: '\" + s + \"' -> \" + e.getMessage());\n            return -1;\n        }\n    }\n\n    public static void main(String[] args) {\n        String[] inputs = {\"42\", \"hello\", \"100\", \"\", \"3.14\"};\n        for (String input : inputs) {\n            int result = parseIntSafely(input);\n            System.out.println(\"parseIntSafely('\" + input + \"') = \" + result);\n        }\n    }\n}",
+      "explanation": "NumberFormatException is an unchecked exception (it extends RuntimeException) — the compiler does not require you to catch it or declare it with throws. Unchecked exceptions represent programming errors or invalid inputs that the programmer may or may not choose to handle. Checked exceptions (like IOException) must be either caught or declared; they represent conditions the caller should reasonably handle. Here, wrapping the parse in a try-catch makes the method recover gracefully from bad input, returning a sentinel value (-1) that the caller can check. Printing e.getMessage() is useful for debugging but in production you'd log the exception properly.",
+      "methodSignatures": [
+        {
+          "method": "static int Integer.parseInt(String s)",
+          "description": "Parses the string as a signed decimal integer; throws NumberFormatException if the string is not a valid integer."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-002",
+    "topic": "exceptions",
+    "subtopic": "checked-unchecked",
+    "difficulty": "beginner",
+    "title": "Catching IOException (Checked Exception)",
+    "description": "Write a method readFirstLine(String path) that reads and returns the first line of a text file using BufferedReader, or null if the file doesn't exist. The method must handle the checked IOException.",
+    "starterCode": "import java.io.BufferedReader;\nimport java.io.FileReader;\nimport java.io.IOException;\n\npublic class Exercise {\n    public static String readFirstLine(String path) {\n        // Your code here\n        return null;\n    }\n\n    public static void main(String[] args) {\n        String result = readFirstLine(\"nonexistent.txt\");\n        System.out.println(\"Result: \" + result);\n    }\n}",
+    "hints": [
+      "IOException is a checked exception — you must catch it or declare throws IOException.",
+      "Catching inside the method is cleaner if callers don't need to know about the file operation."
+    ],
+    "solution": {
+      "code": "import java.io.BufferedReader;\nimport java.io.FileReader;\nimport java.io.IOException;\n\npublic class Exercise {\n    public static String readFirstLine(String path) {\n        try {\n            BufferedReader reader = new BufferedReader(new FileReader(path));\n            String line = reader.readLine();\n            reader.close();\n            return line;\n        } catch (IOException e) {\n            System.out.println(\"Could not read file '\" + path + \"': \" + e.getMessage());\n            return null;\n        }\n    }\n\n    public static void main(String[] args) {\n        String result1 = readFirstLine(\"nonexistent.txt\");\n        System.out.println(\"Nonexistent file: \" + result1); // null\n\n        // Create a temp file to test success path:\n        try {\n            java.io.File tmp = java.io.File.createTempFile(\"test\", \".txt\");\n            java.io.FileWriter fw = new java.io.FileWriter(tmp);\n            fw.write(\"Hello from file!\"); fw.close();\n            System.out.println(\"First line: \" + readFirstLine(tmp.getAbsolutePath()));\n            tmp.deleteOnExit();\n        } catch (IOException e) {\n            System.out.println(\"Setup failed: \" + e.getMessage());\n        }\n    }\n}",
+      "explanation": "IOException is a checked exception — any method that might throw it must either catch it (as we do here) or declare throws IOException in its signature. Checked exceptions model recoverable conditions: a missing file is something the program can meaningfully react to. The trade-off of catching inside the method is that callers don't need to know about the IO detail, but they lose the ability to distinguish 'file not found' from 'permission denied' (both return null). Note this code has a resource-leak bug if readLine() throws — the reader won't be closed; try-with-resources (exercise exceptions-004) is the proper fix.",
+      "methodSignatures": [
+        {
+          "method": "String BufferedReader.readLine()",
+          "description": "Reads a line of text, returning null at end of stream; throws IOException on error."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-003",
+    "topic": "exceptions",
+    "subtopic": "multi-catch",
+    "difficulty": "intermediate",
+    "title": "Multi-Catch: Catching Multiple Exception Types",
+    "description": "Write a method processInput(String s) that: (1) parses s as an integer, (2) looks up an element in an array at that index. Use a single catch block (multi-catch) to handle both NumberFormatException and ArrayIndexOutOfBoundsException. Also show catch ordering (specific before general).",
+    "starterCode": "public class Exercise {\n    static String[] DATA = {\"alpha\", \"beta\", \"gamma\", \"delta\"};\n\n    public static String processInput(String s) {\n        // Use multi-catch for NumberFormatException | ArrayIndexOutOfBoundsException\n        // Your code here\n        return null;\n    }\n\n    public static void main(String[] args) {\n        System.out.println(processInput(\"1\"));\n        System.out.println(processInput(\"99\"));\n        System.out.println(processInput(\"abc\"));\n    }\n}",
+    "hints": [
+      "Multi-catch syntax: catch (NumberFormatException | ArrayIndexOutOfBoundsException e)",
+      "The exception variable in a multi-catch is implicitly final — you cannot reassign it."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static String[] DATA = {\"alpha\", \"beta\", \"gamma\", \"delta\"};\n\n    public static String processInput(String s) {\n        try {\n            int index = Integer.parseInt(s);\n            return DATA[index];\n        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {\n            // Multi-catch: handles either exception with the same handler\n            return \"Error (\" + e.getClass().getSimpleName() + \"): \" + e.getMessage();\n        }\n    }\n\n    // Demonstrating catch ordering: specific before general\n    public static void catchOrdering(String s) {\n        try {\n            int x = Integer.parseInt(s);\n            System.out.println(\"Parsed: \" + x);\n        } catch (NumberFormatException e) {\n            System.out.println(\"Specific: not a number -> \" + e.getMessage());\n        } catch (RuntimeException e) {\n            // Would catch any other RuntimeException not caught above\n            System.out.println(\"General RuntimeException: \" + e.getMessage());\n        } catch (Exception e) {\n            System.out.println(\"Most general: \" + e.getMessage());\n        }\n    }\n\n    public static void main(String[] args) {\n        System.out.println(processInput(\"1\"));   // beta\n        System.out.println(processInput(\"99\"));  // Error (ArrayIndexOutOfBoundsException): ...\n        System.out.println(processInput(\"abc\")); // Error (NumberFormatException): ...\n        catchOrdering(\"42\");\n        catchOrdering(\"oops\");\n    }\n}",
+      "explanation": "Multi-catch (added in Java 7) allows a single catch block to handle multiple exception types using the | operator, avoiding duplicate handler code when the recovery logic is the same for all caught types. The exception variable is implicitly final in a multi-catch block to prevent type confusion. Catch blocks must be ordered from most specific to most general — if you put catch(Exception e) before catch(NumberFormatException e), the compiler rejects it because the more specific type is unreachable. This specific-before-general rule mirrors class hierarchy: NumberFormatException extends IllegalArgumentException extends RuntimeException extends Exception.",
+      "methodSignatures": [
+        {
+          "method": "String Throwable.getMessage()",
+          "description": "Returns the detail message string describing this throwable."
+        },
+        {
+          "method": "String Object.getClass().getSimpleName()",
+          "description": "Returns the simple name of the underlying class (without package)."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-004",
+    "topic": "exceptions",
+    "subtopic": "finally",
+    "difficulty": "intermediate",
+    "title": "finally: Guaranteed Cleanup",
+    "description": "Demonstrate that a finally block runs even when: (1) the try block completes normally, (2) the try block throws an exception, (3) the try block executes a return statement. Show that finally always executes before the method returns.",
+    "starterCode": "public class Exercise {\n    public static String testNormal() {\n        // try { ... } finally { ... }\n        // Your code here\n        return \"never\";\n    }\n\n    public static String testException() {\n        // Your code here\n        return \"never\";\n    }\n\n    public static String testReturn() {\n        // try { return \"from-try\"; } finally { System.out.println(\"finally runs!\"); }\n        // Your code here\n        return \"never\";\n    }\n\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    "hints": [
+      "finally runs before the method returns even when return is inside the try block.",
+      "If finally also has a return, it overrides the return value from the try block."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    public static String testNormal() {\n        try {\n            System.out.println(\"testNormal: try block\");\n            return \"from-try\";\n        } finally {\n            System.out.println(\"testNormal: finally runs (before actual return)\");\n        }\n    }\n\n    public static String testException() {\n        try {\n            System.out.println(\"testException: try block\");\n            if (true) throw new RuntimeException(\"oops\");\n            return \"unreachable\";\n        } catch (RuntimeException e) {\n            System.out.println(\"testException: catch: \" + e.getMessage());\n            return \"from-catch\";\n        } finally {\n            System.out.println(\"testException: finally runs\");\n        }\n    }\n\n    public static int testReturnOverride() {\n        try {\n            System.out.println(\"testReturnOverride: returning 1 from try\");\n            return 1;\n        } finally {\n            System.out.println(\"testReturnOverride: finally runs, returning 99\");\n            return 99; // THIS overrides the try's return -- avoid in production!\n        }\n    }\n\n    public static void main(String[] args) {\n        System.out.println(\"Result: \" + testNormal()); // finally runs, then returns \"from-try\"\n        System.out.println();\n        System.out.println(\"Result: \" + testException()); // catch, then finally, returns \"from-catch\"\n        System.out.println();\n        System.out.println(\"Result: \" + testReturnOverride()); // 99 (finally overrides)\n    }\n}",
+      "explanation": "The finally block is guaranteed to execute after the try (and any matching catch) block, regardless of whether an exception occurred or whether a return statement was hit. This makes it the right place to release resources (close files, database connections) that must be freed no matter what happens. When the try block has a return statement, finally still executes before the value is actually returned to the caller. Critically, if the finally block itself contains a return, it overrides any return value from the try block — this is considered a bad practice because it can silently discard exceptions or change return values unexpectedly.",
+      "methodSignatures": []
+    }
+  },
+  {
+    "id": "exceptions-005",
+    "topic": "exceptions",
+    "subtopic": "try-with-resources",
+    "difficulty": "intermediate",
+    "title": "Try-With-Resources: AutoCloseable",
+    "description": "Create a custom AutoCloseable resource class that prints a message when closed. Use try-with-resources to auto-close it. Then open two resources in a single try-with-resources block and observe the closing order. Demonstrate that the resource is closed even when an exception is thrown.",
+    "starterCode": "public class Exercise {\n    static class MyResource implements AutoCloseable {\n        private final String name;\n        MyResource(String name) {\n            this.name = name;\n            System.out.println(\"Opened: \" + name);\n        }\n        public void use() { System.out.println(\"Using: \" + name); }\n        // Implement close()\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        // Single resource\n        // Your code here\n\n        // Multiple resources\n        // Your code here\n\n        // Resource with exception\n        // Your code here\n    }\n}",
+    "hints": [
+      "@Override public void close() { System.out.println(\"Closed: \" + name); }",
+      "Multiple resources: try (R1 r1 = ...; R2 r2 = ...) — they close in reverse order (r2 first)."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class MyResource implements AutoCloseable {\n        private final String name;\n        MyResource(String name) {\n            this.name = name;\n            System.out.println(\"Opened: \" + name);\n        }\n        public void use() { System.out.println(\"Using: \" + name); }\n        @Override\n        public void close() {\n            System.out.println(\"Closed: \" + name);\n        }\n    }\n\n    public static void main(String[] args) {\n        System.out.println(\"--- Single resource ---\");\n        try (MyResource r = new MyResource(\"R1\")) {\n            r.use();\n        } // close() called automatically here\n\n        System.out.println();\n        System.out.println(\"--- Multiple resources (closed in reverse order) ---\");\n        try (MyResource r1 = new MyResource(\"A\");\n             MyResource r2 = new MyResource(\"B\")) {\n            r1.use();\n            r2.use();\n        } // B closed first, then A\n\n        System.out.println();\n        System.out.println(\"--- Resource with exception ---\");\n        try (MyResource r = new MyResource(\"ExResource\")) {\n            r.use();\n            if (true) throw new RuntimeException(\"Something went wrong\");\n            r.use(); // not reached\n        } catch (RuntimeException e) {\n            System.out.println(\"Caught: \" + e.getMessage());\n        }\n        // Output: Opened, Using, Closed (before catch block), Caught\n    }\n}",
+      "explanation": "Try-with-resources (Java 7+) automatically calls close() on any resource that implements AutoCloseable at the end of the try block, whether it exits normally or via an exception. This eliminates the need for a finally block to close resources and prevents resource leaks when exceptions occur mid-way. When multiple resources are declared, they are closed in the reverse order of declaration (LIFO) — this mirrors the natural stack unwinding order and ensures resources that depend on others are closed first. The close() call happens before any catch block executes, which is important for flushing buffers before handling errors.",
+      "methodSignatures": [
+        {
+          "method": "void AutoCloseable.close() throws Exception",
+          "description": "Closes this resource, relinquishing any underlying resources. Called automatically by try-with-resources."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-006",
+    "topic": "exceptions",
+    "subtopic": "try-with-resources",
+    "difficulty": "advanced",
+    "title": "Suppressed Exceptions in Try-With-Resources",
+    "description": "Create a resource whose close() method itself throws an exception. Demonstrate that when both the try body and close() throw, the body's exception is the primary exception and close()'s exception is added as a suppressed exception. Access it with getSuppressed().",
+    "starterCode": "public class Exercise {\n    static class FailingResource implements AutoCloseable {\n        @Override\n        public void close() throws Exception {\n            // Throw an exception from close()\n            throw new Exception(\"Error during close\");\n        }\n    }\n\n    public static void main(String[] args) {\n        // Your code here: trigger both body exception and close() exception\n    }\n}",
+    "hints": [
+      "The primary exception (from the try body) propagates; close()'s exception is suppressed.",
+      "Use e.getSuppressed() to retrieve the suppressed exceptions array."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class FailingResource implements AutoCloseable {\n        @Override\n        public void close() throws Exception {\n            System.out.println(\"close() throwing...\");\n            throw new Exception(\"Error during close\");\n        }\n    }\n\n    public static void main(String[] args) {\n        try (FailingResource res = new FailingResource()) {\n            System.out.println(\"In try body, throwing...\");\n            throw new RuntimeException(\"Primary exception from try body\");\n        } catch (Exception e) {\n            System.out.println(\"Primary: \" + e.getMessage());\n            Throwable[] suppressed = e.getSuppressed();\n            System.out.println(\"Suppressed count: \" + suppressed.length); // 1\n            for (Throwable s : suppressed) {\n                System.out.println(\"Suppressed: \" + s.getMessage()); // Error during close\n            }\n        }\n\n        // Contrast: without try-with-resources (old style), close() exception swallows body exception:\n        System.out.println();\n        System.out.println(\"If you did it manually with finally:\");\n        System.out.println(\"  the body exception would be LOST if finally also throws!\");\n    }\n}",
+      "explanation": "Before try-with-resources, if both the try body and a finally block threw exceptions, the body's exception was silently swallowed by the finally exception — a notorious source of hard-to-diagnose bugs. Try-with-resources solves this: if both the body and close() throw, the body's exception is the primary exception that propagates, and close()'s exception is attached as a 'suppressed' exception accessible via getSuppressed(). This preserves the original exception while still giving you access to the cleanup failure. getSuppressed() returns an array because multiple resources might each throw on close(), each becoming a separate suppressed exception.",
+      "methodSignatures": [
+        {
+          "method": "Throwable[] Throwable.getSuppressed()",
+          "description": "Returns an array of all exceptions that were suppressed in order to deliver this exception."
+        },
+        {
+          "method": "void Throwable.addSuppressed(Throwable exception)",
+          "description": "Appends the specified exception to the exceptions that were suppressed in order to deliver this exception."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-007",
+    "topic": "exceptions",
+    "subtopic": "custom-exceptions",
+    "difficulty": "intermediate",
+    "title": "Custom Checked Exception",
+    "description": "Create a custom checked exception InsufficientFundsException (extends Exception) with fields amount and balance. Use it in a BankAccount class whose withdraw method throws it. The exception should have a constructor that takes both values and builds a descriptive message.",
+    "starterCode": "public class Exercise {\n    // Define InsufficientFundsException here\n\n    static class BankAccount {\n        private double balance;\n        BankAccount(double balance) { this.balance = balance; }\n        // withdraw(double amount) throws InsufficientFundsException\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        BankAccount account = new BankAccount(100.0);\n        // Your code here\n    }\n}",
+    "hints": [
+      "class InsufficientFundsException extends Exception — it's checked, so callers must handle it.",
+      "Pass a descriptive message to super() in the constructor."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class InsufficientFundsException extends Exception {\n        private final double amount;\n        private final double balance;\n\n        InsufficientFundsException(double amount, double balance) {\n            super(String.format(\"Insufficient funds: attempted to withdraw %.2f but balance is %.2f\",\n                               amount, balance));\n            this.amount  = amount;\n            this.balance = balance;\n        }\n\n        public double getAmount()  { return amount; }\n        public double getBalance() { return balance; }\n    }\n\n    static class BankAccount {\n        private double balance;\n        BankAccount(double balance) { this.balance = balance; }\n\n        public void withdraw(double amount) throws InsufficientFundsException {\n            if (amount > balance) {\n                throw new InsufficientFundsException(amount, balance);\n            }\n            balance -= amount;\n            System.out.println(\"Withdrew \" + amount + \", new balance: \" + balance);\n        }\n    }\n\n    public static void main(String[] args) {\n        BankAccount account = new BankAccount(100.0);\n        try {\n            account.withdraw(40.0);\n            account.withdraw(80.0); // will fail\n        } catch (InsufficientFundsException e) {\n            System.out.println(\"Caught: \" + e.getMessage());\n            System.out.println(\"Tried: \" + e.getAmount() + \", had: \" + e.getBalance());\n        }\n    }\n}",
+      "explanation": "Extending Exception (not RuntimeException) makes the exception checked — the compiler forces any caller of withdraw() to either catch InsufficientFundsException or declare throws InsufficientFundsException. This is appropriate here because insufficient funds is a foreseeable, recoverable business condition that callers should explicitly handle. Adding domain-specific fields (amount, balance) with getters enriches the exception with structured data beyond the message string — the catch block can access these to present accurate feedback or make decisions programmatically without parsing the message string. Calling super(message) ensures the message is stored in the standard Throwable.getMessage() location.",
+      "methodSignatures": [
+        {
+          "method": "Exception(String message)",
+          "description": "Constructs a new exception with the specified detail message."
+        },
+        {
+          "method": "String Throwable.getMessage()",
+          "description": "Returns the detail message string of this throwable."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-008",
+    "topic": "exceptions",
+    "subtopic": "custom-exceptions",
+    "difficulty": "intermediate",
+    "title": "Custom Unchecked Exception with Cause",
+    "description": "Create an unchecked exception DatabaseException (extends RuntimeException) that wraps a low-level cause. Create a UserRepository that catches low-level exceptions (like NullPointerException for a simulated DB error) and wraps them in DatabaseException. Demonstrate getCause().",
+    "starterCode": "public class Exercise {\n    // Define DatabaseException (extends RuntimeException) with message and cause constructors\n\n    static class UserRepository {\n        // findById(int id): throws DatabaseException wrapping a simulated error\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        UserRepository repo = new UserRepository();\n        // Your code here\n    }\n}",
+    "hints": [
+      "RuntimeException has constructors: (String msg), (String msg, Throwable cause), (Throwable cause).",
+      "getCause() returns the original Throwable that was wrapped."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class DatabaseException extends RuntimeException {\n        DatabaseException(String message) {\n            super(message);\n        }\n        DatabaseException(String message, Throwable cause) {\n            super(message, cause);\n        }\n    }\n\n    static class UserRepository {\n        public String findById(int id) {\n            try {\n                if (id <= 0) {\n                    // Simulate a DB driver throwing a low-level exception\n                    throw new IllegalArgumentException(\"DB error: invalid id \" + id);\n                }\n                if (id > 100) {\n                    throw new RuntimeException(\"DB connection lost\");\n                }\n                return \"User-\" + id;\n            } catch (IllegalArgumentException | RuntimeException e) {\n                // Wrap low-level exception in domain exception\n                throw new DatabaseException(\"Failed to find user with id=\" + id, e);\n            }\n        }\n    }\n\n    public static void main(String[] args) {\n        UserRepository repo = new UserRepository();\n        try {\n            System.out.println(repo.findById(42));  // ok: User-42\n            System.out.println(repo.findById(-1));  // throws\n        } catch (DatabaseException e) {\n            System.out.println(\"DatabaseException: \" + e.getMessage());\n            System.out.println(\"Caused by: \" + e.getCause().getClass().getSimpleName()\n                               + \" -> \" + e.getCause().getMessage());\n        }\n\n        try {\n            repo.findById(999);\n        } catch (DatabaseException e) {\n            System.out.println(\"DatabaseException: \" + e.getMessage());\n            System.out.println(\"Caused by: \" + e.getCause().getMessage());\n        }\n    }\n}",
+      "explanation": "Extending RuntimeException makes DatabaseException unchecked — callers are not forced to declare or catch it, which is appropriate for unexpected technical failures where there's often nothing useful to do at the call site (the operation fundamentally can't complete). Exception wrapping (chaining) is critical for abstraction: the repository's contract is about users, not SQL drivers or network connections — callers shouldn't need to handle JDBC-specific exceptions. Passing the original exception as the cause preserves the full stack trace and the root cause, which is invaluable when debugging. Never swallow the cause by creating new DatabaseException(message) without passing e.",
+      "methodSignatures": [
+        {
+          "method": "RuntimeException(String message, Throwable cause)",
+          "description": "Constructs a RuntimeException with the specified detail message and cause."
+        },
+        {
+          "method": "Throwable Throwable.getCause()",
+          "description": "Returns the cause of this throwable, or null if the cause is nonexistent or unknown."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-009",
+    "topic": "exceptions",
+    "subtopic": "exception-chaining",
+    "difficulty": "intermediate",
+    "title": "Exception Chaining and Re-Throwing with Cause",
+    "description": "Build a three-layer architecture: DAO -> Service -> Controller. Each layer catches exceptions from the layer below and wraps them in its own exception type, preserving the cause. Show the full exception chain by printing each exception and its cause.",
+    "starterCode": "public class Exercise {\n    static class DataAccessException extends Exception {\n        DataAccessException(String msg, Throwable cause) { super(msg, cause); }\n    }\n    static class ServiceException extends Exception {\n        ServiceException(String msg, Throwable cause) { super(msg, cause); }\n    }\n    static class ControllerException extends Exception {\n        ControllerException(String msg, Throwable cause) { super(msg, cause); }\n    }\n\n    static class Dao {\n        void fetchData() throws DataAccessException {\n            // Simulate a low-level failure\n            // Your code here\n        }\n    }\n    static class Service {\n        Dao dao = new Dao();\n        void processData() throws ServiceException { /* wrap DAO exceptions */ }\n    }\n    static class Controller {\n        Service service = new Service();\n        void handleRequest() throws ControllerException { /* wrap Service exceptions */ }\n    }\n\n    static void printCauseChain(Throwable t) {\n        // Print the full chain\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    "hints": [
+      "Each layer: catch(LowerException e) { throw new UpperException(\"msg\", e); }",
+      "Traverse the chain with t.getCause() until null."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class DataAccessException extends Exception {\n        DataAccessException(String msg, Throwable cause) { super(msg, cause); }\n    }\n    static class ServiceException extends Exception {\n        ServiceException(String msg, Throwable cause) { super(msg, cause); }\n    }\n    static class ControllerException extends Exception {\n        ControllerException(String msg, Throwable cause) { super(msg, cause); }\n    }\n\n    static class Dao {\n        void fetchData() throws DataAccessException {\n            try {\n                throw new RuntimeException(\"SQL: connection refused\");\n            } catch (RuntimeException e) {\n                throw new DataAccessException(\"DAO: failed to fetch data\", e);\n            }\n        }\n    }\n\n    static class Service {\n        Dao dao = new Dao();\n        void processData() throws ServiceException {\n            try {\n                dao.fetchData();\n            } catch (DataAccessException e) {\n                throw new ServiceException(\"Service: data processing failed\", e);\n            }\n        }\n    }\n\n    static class Controller {\n        Service service = new Service();\n        void handleRequest() throws ControllerException {\n            try {\n                service.processData();\n            } catch (ServiceException e) {\n                throw new ControllerException(\"Controller: request handling failed\", e);\n            }\n        }\n    }\n\n    static void printCauseChain(Throwable t) {\n        int depth = 0;\n        while (t != null) {\n            System.out.println(\"  \".repeat(depth) + t.getClass().getSimpleName() + \": \" + t.getMessage());\n            t = t.getCause();\n            depth++;\n        }\n    }\n\n    public static void main(String[] args) {\n        try {\n            new Controller().handleRequest();\n        } catch (ControllerException e) {\n            System.out.println(\"Caught at top level:\");\n            printCauseChain(e);\n        }\n    }\n}",
+      "explanation": "Exception chaining builds a causal chain that maps exactly to architectural boundaries: the ControllerException at the top is what the HTTP layer deals with, ServiceException is what business logic deals with, DataAccessException is what persistence deals with, and the root RuntimeException is the raw technical failure. Each layer translates the vocabulary of its concern without discarding lower-level context. getCause() lets you traverse the chain programmatically to find the root cause; Throwable also has printStackTrace() which prints the full chained trace automatically. This pattern is essential for production observability — without it, a 'request handling failed' error tells you nothing about whether it was a DB timeout, network error, or coding bug.",
+      "methodSignatures": [
+        {
+          "method": "Throwable Throwable.getCause()",
+          "description": "Returns the cause of this throwable, or null if none."
+        },
+        {
+          "method": "void Throwable.printStackTrace()",
+          "description": "Prints this throwable and its backtrace, including the cause chain, to standard error."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-010",
+    "topic": "exceptions",
+    "subtopic": "best-practices",
+    "difficulty": "intermediate",
+    "title": "Don't Swallow Exceptions — Log and Rethrow",
+    "description": "Demonstrate three anti-patterns: (1) catching Exception blindly, (2) empty catch blocks (swallowing), (3) losing the cause. Then demonstrate the correct pattern: catch specifically, log with context, and rethrow with cause.",
+    "starterCode": "public class Exercise {\n    static void badPattern1() {\n        // Anti-pattern: catching Exception blindly\n        // Your code here\n    }\n\n    static void badPattern2() {\n        // Anti-pattern: empty catch (swallowing)\n        // Your code here\n    }\n\n    static void goodPattern(String input) throws IllegalArgumentException {\n        // Correct: catch specifically, include context, preserve cause\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    "hints": [
+      "An empty catch block hides the error completely — a bug becomes invisible.",
+      "Log the context (what was being processed) and wrap with the original cause."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    // Anti-pattern 1: catching Exception blindly\n    static void badPattern1(String s) {\n        try {\n            int x = Integer.parseInt(s);\n            System.out.println(\"Parsed: \" + x);\n        } catch (Exception e) { // Too broad! Also catches NullPointerException, OutOfMemoryError...\n            System.out.println(\"Something failed: \" + e.getMessage());\n            // Problem: we don't know what failed or why; also masks programming errors\n        }\n    }\n\n    // Anti-pattern 2: empty catch (swallowing)\n    static void badPattern2(String s) {\n        try {\n            int x = Integer.parseInt(s);\n        } catch (NumberFormatException e) {\n            // !! Silent: the exception is lost; caller thinks everything is fine\n        }\n    }\n\n    // Anti-pattern 3: losing the cause\n    static void badPattern3(String s) throws IllegalArgumentException {\n        try {\n            int x = Integer.parseInt(s);\n        } catch (NumberFormatException e) {\n            throw new IllegalArgumentException(\"Bad input: \" + s); // cause e is dropped!\n        }\n    }\n\n    // Good pattern: catch specifically, log context, preserve cause\n    static void goodPattern(String s) throws IllegalArgumentException {\n        try {\n            int x = Integer.parseInt(s);\n            System.out.println(\"Processed: \" + x);\n        } catch (NumberFormatException e) {\n            // Log with full context (in production: use a real logger)\n            System.err.println(\"[ERROR] Could not parse integer from input='\" + s + \"': \" + e.getMessage());\n            // Rethrow with cause preserved\n            throw new IllegalArgumentException(\"Invalid integer input: '\" + s + \"'\", e);\n        }\n    }\n\n    public static void main(String[] args) {\n        badPattern1(\"oops\");  // catches too broadly\n        badPattern2(\"oops\");  // silent failure\n\n        try {\n            goodPattern(\"42\");    // success\n            goodPattern(\"bad\");   // throws, with cause\n        } catch (IllegalArgumentException e) {\n            System.out.println(\"Caught: \" + e.getMessage());\n            System.out.println(\"Root cause: \" + e.getCause().getMessage());\n        }\n    }\n}",
+      "explanation": "Catching Exception (or Throwable) is an anti-pattern because it also catches programming errors (NullPointerException, ClassCastException) that should crash the program to surface bugs early. Empty catch blocks are even worse — they silently discard exceptions, making failures invisible and leaving the program in an inconsistent state. Dropping the cause when rethrowing (new MyException(msg) without passing e) destroys the stack trace of the original error, making root-cause analysis impossible. The correct pattern is: catch the most specific exception type you can handle, log enough context to reproduce the problem, and rethrow with the original exception as the cause to preserve the full diagnostic chain.",
+      "methodSignatures": [
+        {
+          "method": "IllegalArgumentException(String message, Throwable cause)",
+          "description": "Constructs an IllegalArgumentException with the specified message and cause."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-011",
+    "topic": "exceptions",
+    "subtopic": "best-practices",
+    "difficulty": "advanced",
+    "title": "Exception-Safe Resource Handling Without Try-With-Resources",
+    "description": "Before Java 7, resource cleanup required careful finally block patterns. Implement a method that opens two resources and must ensure both are closed even if an exception occurs during processing — correctly using the nested try-finally pattern. Then compare to the try-with-resources version.",
+    "starterCode": "public class Exercise {\n    static class Connection implements AutoCloseable {\n        String name;\n        Connection(String name) { this.name = name; System.out.println(\"Open: \" + name); }\n        public void query() { System.out.println(\"Query on \" + name); }\n        public void close() { System.out.println(\"Close: \" + name); }\n    }\n\n    // Old way: manual nested finally\n    static void processOldWay() throws Exception {\n        // Your code here\n    }\n\n    // New way: try-with-resources\n    static void processNewWay() throws Exception {\n        // Your code here\n    }\n\n    public static void main(String[] args) throws Exception {\n        System.out.println(\"--- Old way ---\");\n        processOldWay();\n        System.out.println();\n        System.out.println(\"--- New way ---\");\n        processNewWay();\n    }\n}",
+    "hints": [
+      "Old way: initialize to null, open in try, close in finally (null-check first).",
+      "Nested try-finally for two resources: outer opens first, inner opens second."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class Connection implements AutoCloseable {\n        String name;\n        Connection(String name) { this.name = name; System.out.println(\"Open: \" + name); }\n        public void query() { System.out.println(\"Query on \" + name); }\n        public void close() { System.out.println(\"Close: \" + name); }\n    }\n\n    static void processOldWay() throws Exception {\n        Connection c1 = null;\n        Connection c2 = null;\n        try {\n            c1 = new Connection(\"DB\");\n            c2 = new Connection(\"Cache\");\n            c1.query();\n            c2.query();\n            // Simulate error:\n            // throw new Exception(\"processing error\");\n        } finally {\n            // Null-check before closing; close c2 before c1 (reverse order)\n            if (c2 != null) {\n                try { c2.close(); } catch (Exception e) {\n                    System.err.println(\"Error closing c2: \" + e.getMessage());\n                }\n            }\n            if (c1 != null) {\n                try { c1.close(); } catch (Exception e) {\n                    System.err.println(\"Error closing c1: \" + e.getMessage());\n                }\n            }\n        }\n    }\n\n    static void processNewWay() throws Exception {\n        try (Connection c1 = new Connection(\"DB\");\n             Connection c2 = new Connection(\"Cache\")) {\n            c1.query();\n            c2.query();\n        } // c2 closed first, then c1 — automatically, correctly\n    }\n\n    public static void main(String[] args) throws Exception {\n        System.out.println(\"--- Old way ---\");\n        processOldWay();\n        System.out.println();\n        System.out.println(\"--- New way ---\");\n        processNewWay();\n    }\n}",
+      "explanation": "The old-style pattern initializes resources to null before the try block, opens them inside the try, then in the finally block null-checks and closes them in reverse order — each close is individually wrapped in its own try-catch so that a failure to close one resource doesn't prevent closing the other. This pattern is correct but verbose, and it's very easy to get wrong (forget the null check, wrong close order, forget to wrap close in try-catch). Try-with-resources produces identical behavior with a fraction of the code, handles close exceptions as suppressed exceptions automatically, and is impossible to get wrong. Use try-with-resources for all new code.",
+      "methodSignatures": []
+    }
+  },
+  {
+    "id": "exceptions-012",
+    "topic": "exceptions",
+    "subtopic": "best-practices",
+    "difficulty": "advanced",
+    "title": "Custom Exception Hierarchy for a Domain",
+    "description": "Design a small exception hierarchy for an e-commerce order system: OrderException (base, checked), PaymentException (extends OrderException), InventoryException (extends OrderException). Create an OrderService that may throw any of these. Catch them at different levels of specificity.",
+    "starterCode": "public class Exercise {\n    // Define OrderException, PaymentException, InventoryException\n\n    static class OrderService {\n        void placeOrder(String item, int qty, double payment) throws OrderException {\n            // Throw PaymentException if payment is 0\n            // Throw InventoryException if qty > 10\n            // Otherwise success\n            // Your code here\n        }\n    }\n\n    public static void main(String[] args) {\n        OrderService service = new OrderService();\n        // Test: success, PaymentException, InventoryException\n        // Your code here\n    }\n}",
+    "hints": [
+      "PaymentException extends OrderException, which extends Exception.",
+      "Catch OrderException to handle all order errors; catch PaymentException for payment-specific handling."
+    ],
+    "solution": {
+      "code": "public class Exercise {\n    static class OrderException extends Exception {\n        OrderException(String message) { super(message); }\n        OrderException(String message, Throwable cause) { super(message, cause); }\n    }\n\n    static class PaymentException extends OrderException {\n        private final double amount;\n        PaymentException(double amount) {\n            super(\"Payment failed: invalid amount \" + amount);\n            this.amount = amount;\n        }\n        public double getAmount() { return amount; }\n    }\n\n    static class InventoryException extends OrderException {\n        private final String item;\n        private final int requested;\n        InventoryException(String item, int requested) {\n            super(\"Inventory error: \" + item + \" — requested \" + requested + \" but max is 10\");\n            this.item = item;\n            this.requested = requested;\n        }\n        public String getItem() { return item; }\n        public int getRequested() { return requested; }\n    }\n\n    static class OrderService {\n        void placeOrder(String item, int qty, double payment) throws OrderException {\n            if (payment <= 0) throw new PaymentException(payment);\n            if (qty > 10) throw new InventoryException(item, qty);\n            System.out.println(\"Order placed: \" + qty + \"x\" + item + \" for $\" + payment);\n        }\n    }\n\n    public static void main(String[] args) {\n        OrderService service = new OrderService();\n        String[][] tests = {{\"book\",\"2\",\"29.99\"}, {\"pen\",\"1\",\"0\"}, {\"chair\",\"15\",\"199.99\"}};\n        for (String[] t : tests) {\n            try {\n                service.placeOrder(t[0], Integer.parseInt(t[1]), Double.parseDouble(t[2]));\n            } catch (PaymentException e) {\n                System.out.println(\"[Payment] \" + e.getMessage() + \" (amount=\" + e.getAmount() + \")\");\n            } catch (InventoryException e) {\n                System.out.println(\"[Inventory] \" + e.getMessage() + \" (item=\" + e.getItem() + \")\");\n            } catch (OrderException e) {\n                System.out.println(\"[Order] \" + e.getMessage());\n            }\n        }\n    }\n}",
+      "explanation": "A well-designed exception hierarchy lets callers choose their level of handling granularity. Catching PaymentException allows payment-specific recovery (retry with a different card); catching the parent OrderException handles any order problem generically (show a user-friendly error page). The hierarchy must be declared from most specific to most general in catch blocks — since PaymentException is a subtype of OrderException, it must appear first. Each subclass carries domain-specific fields (amount, item, requested) rather than forcing callers to parse the message string. Making OrderException checked (extends Exception) forces callers to acknowledge that placing an order can fail, which is appropriate for a business operation with known failure modes.",
+      "methodSignatures": [
+        {
+          "method": "Exception(String message)",
+          "description": "Constructs a new exception with the specified detail message."
+        },
+        {
+          "method": "Exception(String message, Throwable cause)",
+          "description": "Constructs a new exception with the specified detail message and cause."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exceptions-013",
+    "topic": "exceptions",
+    "subtopic": "checked-unchecked",
+    "difficulty": "intermediate",
+    "title": "throws Declaration and Checked Exception Propagation",
+    "description": "Demonstrate the throws keyword: write a call chain methodA() -> methodB() -> methodC() where methodC throws a checked IOException. Show two options: (1) each method declares throws, propagating to main, or (2) methodB catches and wraps it. Compare both approaches.",
+    "starterCode": "import java.io.IOException;\n\npublic class Exercise {\n    // Option 1: propagate with throws declarations\n    static void methodC_option1() throws IOException {\n        throw new IOException(\"Simulated IO failure\");\n    }\n    static void methodB_option1() throws IOException {\n        // Your code here\n    }\n    static void methodA_option1() throws IOException {\n        // Your code here\n    }\n\n    // Option 2: wrap at the boundary\n    static void methodC_option2() throws IOException {\n        throw new IOException(\"Simulated IO failure\");\n    }\n    static void methodB_option2() {\n        // Catch IOException and wrap in unchecked\n        // Your code here\n    }\n    static void methodA_option2() {\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    "hints": [
+      "Option 1: add 'throws IOException' to methodB and methodA signatures.",
+      "Option 2: methodB catches IOException and throws new RuntimeException(\"msg\", e)."
+    ],
+    "solution": {
+      "code": "import java.io.IOException;\n\npublic class Exercise {\n    // Option 1: propagate throws declarations up the call chain\n    static void methodC_option1() throws IOException {\n        System.out.println(\"C1: throwing\");\n        throw new IOException(\"Simulated IO failure\");\n    }\n    static void methodB_option1() throws IOException {\n        System.out.println(\"B1: calling C\");\n        methodC_option1(); // must declare throws because C declares it\n    }\n    static void methodA_option1() throws IOException {\n        System.out.println(\"A1: calling B\");\n        methodB_option1(); // must declare throws because B declares it\n    }\n\n    // Option 2: wrap at the service boundary (B is the boundary)\n    static void methodC_option2() throws IOException {\n        System.out.println(\"C2: throwing\");\n        throw new IOException(\"Simulated IO failure\");\n    }\n    static void methodB_option2() { // no throws — wraps before propagating\n        System.out.println(\"B2: calling C, catching and wrapping\");\n        try {\n            methodC_option2();\n        } catch (IOException e) {\n            throw new RuntimeException(\"Service failure in B\", e); // wraps with cause\n        }\n    }\n    static void methodA_option2() { // no throws needed\n        System.out.println(\"A2: calling B\");\n        methodB_option2();\n    }\n\n    public static void main(String[] args) {\n        System.out.println(\"--- Option 1: propagated throws ---\");\n        try {\n            methodA_option1();\n        } catch (IOException e) {\n            System.out.println(\"main caught IOException: \" + e.getMessage());\n        }\n\n        System.out.println();\n        System.out.println(\"--- Option 2: wrapped at boundary ---\");\n        try {\n            methodA_option2();\n        } catch (RuntimeException e) {\n            System.out.println(\"main caught RuntimeException: \" + e.getMessage());\n            System.out.println(\"Caused by: \" + e.getCause().getMessage());\n        }\n    }\n}",
+      "explanation": "When a method calls code that declares throws CheckedException, it must either handle it (try-catch) or propagate it by also declaring throws CheckedException. Option 1 (propagation) is suitable when every layer in the chain cares about the specific exception type — for example, a CLI tool that handles IO differently from network errors. Option 2 (wrapping at the boundary) is the better choice when lower layers use implementation details (like JDBC SQLExceptions or file IOExceptions) that should not leak into higher-level APIs — it translates the vocabulary and avoids coupling callers to infrastructure details. Always preserve the original cause when wrapping so root-cause debugging remains possible.",
+      "methodSignatures": []
+    }
+  }
+]

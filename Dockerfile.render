@@ -1,0 +1,47 @@
+# =============================================================================
+# Single-container build for Render.com free tier
+# Backend (Spring Boot / JShell) + Frontend (nginx) in one image
+# =============================================================================
+
+# ── Stage 1: Build backend ────────────────────────────────────────────────
+FROM maven:3.9-eclipse-temurin-21 AS backend-build
+WORKDIR /backend
+COPY backend/pom.xml .
+RUN mvn dependency:go-offline -q
+COPY backend/src ./src
+RUN mvn package -DskipTests -q
+
+# ── Stage 2: Build frontend ───────────────────────────────────────────────
+FROM node:20-alpine AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
+
+# ── Stage 3: Combined runtime ─────────────────────────────────────────────
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
+
+# nginx + supervisor (process manager to run both services)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx supervisor curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Backend jar
+COPY --from=backend-build /backend/target/java-mastery-backend-1.0.0.jar backend.jar
+
+# Frontend static files
+COPY --from=frontend-build /frontend/dist /usr/share/nginx/html
+
+# Configs
+COPY nginx.render.conf   /etc/nginx/sites-enabled/default
+COPY supervisord.conf    /etc/supervisor/conf.d/app.conf
+
+# Remove default nginx site
+RUN rm -f /etc/nginx/sites-enabled/default.bak \
+    && nginx -t
+
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/app.conf"]

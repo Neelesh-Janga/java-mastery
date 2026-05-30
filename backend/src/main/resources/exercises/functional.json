@@ -1,0 +1,446 @@
+[
+  {
+    "id": "functional-001",
+    "topic": "functional",
+    "subtopic": "predicate",
+    "difficulty": "beginner",
+    "title": "Predicate: test, and, or, negate",
+    "description": "Create Predicates to test whether a number is even and whether it is greater than 5. Use and(), or(), and negate() to build compound predicates. Test each against several integers and print results.",
+    "starterCode": "import java.util.function.Predicate;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Predicate<Integer> isEven = n -> n % 2 == 0;\n        Predicate<Integer> greaterThan5 = n -> n > 5;\n        // Build: isEvenAndGreaterThan5, isEvenOrGreaterThan5, isOdd\n        // Your code here\n        int[] testValues = {2, 4, 6, 8, 3, 7};\n        // Your code here\n    }\n}",
+    "hints": [
+      "isEven.and(greaterThan5) returns a new Predicate that is true only when both are true.",
+      "isEven.negate() returns a Predicate that inverts the result."
+    ],
+    "solution": {
+      "code": "import java.util.function.Predicate;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Predicate<Integer> isEven = n -> n % 2 == 0;\n        Predicate<Integer> greaterThan5 = n -> n > 5;\n\n        Predicate<Integer> isEvenAndBig = isEven.and(greaterThan5);\n        Predicate<Integer> isEvenOrBig  = isEven.or(greaterThan5);\n        Predicate<Integer> isOdd        = isEven.negate();\n\n        int[] testValues = {2, 4, 6, 8, 3, 7};\n        System.out.println(\"n  | even | >5  | even&&>5 | even||>5 | odd\");\n        for (int n : testValues) {\n            System.out.printf(\"%-3d| %-5b| %-4b| %-9b| %-9b| %b%n\",\n                n, isEven.test(n), greaterThan5.test(n),\n                isEvenAndBig.test(n), isEvenOrBig.test(n), isOdd.test(n));\n        }\n    }\n}",
+      "explanation": "Predicate<T> is a functional interface in java.util.function with a single abstract method boolean test(T t). The default methods and(Predicate), or(Predicate), and negate() return new composed Predicates — they implement short-circuit evaluation just like && and ||: and() skips the second predicate if the first returns false, and or() skips the second if the first returns true. This composability lets you build arbitrarily complex filters from simple, reusable primitives without any if-else chains.",
+      "methodSignatures": [
+        {
+          "method": "boolean Predicate<T>.test(T t)",
+          "description": "Evaluates this predicate on the given argument."
+        },
+        {
+          "method": "Predicate<T> Predicate<T>.and(Predicate<? super T> other)",
+          "description": "Returns a composed predicate representing logical AND; short-circuits if this returns false."
+        },
+        {
+          "method": "Predicate<T> Predicate<T>.or(Predicate<? super T> other)",
+          "description": "Returns a composed predicate representing logical OR; short-circuits if this returns true."
+        },
+        {
+          "method": "Predicate<T> Predicate<T>.negate()",
+          "description": "Returns a predicate that represents the logical negation of this predicate."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-002",
+    "topic": "functional",
+    "subtopic": "predicate",
+    "difficulty": "intermediate",
+    "title": "Predicate.isEqual and Chaining in a Filter",
+    "description": "Use Predicate.isEqual() to create a predicate that matches a specific string. Then write a generic filterList method that takes a List<T> and a Predicate<T> and returns a new list of matching elements. Demonstrate with string length and equality filters.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.ArrayList;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    public static <T> List<T> filterList(List<T> list, Predicate<T> predicate) {\n        // Your code here\n        return null;\n    }\n\n    public static void main(String[] args) {\n        List<String> words = Arrays.asList(\"apple\", \"banana\", \"apricot\", \"cherry\", \"avocado\");\n        // Your code here\n    }\n}",
+    "hints": [
+      "Predicate.isEqual(\"apple\") returns a Predicate<Object> that tests equals.",
+      "Chain predicates: startsWithA.and(longerThan5) for compound filters."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.ArrayList;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    public static <T> List<T> filterList(List<T> list, Predicate<T> predicate) {\n        List<T> result = new ArrayList<>();\n        for (T item : list) {\n            if (predicate.test(item)) result.add(item);\n        }\n        return result;\n    }\n\n    public static void main(String[] args) {\n        List<String> words = Arrays.asList(\"apple\", \"banana\", \"apricot\", \"cherry\", \"avocado\");\n\n        Predicate<String> startsWithA = s -> s.startsWith(\"a\");\n        Predicate<String> longerThan5 = s -> s.length() > 5;\n        Predicate<String> isApple     = Predicate.isEqual(\"apple\");\n\n        System.out.println(\"Starts with A: \" + filterList(words, startsWithA));\n        // [apple, apricot, avocado]\n        System.out.println(\"Starts with A AND > 5 chars: \" + filterList(words, startsWithA.and(longerThan5)));\n        // [apricot, avocado]\n        System.out.println(\"Is exactly 'apple': \" + filterList(words, isApple));\n        // [apple]\n        System.out.println(\"Starts with A OR is cherry: \" + filterList(words, startsWithA.or(Predicate.isEqual(\"cherry\"))));\n        // [apple, apricot, avocado, cherry]\n    }\n}",
+      "explanation": "Predicate.isEqual(target) is a static factory method that returns a Predicate equivalent to Objects.equals(target, t) — it handles null safely (Predicate.isEqual(null).test(null) returns true). The generic filterList method demonstrates how Predicates integrate naturally with regular Java code before you learn streams — it's essentially implementing Stream.filter manually. The chaining pattern (and/or) lets you compose complex queries from simple building blocks, making the intent of each filter clear and the predicates reusable across different call sites.",
+      "methodSignatures": [
+        {
+          "method": "static <T> Predicate<T> Predicate.isEqual(Object targetRef)",
+          "description": "Returns a predicate that tests if the argument is equal to targetRef using Objects.equals."
+        },
+        {
+          "method": "static <T> List<T> Exercise.filterList(List<T> list, Predicate<T> predicate)",
+          "description": "Returns a new list containing only the elements for which the predicate returns true."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-003",
+    "topic": "functional",
+    "subtopic": "function",
+    "difficulty": "beginner",
+    "title": "Function: apply, andThen, compose, identity",
+    "description": "Create Functions for: (1) converting a String to its length, (2) doubling an integer, (3) converting an integer to its hex string. Use andThen to chain them: String -> length -> doubled. Use compose for the reverse pipeline. Use Function.identity() as a no-op.",
+    "starterCode": "import java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Function<String, Integer> strLen = s -> s.length();\n        Function<Integer, Integer> doubleIt = n -> n * 2;\n        Function<Integer, String> toHex = Integer::toHexString;\n        // Your code here\n    }\n}",
+    "hints": [
+      "f.andThen(g) means: apply f first, then pass the result to g.",
+      "f.compose(g) means: apply g first, then pass the result to f."
+    ],
+    "solution": {
+      "code": "import java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Function<String, Integer> strLen  = s -> s.length();\n        Function<Integer, Integer> doubleIt = n -> n * 2;\n        Function<Integer, String>  toHex  = Integer::toHexString;\n\n        // andThen: strLen -> doubleIt\n        Function<String, Integer> lenThenDouble = strLen.andThen(doubleIt);\n        System.out.println(\"'hello' -> len -> doubled: \" + lenThenDouble.apply(\"hello\")); // 10\n\n        // andThen chaining: strLen -> doubleIt -> toHex\n        Function<String, String> lenDoubleHex = strLen.andThen(doubleIt).andThen(toHex);\n        System.out.println(\"'hello' -> len -> doubled -> hex: \" + lenDoubleHex.apply(\"hello\")); // a\n\n        // compose: doubleIt.compose(strLen) = strLen first, then doubleIt\n        Function<String, Integer> composed = doubleIt.compose(strLen);\n        System.out.println(\"compose: \" + composed.apply(\"world\")); // 10\n\n        // identity: returns the input unchanged\n        Function<String, String> id = Function.identity();\n        System.out.println(\"identity: \" + id.apply(\"unchanged\")); // unchanged\n    }\n}",
+      "explanation": "Function<T,R> represents a function from T to R. apply(T t) evaluates it. andThen(Function<R,V> after) creates a composed function that applies this first and passes the result to after — it's left-to-right composition (the more readable direction). compose(Function<V,T> before) creates a composed function that applies before first, then this — it's right-to-left composition like mathematical function composition. Function.identity() returns a function that always returns its input argument, useful as a neutral element in functional pipelines or as a placeholder. andThen chains are compile-time checked: each step's output type must match the next step's input type.",
+      "methodSignatures": [
+        {
+          "method": "R Function<T,R>.apply(T t)",
+          "description": "Applies this function to the given argument and returns the result."
+        },
+        {
+          "method": "<V> Function<T,V> Function<T,R>.andThen(Function<? super R, ? extends V> after)",
+          "description": "Returns a composed function that applies this first, then after."
+        },
+        {
+          "method": "<V> Function<V,R> Function<T,R>.compose(Function<? super V, ? extends T> before)",
+          "description": "Returns a composed function that applies before first, then this."
+        },
+        {
+          "method": "static <T> Function<T,T> Function.identity()",
+          "description": "Returns a function that always returns its input argument."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-004",
+    "topic": "functional",
+    "subtopic": "function",
+    "difficulty": "intermediate",
+    "title": "Function<String, Integer> for Parsing and Transformation Pipeline",
+    "description": "Build a data transformation pipeline using Functions. Parse a list of CSV strings like \"Alice,30,Engineer\" into Person objects. Chain: csvString -> String[] -> Person. Print each Person.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Function;\n\npublic class Exercise {\n    static class Person {\n        String name; int age; String role;\n        Person(String name, int age, String role) {\n            this.name = name; this.age = age; this.role = role;\n        }\n        public String toString() { return name + \", \" + age + \", \" + role; }\n    }\n\n    public static void main(String[] args) {\n        List<String> csvLines = Arrays.asList(\n            \"Alice,30,Engineer\", \"Bob,25,Designer\", \"Charlie,35,Manager\"\n        );\n        Function<String, String[]> splitCsv;\n        Function<String[], Person> toPerson;\n        // Your code here\n    }\n}",
+    "hints": [
+      "splitCsv = line -> line.split(\",\");",
+      "Chain: splitCsv.andThen(toPerson) gives Function<String, Person>."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Function;\n\npublic class Exercise {\n    static class Person {\n        String name; int age; String role;\n        Person(String name, int age, String role) {\n            this.name = name; this.age = age; this.role = role;\n        }\n        public String toString() { return name + \", \" + age + \", \" + role; }\n    }\n\n    public static void main(String[] args) {\n        List<String> csvLines = Arrays.asList(\n            \"Alice,30,Engineer\", \"Bob,25,Designer\", \"Charlie,35,Manager\"\n        );\n\n        Function<String, String[]> splitCsv = line -> line.split(\",\");\n        Function<String[], Person>  toPerson = parts ->\n            new Person(parts[0].trim(), Integer.parseInt(parts[1].trim()), parts[2].trim());\n\n        Function<String, Person> csvToPerson = splitCsv.andThen(toPerson);\n\n        System.out.println(\"Parsed persons:\");\n        for (String csv : csvLines) {\n            System.out.println(csvToPerson.apply(csv));\n        }\n    }\n}",
+      "explanation": "Composing small, single-purpose Functions into a pipeline is a key functional programming pattern. Each function does one thing: splitCsv only splits, toPerson only constructs. andThen chains them into a single Function<String, Person> that is reusable and easily testable in isolation. This design also makes it trivial to insert a new transformation step (e.g., a trimming function) between existing steps without modifying either. In production code, these small functions often replace verbose static utility methods and are passed to Stream.map() to process collections.",
+      "methodSignatures": [
+        {
+          "method": "<V> Function<T,V> Function<T,R>.andThen(Function<? super R, ? extends V> after)",
+          "description": "Composes this function with after, applying this first."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-005",
+    "topic": "functional",
+    "subtopic": "consumer",
+    "difficulty": "beginner",
+    "title": "Consumer: accept and andThen",
+    "description": "Create a Consumer<String> that prints a string in uppercase and another that prints its length. Use andThen to chain them so both actions happen on each input. Apply to a list of words.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Consumer;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Consumer<String> printUpper = s -> System.out.println(s.toUpperCase());\n        Consumer<String> printLength = s -> System.out.println(\"Length: \" + s.length());\n        List<String> words = Arrays.asList(\"hello\", \"world\", \"java\");\n        // Chain the consumers and apply to each word\n        // Your code here\n    }\n}",
+    "hints": [
+      "printUpper.andThen(printLength) returns a new Consumer that does both in sequence.",
+      "Use a for-each loop and call the combined consumer's accept() method."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Consumer;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Consumer<String> printUpper  = s -> System.out.println(s.toUpperCase());\n        Consumer<String> printLength = s -> System.out.println(\"Length: \" + s.length());\n\n        Consumer<String> combined = printUpper.andThen(printLength);\n\n        List<String> words = Arrays.asList(\"hello\", \"world\", \"java\");\n        for (String word : words) {\n            combined.accept(word);\n            System.out.println(\"---\");\n        }\n    }\n}",
+      "explanation": "Consumer<T> is a functional interface whose accept(T t) method performs an action on T but returns nothing (void). It is used for side effects like printing, logging, or updating state. andThen(Consumer<? super T> after) returns a new Consumer that performs this consumer's action first and then after's action on the same input — unlike Function.andThen, there's no chaining of return values since Consumers return void. This is commonly seen in forEach calls: list.forEach(printUpper.andThen(printLength)) applies both actions to every element.",
+      "methodSignatures": [
+        {
+          "method": "void Consumer<T>.accept(T t)",
+          "description": "Performs this operation on the given argument."
+        },
+        {
+          "method": "Consumer<T> Consumer<T>.andThen(Consumer<? super T> after)",
+          "description": "Returns a composed Consumer that performs this operation first, then after."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-006",
+    "topic": "functional",
+    "subtopic": "consumer",
+    "difficulty": "intermediate",
+    "title": "BiConsumer: accept with Two Arguments",
+    "description": "Create a BiConsumer<String, Integer> that prints a name with a score. Use it to iterate a Map<String, Integer> of student scores with forEach. Then chain two BiConsumers with andThen.",
+    "starterCode": "import java.util.HashMap;\nimport java.util.Map;\nimport java.util.function.BiConsumer;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, Integer> scores = new HashMap<>();\n        scores.put(\"Alice\", 92);\n        scores.put(\"Bob\", 85);\n        scores.put(\"Charlie\", 78);\n        BiConsumer<String, Integer> printScore;\n        BiConsumer<String, Integer> printGrade;\n        // Your code here\n    }\n}",
+    "hints": [
+      "Map.forEach(BiConsumer<K,V>) calls the BiConsumer for each entry.",
+      "printScore.andThen(printGrade) chains both consumers on each key-value pair."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.Map;\nimport java.util.function.BiConsumer;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Map<String, Integer> scores = new HashMap<>();\n        scores.put(\"Alice\", 92);\n        scores.put(\"Bob\", 85);\n        scores.put(\"Charlie\", 78);\n\n        BiConsumer<String, Integer> printScore =\n            (name, score) -> System.out.println(name + \": \" + score);\n\n        BiConsumer<String, Integer> printGrade = (name, score) -> {\n            String grade = score >= 90 ? \"A\" : score >= 80 ? \"B\" : \"C\";\n            System.out.println(name + \" -> grade: \" + grade);\n        };\n\n        System.out.println(\"--- Scores ---\");\n        scores.forEach(printScore);\n\n        System.out.println(\"--- Combined ---\");\n        scores.forEach(printScore.andThen(printGrade));\n    }\n}",
+      "explanation": "BiConsumer<T,U> accepts two arguments and returns nothing — it's the two-argument version of Consumer. Map.forEach(BiConsumer<K,V>) passes each key-value pair to the BiConsumer, making it the cleanest way to iterate a map when you need both the key and value. BiConsumer also has andThen, allowing you to chain multiple operations on the same pair of arguments. BiConsumer is also used in Map.replaceAll (BiFunction variant), Map.compute, and when building event handlers that need two pieces of context.",
+      "methodSignatures": [
+        {
+          "method": "void BiConsumer<T,U>.accept(T t, U u)",
+          "description": "Performs this operation on the two given arguments."
+        },
+        {
+          "method": "BiConsumer<T,U> BiConsumer<T,U>.andThen(BiConsumer<? super T, ? super U> after)",
+          "description": "Returns a composed BiConsumer that performs this and then after on the same arguments."
+        },
+        {
+          "method": "void Map<K,V>.forEach(BiConsumer<? super K, ? super V> action)",
+          "description": "Performs the given action for each entry in this map."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-007",
+    "topic": "functional",
+    "subtopic": "supplier",
+    "difficulty": "beginner",
+    "title": "Supplier: get and Lazy Initialization",
+    "description": "Create a Supplier<List<String>> that lazily creates and populates a list only when get() is called. Then demonstrate a lazy initialization pattern: only compute an expensive value if it's needed.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.Supplier;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Supplier<List<String>> listSupplier;\n        // Your code here: define listSupplier so it creates and returns a fresh list\n\n        // Lazy initialization pattern: value is null, computed only on first access\n        String cachedValue = null;\n        Supplier<String> expensiveSupplier = () -> {\n            System.out.println(\"(computing...)\");\n            return \"ExpensiveResult\";\n        };\n        // Your code here\n    }\n}",
+    "hints": [
+      "Supplier<T> has a single method T get() with no arguments.",
+      "For lazy init: if (cachedValue == null) { cachedValue = expensiveSupplier.get(); }"
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Supplier;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        Supplier<List<String>> listSupplier = () -> {\n            List<String> list = new ArrayList<>();\n            list.add(\"alpha\");\n            list.add(\"beta\");\n            list.add(\"gamma\");\n            return list;\n        };\n\n        System.out.println(\"Before get()\");\n        List<String> result = listSupplier.get();\n        System.out.println(\"Got: \" + result); // [alpha, beta, gamma]\n        // Each call creates a fresh list:\n        System.out.println(\"Same? \" + (listSupplier.get() == result)); // false\n\n        // Lazy initialization pattern:\n        String cachedValue = null;\n        Supplier<String> expensiveSupplier = () -> {\n            System.out.println(\"(computing...)\");\n            return \"ExpensiveResult\";\n        };\n        System.out.println(\"Need value? Checking...\");\n        if (cachedValue == null) {\n            cachedValue = expensiveSupplier.get(); // only computed here\n        }\n        System.out.println(\"Value: \" + cachedValue);\n        // Second access: no re-computation\n        if (cachedValue == null) {\n            cachedValue = expensiveSupplier.get();\n        }\n        System.out.println(\"Value again: \" + cachedValue); // no \"(computing...)\" line\n    }\n}",
+      "explanation": "Supplier<T> is a functional interface with a single abstract method T get() that takes no arguments and returns a value. Unlike a direct field assignment, a Supplier defers execution until get() is called — this is lazy evaluation. The lazy initialization pattern (check null, then call supplier) is the non-thread-safe version of the double-checked locking idiom; for thread safety you'd use AtomicReference or a synchronized block. Suppliers are used extensively in the JDK: Optional.orElseGet(Supplier), Objects.requireNonNullElseGet, and logging frameworks that accept message suppliers to avoid string concatenation when logging is disabled.",
+      "methodSignatures": [
+        {
+          "method": "T Supplier<T>.get()",
+          "description": "Gets a result. Each call may or may not return the same object depending on the implementation."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-008",
+    "topic": "functional",
+    "subtopic": "supplier",
+    "difficulty": "intermediate",
+    "title": "Supplier Memoization Pattern",
+    "description": "Implement a memoize(Supplier<T>) utility that wraps a Supplier so the value is computed only once and cached for subsequent calls. Demonstrate that the expensive computation runs exactly once.",
+    "starterCode": "import java.util.function.Supplier;\n\npublic class Exercise {\n    public static <T> Supplier<T> memoize(Supplier<T> supplier) {\n        // Your code here\n        return null;\n    }\n\n    public static void main(String[] args) {\n        Supplier<String> expensiveOp = () -> {\n            System.out.println(\"Running expensive operation...\");\n            return \"Result\";\n        };\n        // Your code here\n    }\n}",
+    "hints": [
+      "Use an array or AtomicReference to hold the cached value within the closure.",
+      "Boolean flag or null-check: if not computed yet, call supplier.get() and store the result."
+    ],
+    "solution": {
+      "code": "import java.util.function.Supplier;\n\npublic class Exercise {\n    @SuppressWarnings(\"unchecked\")\n    public static <T> Supplier<T> memoize(Supplier<T> supplier) {\n        Object[] cache = {null};\n        boolean[] computed = {false};\n        return () -> {\n            if (!computed[0]) {\n                cache[0] = supplier.get();\n                computed[0] = true;\n            }\n            return (T) cache[0];\n        };\n    }\n\n    public static void main(String[] args) {\n        Supplier<String> expensiveOp = () -> {\n            System.out.println(\"Running expensive operation...\");\n            return \"CachedResult\";\n        };\n\n        Supplier<String> memoized = memoize(expensiveOp);\n\n        System.out.println(memoized.get()); // prints \"Running expensive operation...\" then \"CachedResult\"\n        System.out.println(memoized.get()); // prints only \"CachedResult\" — no recomputation\n        System.out.println(memoized.get()); // same\n        System.out.println(\"All calls complete.\");\n    }\n}",
+      "explanation": "Memoization caches the result of a function so it is computed only once regardless of how many times get() is called. The implementation uses a single-element Object array and boolean array rather than local variables because lambdas in Java can only close over effectively final variables — arrays are effectively final (the reference doesn't change) even though their contents can be mutated. The returned lambda is a closure that captures both arrays and the original supplier. Note this implementation is not thread-safe; for thread safety use AtomicReference and compare-and-set, or use synchronized.",
+      "methodSignatures": [
+        {
+          "method": "static <T> Supplier<T> Exercise.memoize(Supplier<T> supplier)",
+          "description": "Returns a Supplier that computes the value once on first call and caches it for subsequent calls."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-009",
+    "topic": "functional",
+    "subtopic": "bifunction",
+    "difficulty": "intermediate",
+    "title": "BiFunction: apply and andThen",
+    "description": "Create a BiFunction<String, Integer, String> that repeats a string n times. Use andThen to transform the result. Also create a BiFunction<Integer, Integer, Integer> for addition and use it with a list of pairs.",
+    "starterCode": "import java.util.function.BiFunction;\nimport java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        BiFunction<String, Integer, String> repeat;\n        BiFunction<Integer, Integer, Integer> add;\n        // Your code here\n    }\n}",
+    "hints": [
+      "BiFunction<T,U,R>.apply(T t, U u) takes two arguments and returns R.",
+      "andThen(Function<R,V> after) composes a function on the result of BiFunction."
+    ],
+    "solution": {
+      "code": "import java.util.function.BiFunction;\nimport java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        BiFunction<String, Integer, String> repeat =\n            (s, n) -> s.repeat(n);\n\n        System.out.println(repeat.apply(\"ha\", 3)); // hahaha\n\n        // andThen: repeat then get uppercase\n        BiFunction<String, Integer, String> repeatUpper =\n            repeat.andThen(String::toUpperCase);\n        System.out.println(repeatUpper.apply(\"hi\", 2)); // HIHI\n\n        BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;\n        int[][] pairs = {{1,2}, {3,4}, {10,20}};\n        for (int[] pair : pairs) {\n            System.out.println(pair[0] + \" + \" + pair[1] + \" = \" + add.apply(pair[0], pair[1]));\n        }\n\n        // andThen on add: add two numbers, then convert to string\n        BiFunction<Integer, Integer, String> addToString = add.andThen(Object::toString);\n        System.out.println(\"Sum as string: \" + addToString.apply(7, 8)); // \"15\"\n    }\n}",
+      "explanation": "BiFunction<T,U,R> is the two-argument version of Function<T,R>: apply(T t, U u) takes two inputs and returns one output. andThen(Function<R,V> after) composes a unary Function on the result — note that BiFunction does not have compose() because there is no clean way to compose two functions before a two-input function. BiFunction is used throughout the JDK: Map.merge, Map.compute, Map.replaceAll all accept BiFunction variants. The repeat(String, int) pattern also shows how BiFunction cleanly replaces a static utility method in a composable, passable form.",
+      "methodSignatures": [
+        {
+          "method": "R BiFunction<T,U,R>.apply(T t, U u)",
+          "description": "Applies this function to the two arguments and returns the result."
+        },
+        {
+          "method": "<V> BiFunction<T,U,V> BiFunction<T,U,R>.andThen(Function<? super R, ? extends V> after)",
+          "description": "Returns a composed BiFunction that applies this first, then the after Function to the result."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-010",
+    "topic": "functional",
+    "subtopic": "unary-binary",
+    "difficulty": "intermediate",
+    "title": "UnaryOperator and BinaryOperator",
+    "description": "Use UnaryOperator<String> to transform strings (trim then capitalize). Use BinaryOperator<Integer> to find the max of two integers. Apply UnaryOperator with List.replaceAll and BinaryOperator with Stream.reduce.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.BinaryOperator;\nimport java.util.function.UnaryOperator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> words = Arrays.asList(\"  hello  \", \"  world  \", \"  java  \");\n        UnaryOperator<String> trimAndCapitalize;\n        BinaryOperator<Integer> maxOp;\n        List<Integer> numbers = Arrays.asList(3, 7, 1, 9, 4, 6);\n        // Your code here\n    }\n}",
+    "hints": [
+      "UnaryOperator<T> extends Function<T,T> — the input and output are the same type.",
+      "Use list.replaceAll(unaryOp) and stream.reduce(BinaryOperator) for practical application."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.Optional;\nimport java.util.function.BinaryOperator;\nimport java.util.function.UnaryOperator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> words = new ArrayList<>(Arrays.asList(\"  hello  \", \"  world  \", \"  java  \"));\n\n        UnaryOperator<String> trimAndCapitalize = s -> {\n            String trimmed = s.trim();\n            return trimmed.isEmpty() ? trimmed : Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1);\n        };\n\n        words.replaceAll(trimAndCapitalize);\n        System.out.println(\"After replaceAll: \" + words); // [Hello, World, Java]\n\n        BinaryOperator<Integer> maxOp = (a, b) -> a >= b ? a : b;\n        List<Integer> numbers = Arrays.asList(3, 7, 1, 9, 4, 6);\n        Optional<Integer> max = numbers.stream().reduce(maxOp);\n        System.out.println(\"Max: \" + max.orElse(-1)); // 9\n\n        // Also use as Integer::max method reference:\n        Optional<Integer> max2 = numbers.stream().reduce(Integer::max);\n        System.out.println(\"Max (method ref): \" + max2.orElse(-1)); // 9\n    }\n}",
+      "explanation": "UnaryOperator<T> extends Function<T,T> — it specializes Function for the case where input and output are the same type, making the intent clearer. List.replaceAll(UnaryOperator<E>) applies the operator to each element in-place, replacing each element with the operator's result. BinaryOperator<T> extends BiFunction<T,T,T> — both inputs and the output are the same type. Stream.reduce(BinaryOperator<T>) repeatedly applies the operator to combine all elements into a single result; without an identity element it returns Optional<T> because the stream might be empty. Integer::max and Math::max are commonly used as BinaryOperators.",
+      "methodSignatures": [
+        {
+          "method": "void List<E>.replaceAll(UnaryOperator<E> operator)",
+          "description": "Replaces each element in the list with the result of applying the operator."
+        },
+        {
+          "method": "Optional<T> Stream<T>.reduce(BinaryOperator<T> accumulator)",
+          "description": "Reduces the stream elements using an associative accumulation function, returning an Optional."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-011",
+    "topic": "functional",
+    "subtopic": "method-references",
+    "difficulty": "beginner",
+    "title": "Static Method References",
+    "description": "Replace lambda expressions with static method references for: Math::abs on a list of integers, Integer::parseInt on a list of strings, and Integer::toBinaryString. Print results for each.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Function;\nimport java.util.function.IntUnaryOperator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = Arrays.asList(-3, -1, 0, 2, -5);\n        List<String> strings = Arrays.asList(\"10\", \"255\", \"42\", \"7\");\n        // Use method references instead of lambdas\n        // Your code here\n    }\n}",
+    "hints": [
+      "Math::abs is ClassName::staticMethod — equivalent to n -> Math.abs(n).",
+      "Integer::parseInt is equivalent to s -> Integer.parseInt(s)."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = Arrays.asList(-3, -1, 0, 2, -5);\n        List<String> strings = Arrays.asList(\"10\", \"255\", \"42\", \"7\");\n\n        // Static method reference: ClassName::staticMethod\n        Function<Integer, Integer> absFunc = Math::abs; // equiv: n -> Math.abs(n)\n        System.out.print(\"Abs values: \");\n        for (Integer n : numbers) System.out.print(absFunc.apply(n) + \" \");\n        System.out.println();\n\n        Function<String, Integer> parseInt = Integer::parseInt; // equiv: s -> Integer.parseInt(s)\n        System.out.print(\"Parsed ints: \");\n        for (String s : strings) System.out.print(parseInt.apply(s) + \" \");\n        System.out.println();\n\n        Function<Integer, String> toBinary = Integer::toBinaryString;\n        System.out.print(\"Binary: \");\n        for (String s : strings) System.out.print(toBinary.apply(parseInt.apply(s)) + \" \");\n        System.out.println(); // 1010 11111111 101010 111\n    }\n}",
+      "explanation": "A static method reference has the form ClassName::staticMethodName and is equivalent to a lambda that calls that static method with the lambda's argument. The compiler matches the method reference to the target functional interface by checking that the method's parameter and return types match the interface's abstract method signature. Math::abs matches Function<Integer,Integer> because it takes one Integer and returns one Integer. Static method references are the most straightforward kind — the class name is fixed, and the argument is passed directly to the static method.",
+      "methodSignatures": [
+        {
+          "method": "static int Math.abs(int a)",
+          "description": "Returns the absolute value of an int."
+        },
+        {
+          "method": "static int Integer.parseInt(String s)",
+          "description": "Parses the string as a signed decimal integer."
+        },
+        {
+          "method": "static String Integer.toBinaryString(int i)",
+          "description": "Returns a string representation of the int argument as an unsigned integer in base 2."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-012",
+    "topic": "functional",
+    "subtopic": "method-references",
+    "difficulty": "intermediate",
+    "title": "Instance Method References (Unbound and Bound)",
+    "description": "Demonstrate the two kinds of instance method references: (1) Unbound: String::toUpperCase, String::length used as Function<String, String> and Function<String, Integer>. (2) Bound: a specific String instance's method: str::contains used as Predicate<String>.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Function;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> words = Arrays.asList(\"hello\", \"world\", \"java\", \"programming\");\n        String prefix = \"java\";\n        // Your code here\n    }\n}",
+    "hints": [
+      "Unbound: String::toUpperCase is equiv to s -> s.toUpperCase(). The string itself is the first arg.",
+      "Bound: prefix::contains is equiv to s -> prefix.contains(s). The specific object is captured."
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.function.Function;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<String> words = Arrays.asList(\"hello\", \"world\", \"java\", \"programming\");\n\n        // Unbound instance method reference: instance is the first (implicit) argument\n        Function<String, String>  toUpper = String::toUpperCase; // s -> s.toUpperCase()\n        Function<String, Integer> getLen  = String::length;      // s -> s.length()\n\n        System.out.print(\"Upper: \");\n        for (String w : words) System.out.print(toUpper.apply(w) + \" \");\n        System.out.println();\n\n        System.out.print(\"Lengths: \");\n        for (String w : words) System.out.print(getLen.apply(w) + \" \");\n        System.out.println();\n\n        // Bound instance method reference: the object is fixed\n        String substring = \"java\";\n        Predicate<String> containsJava = substring::contains; // s -> substring.contains(s)\n        // Note: this checks if 'substring' contains s, not if s contains 'java'\n        // For \"does s contain 'java'\": use s -> s.contains(\"java\") or a lambda\n        Predicate<String> hasJava = w -> w.contains(\"java\");\n        System.out.println(\"Contains 'java':\");\n        for (String w : words) {\n            System.out.println(\"  \" + w + \": \" + hasJava.test(w));\n        }\n    }\n}",
+      "explanation": "There are two kinds of instance method references. An unbound reference (String::toUpperCase) refers to an instance method of a specific class but the receiver object is supplied as the first argument at call time — so it fits Function<String,String> where the String argument becomes the 'this' of the method. A bound reference (substring::contains) captures a specific object instance (substring) and the lambda's argument becomes the method's parameter — so it fits Predicate<String> where the String argument is passed to contains(). The difference is subtle: String::toUpperCase means 'call toUpperCase on whatever String is given'; substring::contains means 'call contains on this specific String, passing the given argument'.",
+      "methodSignatures": [
+        {
+          "method": "String String.toUpperCase()",
+          "description": "Returns this string converted to upper case."
+        },
+        {
+          "method": "boolean String.contains(CharSequence s)",
+          "description": "Returns true if this string contains the specified sequence of char values."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-013",
+    "topic": "functional",
+    "subtopic": "method-references",
+    "difficulty": "intermediate",
+    "title": "Constructor References",
+    "description": "Use constructor references (ClassName::new) to create objects. Demonstrate with ArrayList::new as a Supplier, String::new as a Function<char[],String>, and a custom Person class constructor reference used as a BiFunction.",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.BiFunction;\nimport java.util.function.Function;\nimport java.util.function.Supplier;\n\npublic class Exercise {\n    static class Person {\n        String name; int age;\n        Person(String name, int age) { this.name = name; this.age = age; }\n        public String toString() { return name + \"(\" + age + \")\"; }\n    }\n\n    public static void main(String[] args) {\n        // Your code here\n    }\n}",
+    "hints": [
+      "ArrayList::new as Supplier<List<String>> calls the no-arg constructor.",
+      "Person::new as BiFunction<String,Integer,Person> calls the two-arg constructor."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.BiFunction;\nimport java.util.function.Function;\nimport java.util.function.Supplier;\n\npublic class Exercise {\n    static class Person {\n        String name; int age;\n        Person(String name, int age) { this.name = name; this.age = age; }\n        public String toString() { return name + \"(\" + age + \")\"; }\n    }\n\n    public static void main(String[] args) {\n        // No-arg constructor reference: Supplier\n        Supplier<List<String>> listFactory = ArrayList::new;\n        List<String> list1 = listFactory.get();\n        List<String> list2 = listFactory.get();\n        list1.add(\"a\"); list2.add(\"b\");\n        System.out.println(\"list1: \" + list1 + \", list2: \" + list2); // [a], [b]\n\n        // Single-arg constructor reference: Function\n        Function<String, StringBuilder> sbFactory = StringBuilder::new;\n        StringBuilder sb = sbFactory.apply(\"initial\");\n        sb.append(\" content\");\n        System.out.println(\"StringBuilder: \" + sb);\n\n        // Two-arg constructor reference: BiFunction\n        BiFunction<String, Integer, Person> personFactory = Person::new;\n        Person alice = personFactory.apply(\"Alice\", 30);\n        Person bob   = personFactory.apply(\"Bob\", 25);\n        System.out.println(alice); // Alice(30)\n        System.out.println(bob);   // Bob(25)\n    }\n}",
+      "explanation": "Constructor references (ClassName::new) work like method references but invoke a constructor. The compiler selects the constructor overload that matches the target functional interface's abstract method signature — Supplier<T> maps to the no-arg constructor, Function<A,T> maps to the one-arg constructor, BiFunction<A,B,T> maps to the two-arg constructor. Constructor references are often used in conjunction with streams (stream.map(Person::new)) or as factory arguments. Each call to the supplier/function creates a new, independent object, which is why list1 and list2 are separate lists despite using the same factory.",
+      "methodSignatures": [
+        {
+          "method": "ArrayList()",
+          "description": "Constructs an empty ArrayList with an initial capacity of ten."
+        },
+        {
+          "method": "StringBuilder(String str)",
+          "description": "Constructs a StringBuilder initialized to the contents of the specified string."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-014",
+    "topic": "functional",
+    "subtopic": "predicate",
+    "difficulty": "advanced",
+    "title": "Building a Reusable Validator with Predicates",
+    "description": "Build a Validator<T> class that chains multiple Predicates and collects error messages for those that fail. Use it to validate a user registration object (username length, email format, age range).",
+    "starterCode": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    static class User {\n        String username, email;\n        int age;\n        User(String username, String email, int age) {\n            this.username = username; this.email = email; this.age = age;\n        }\n    }\n\n    static class Validator<T> {\n        // Support: addRule(Predicate<T>, String errorMsg)\n        //          validate(T value) -> List<String> of errors\n        // Your code here\n    }\n\n    public static void main(String[] args) {\n        Validator<User> userValidator = new Validator<>();\n        // Add rules and validate\n        // Your code here\n    }\n}",
+    "hints": [
+      "Store each rule as a pair of (Predicate<T>, String errorMessage) in a list.",
+      "validate() iterates all rules; if predicate.test(value) is false, add the error message."
+    ],
+    "solution": {
+      "code": "import java.util.ArrayList;\nimport java.util.List;\nimport java.util.function.Predicate;\n\npublic class Exercise {\n    static class User {\n        String username, email;\n        int age;\n        User(String username, String email, int age) {\n            this.username = username; this.email = email; this.age = age;\n        }\n        public String toString() { return username + \"/\" + email + \"/\" + age; }\n    }\n\n    static class ValidationRule<T> {\n        final Predicate<T> predicate;\n        final String errorMessage;\n        ValidationRule(Predicate<T> predicate, String errorMessage) {\n            this.predicate = predicate;\n            this.errorMessage = errorMessage;\n        }\n    }\n\n    static class Validator<T> {\n        private final List<ValidationRule<T>> rules = new ArrayList<>();\n\n        public Validator<T> addRule(Predicate<T> predicate, String errorMessage) {\n            rules.add(new ValidationRule<>(predicate, errorMessage));\n            return this;\n        }\n\n        public List<String> validate(T value) {\n            List<String> errors = new ArrayList<>();\n            for (ValidationRule<T> rule : rules) {\n                if (!rule.predicate.test(value)) {\n                    errors.add(rule.errorMessage);\n                }\n            }\n            return errors;\n        }\n    }\n\n    public static void main(String[] args) {\n        Validator<User> validator = new Validator<User>()\n            .addRule(u -> u.username != null && u.username.length() >= 3, \"Username must be at least 3 chars\")\n            .addRule(u -> u.username != null && u.username.length() <= 20, \"Username must be at most 20 chars\")\n            .addRule(u -> u.email != null && u.email.contains(\"@\"), \"Email must contain @\")\n            .addRule(u -> u.age >= 18, \"Must be 18 or older\")\n            .addRule(u -> u.age <= 120, \"Age must be realistic\");\n\n        User validUser   = new User(\"alice\", \"alice@example.com\", 25);\n        User invalidUser = new User(\"ab\", \"notanemail\", 15);\n\n        System.out.println(\"Valid user errors:   \" + validator.validate(validUser));   // []\n        System.out.println(\"Invalid user errors: \" + validator.validate(invalidUser));\n        // [Username must be at least 3 chars, Email must contain @, Must be 18 or older]\n    }\n}",
+      "explanation": "The Validator pattern separates rule definition from rule execution, making rules independently testable and easily extensible without modifying the Validator class. Each rule stores both a Predicate (the test logic) and an error message (the failure feedback), treating them as a single logical unit. The builder-style addRule(...) that returns this allows method chaining, creating a fluent API that reads like a specification. The validate method collects all failures rather than stopping at the first, giving the caller a complete picture — this is preferable in UI validation scenarios where users need to see all errors at once.",
+      "methodSignatures": [
+        {
+          "method": "Validator<T> Validator<T>.addRule(Predicate<T> predicate, String errorMessage)",
+          "description": "Adds a validation rule; returns this for method chaining."
+        },
+        {
+          "method": "List<String> Validator<T>.validate(T value)",
+          "description": "Runs all rules against the value and returns a list of error messages for failed rules."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-015",
+    "topic": "functional",
+    "subtopic": "unary-binary",
+    "difficulty": "advanced",
+    "title": "BinaryOperator in Reduce and Accumulation",
+    "description": "Use BinaryOperator to implement: (1) a running product of a list of integers, (2) string concatenation with a separator using reduce, (3) finding the longest string in a list. Use both the identity-based and no-identity reduce overloads.",
+    "starterCode": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.Optional;\nimport java.util.function.BinaryOperator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);\n        List<String> words = Arrays.asList(\"banana\", \"apple\", \"cherry\", \"date\");\n        // Your code here\n    }\n}",
+    "hints": [
+      "reduce(identity, BinaryOperator) never returns Optional; reduce(BinaryOperator) returns Optional.",
+      "For the longest string: (a, b) -> a.length() >= b.length() ? a : b"
+    ],
+    "solution": {
+      "code": "import java.util.Arrays;\nimport java.util.List;\nimport java.util.Optional;\nimport java.util.function.BinaryOperator;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);\n        List<String> words = Arrays.asList(\"banana\", \"apple\", \"cherry\", \"date\");\n\n        // Product using identity-based reduce (identity = 1 for multiplication)\n        BinaryOperator<Integer> multiply = (a, b) -> a * b;\n        int product = numbers.stream().reduce(1, multiply);\n        System.out.println(\"Product: \" + product); // 120\n\n        // String joining with separator (no identity -> Optional)\n        BinaryOperator<String> joinWithComma = (a, b) -> a + \", \" + b;\n        Optional<String> joined = words.stream().reduce(joinWithComma);\n        System.out.println(\"Joined: \" + joined.orElse(\"(empty)\")); // banana, apple, cherry, date\n\n        // Longest string (no identity -> Optional)\n        BinaryOperator<String> longest = (a, b) -> a.length() >= b.length() ? a : b;\n        Optional<String> longestWord = words.stream().reduce(longest);\n        System.out.println(\"Longest: \" + longestWord.orElse(\"(empty)\")); // banana or cherry (both 6)\n\n        // Empty list: Optional is empty\n        Optional<String> fromEmpty = List.<String>of().stream().reduce(joinWithComma);\n        System.out.println(\"From empty: \" + fromEmpty.isPresent()); // false\n    }\n}",
+      "explanation": "Stream.reduce has two overloads: reduce(T identity, BinaryOperator<T>) uses an identity value (like 0 for sum, 1 for product) that is used as the initial accumulator and also defines the result when the stream is empty — it always returns T. reduce(BinaryOperator<T>) has no identity and therefore returns Optional<T> because the stream might be empty and there would be no value to return. BinaryOperator<T> extends BiFunction<T,T,T>, so both inputs and the output are the same type T — this is required for the associative accumulation pattern that allows parallel reduction. String joining is better done with Collectors.joining in production, but this illustrates the reduce mechanics.",
+      "methodSignatures": [
+        {
+          "method": "T Stream<T>.reduce(T identity, BinaryOperator<T> accumulator)",
+          "description": "Reduces the stream using the identity value and associative accumulation function."
+        },
+        {
+          "method": "Optional<T> Stream<T>.reduce(BinaryOperator<T> accumulator)",
+          "description": "Reduces the stream using the accumulation function; returns empty Optional if the stream is empty."
+        }
+      ]
+    }
+  },
+  {
+    "id": "functional-016",
+    "topic": "functional",
+    "subtopic": "function",
+    "difficulty": "advanced",
+    "title": "Composing a Processing Pipeline with Function",
+    "description": "Build a text processing pipeline using Function composition. Steps: (1) trim whitespace, (2) convert to lowercase, (3) remove punctuation, (4) split into words, (5) count word frequency. Compose steps 1-3 as a single Function<String,String>, then apply steps 4-5.",
+    "starterCode": "import java.util.HashMap;\nimport java.util.Map;\nimport java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String text = \"  Hello, World! Hello, Java. Hello!  \";\n        Function<String, String> trim = String::trim;\n        Function<String, String> lower = String::toLowerCase;\n        Function<String, String> removePunctuation = s -> s.replaceAll(\"[^a-z0-9\\\\s]\", \"\");\n        // Compose the three string transforms, then count words\n        // Your code here\n    }\n}",
+    "hints": [
+      "trim.andThen(lower).andThen(removePunctuation) creates a single Function<String,String>.",
+      "After cleaning, split on '\\\\s+' and count with a HashMap."
+    ],
+    "solution": {
+      "code": "import java.util.HashMap;\nimport java.util.Map;\nimport java.util.TreeMap;\nimport java.util.function.Function;\n\npublic class Exercise {\n    public static void main(String[] args) {\n        String text = \"  Hello, World! Hello, Java. Hello!  \";\n\n        Function<String, String> trim             = String::trim;\n        Function<String, String> lower            = String::toLowerCase;\n        Function<String, String> removePunctuation = s -> s.replaceAll(\"[^a-z0-9\\\\s]\", \"\");\n\n        Function<String, String> clean = trim.andThen(lower).andThen(removePunctuation);\n        String cleaned = clean.apply(text);\n        System.out.println(\"Cleaned: '\" + cleaned + \"'\");\n        // 'hello world hello java hello'\n\n        String[] words = cleaned.split(\"\\\\s+\");\n        Map<String, Integer> freq = new HashMap<>();\n        for (String w : words) {\n            freq.merge(w, 1, Integer::sum);\n        }\n        System.out.println(\"Word frequencies: \" + new TreeMap<>(freq));\n        // {hello=3, java=1, world=1}\n    }\n}",
+      "explanation": "Function composition with andThen creates a pipeline where each function's output feeds into the next function's input, all resolved at compile time. This approach separates each transformation step into a named, testable function — if the logic changes (e.g., different punctuation rules), only one function needs to be updated. Using method references (String::trim, String::toLowerCase) where possible makes the pipeline self-documenting. The entire clean pipeline is just one line to apply, hiding the multi-step complexity behind a simple clean.apply(text) call — this is the core value of functional composition.",
+      "methodSignatures": [
+        {
+          "method": "<V> Function<T,V> Function<T,R>.andThen(Function<? super R, ? extends V> after)",
+          "description": "Returns a composed Function that applies this function first, then after."
+        },
+        {
+          "method": "String String.replaceAll(String regex, String replacement)",
+          "description": "Replaces each substring of this string that matches the regex with the replacement."
+        }
+      ]
+    }
+  }
+]

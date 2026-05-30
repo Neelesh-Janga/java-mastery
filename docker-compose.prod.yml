@@ -1,0 +1,69 @@
+# Production deployment:
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#
+# Required env vars (or .env file):
+#   DOMAIN=java-aws.fillthesyntax.in
+#   ACME_EMAIL=your@email.com        ← for Let's Encrypt cert notifications
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: java-mastery-backend
+    expose:
+      - "8080"
+    environment:
+      - ALLOWED_ORIGIN=https://${DOMAIN}
+      - JAVA_OPTS=-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 700m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/topics"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: java-mastery-frontend
+    expose:
+      - "80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 64m
+    restart: unless-stopped
+
+  # Caddy: automatic HTTPS via Let's Encrypt — zero config SSL
+  caddy:
+    image: caddy:2-alpine
+    container_name: java-mastery-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
