@@ -18,9 +18,9 @@ export function OutputPanel({ result, running }: Props) {
 
   if (!result) {
     return (
-      <div className="flex-shrink-0 h-32 border-t border-gray-800 bg-gray-900/50 flex items-center justify-center gap-2 text-gray-600 text-sm">
-        <Terminal size={16} />
-        Press <kbd className="px-1.5 py-0.5 rounded text-xs bg-gray-800 text-gray-400 font-mono">⌘ + Enter</kbd> or click Run Code to execute
+      <div className="flex-shrink-0 h-10 border-t border-gray-800 bg-gray-900/50 flex items-center px-4 gap-2 text-gray-700 text-xs">
+        <Terminal size={12} />
+        Output
       </div>
     )
   }

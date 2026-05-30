@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Topic } from '../types'
 import { useProgress } from '../hooks/useProgress'
 import axios from 'axios'
-import { BookOpen, ChevronRight, Trophy, RotateCcw } from 'lucide-react'
+import { BookOpen, ChevronRight, Trophy, RotateCcw, Linkedin } from 'lucide-react'
 
 export function TopicsPage() {
   const [topics, setTopics] = useState<Topic[]>([])
@@ -161,6 +161,25 @@ export function TopicsPage() {
           })}
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-800/60 mt-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="text-base">☕</span>
+            <span>Built with passion for Java learners</span>
+          </div>
+          <a
+            href="https://www.linkedin.com/in/neelesh-janga/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors group"
+          >
+            <Linkedin size={15} className="text-blue-500 group-hover:text-blue-400 transition-colors" />
+            <span>Neelesh Janga</span>
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }
