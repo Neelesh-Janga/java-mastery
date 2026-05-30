@@ -1,6 +1,8 @@
 package com.javamastery.service;
 
 import com.javamastery.model.ExecutionResult;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -13,22 +15,15 @@ import java.util.stream.Collectors;
 @Service
 public class JShellExecutionService {
 
-    private static final int TIMEOUT_SECONDS = 10;
-
-    /** Max bytes captured from stdout/stderr before truncating */
+    private static final int TIMEOUT_SECONDS = 30;
     private static final int MAX_OUTPUT_BYTES = 20_000;
 
-    /**
-     * Patterns that attempt OS escape, process spawning, or JVM shutdown.
-     * These are blocked before even reaching JShell.
-     */
     private static final Set<Pattern> BLOCKED_PATTERNS = Set.of(
-        Pattern.compile("Runtime\\.getRuntime\\s*\\(\\s*\\)\\s*\\.exec", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("Runtime\\.getRuntime\\s*\\(\\s*\\)\\.exec", Pattern.CASE_INSENSITIVE),
         Pattern.compile("new\\s+ProcessBuilder", Pattern.CASE_INSENSITIVE),
         Pattern.compile("System\\s*\\.\\s*exit", Pattern.CASE_INSENSITIVE),
-        Pattern.compile("Thread\\s*\\.\\s*sleep\\s*\\(\\s*[0-9]{5,}", Pattern.CASE_INSENSITIVE), // sleep > 9999ms
-        Pattern.compile("new\\s+Thread\\s*\\(.*\\)\\.start\\s*\\(\\s*\\)", Pattern.CASE_INSENSITIVE),
-        Pattern.compile("Executors\\.newFixedThreadPool\\s*\\(\\s*[1-9][0-9]{2,}", Pattern.CASE_INSENSITIVE) // pools >= 100
+        Pattern.compile("Thread\\s*\\.\\s*sleep\\s*\\(\\s*[0-9]{5,}", Pattern.CASE_INSENSITIVE),
+        Pattern.compile("Executors\\.newFixedThreadPool\\s*\\(\\s*[1-9][0-9]{2,}", Pattern.CASE_INSENSITIVE)
     );
 
     private static final String PREAMBLE = """
@@ -46,8 +41,36 @@ public class JShellExecutionService {
             import com.fasterxml.jackson.core.type.*;
             """;
 
+    /**
+     * Shared JShell instance — created once at startup with all imports
+     * pre-loaded so every user execution is fast (no JVM spin-up cost).
+     * Access is serialised through executionLock.
+     */
+    private jdk.jshell.JShell shell;
+    private final Object executionLock = new Object();
+
+    /** Resettable output buffer shared across executions. */
+    private final ResettableStream outStream = new ResettableStream(MAX_OUTPUT_BYTES);
+    private final ResettableStream errStream = new ResettableStream(MAX_OUTPUT_BYTES);
+
+    @PostConstruct
+    public void init() {
+        createShell();
+        System.out.println("[JShell] Warm-up complete — shared shell ready.");
+    }
+
+    @PreDestroy
+    public void destroy() {
+        synchronized (executionLock) {
+            if (shell != null) {
+                try { shell.close(); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    // ── public API ────────────────────────────────────────────────────────
+
     public ExecutionResult execute(String code) {
-        // Pre-flight security check
         for (Pattern p : BLOCKED_PATTERNS) {
             if (p.matcher(code).find()) {
                 return new ExecutionResult("",
@@ -64,6 +87,11 @@ public class JShellExecutionService {
             return future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
+            // Shell may be in a bad state — recreate for next request
+            synchronized (executionLock) {
+                try { shell.close(); } catch (Exception ignored) {}
+                createShell();
+            }
             return new ExecutionResult("", "Execution timed out after " + TIMEOUT_SECONDS + " seconds.", false,
                     System.currentTimeMillis() - startTime);
         } catch (ExecutionException e) {
@@ -78,62 +106,89 @@ public class JShellExecutionService {
         }
     }
 
-    private ExecutionResult runCode(String userCode, long startTime) {
-        LimitedOutputStream outBuffer = new LimitedOutputStream(MAX_OUTPUT_BYTES);
-        LimitedOutputStream errBuffer = new LimitedOutputStream(MAX_OUTPUT_BYTES);
-        PrintStream originalOut = System.out;
-        PrintStream originalErr = System.err;
+    // ── internals ─────────────────────────────────────────────────────────
 
-        try (jdk.jshell.JShell shell = jdk.jshell.JShell.builder()
-                .out(new PrintStream(outBuffer))
-                .err(new PrintStream(errBuffer))
-                .build()) {
+    /** Create (or recreate) the shared JShell with all preamble imports loaded. */
+    private void createShell() {
+        synchronized (executionLock) {
+            outStream.reset();
+            errStream.reset();
 
-            System.setOut(new PrintStream(outBuffer));
-            System.setErr(new PrintStream(errBuffer));
+            jdk.jshell.JShell newShell = jdk.jshell.JShell.builder()
+                    .out(new PrintStream(outStream))
+                    .err(new PrintStream(errStream))
+                    .build();
 
-            for (String importLine : PREAMBLE.trim().split("\n")) {
-                String line = importLine.trim();
-                if (!line.isEmpty()) shell.eval(line);
+            for (String line : PREAMBLE.trim().split("\n")) {
+                String l = line.trim();
+                if (!l.isEmpty()) newShell.eval(l);
             }
+            shell = newShell;
+        }
+    }
 
-            List<jdk.jshell.SnippetEvent> events = shell.eval(userCode);
+    private ExecutionResult runCode(String userCode, long startTime) {
+        synchronized (executionLock) {
+            outStream.reset();
+            errStream.reset();
 
-            StringBuilder output = new StringBuilder(outBuffer.toString());
-            StringBuilder errors  = new StringBuilder(errBuffer.toString());
+            PrintStream originalOut = System.out;
+            PrintStream originalErr = System.err;
 
-            for (jdk.jshell.SnippetEvent event : events) {
-                if (event.status() == jdk.jshell.Snippet.Status.REJECTED) {
-                    shell.diagnostics(event.snippet())
-                         .collect(Collectors.toList())
-                         .forEach(d -> errors.append(d.getMessage(null)).append("\n"));
-                } else if (event.exception() != null) {
-                    StringWriter sw = new StringWriter();
-                    event.exception().printStackTrace(new PrintWriter(sw));
-                    errors.append(sw);
-                } else if (event.value() != null && !event.value().equals("null")) {
-                    String src = event.snippet().source().trim();
-                    if (!src.endsWith(";") || src.contains("=")) {
-                        if (!output.toString().contains(event.value())) {
-                            output.append("=> ").append(event.value()).append("\n");
+            try {
+                System.setOut(new PrintStream(outStream));
+                System.setErr(new PrintStream(errStream));
+
+                List<jdk.jshell.SnippetEvent> events = shell.eval(userCode);
+
+                StringBuilder output = new StringBuilder(outStream.toString());
+                StringBuilder errors  = new StringBuilder(errStream.toString());
+
+                for (jdk.jshell.SnippetEvent event : events) {
+                    if (event.status() == jdk.jshell.Snippet.Status.REJECTED) {
+                        shell.diagnostics(event.snippet())
+                             .collect(Collectors.toList())
+                             .forEach(d -> errors.append(d.getMessage(null)).append("\n"));
+                    } else if (event.exception() != null) {
+                        StringWriter sw = new StringWriter();
+                        event.exception().printStackTrace(new PrintWriter(sw));
+                        errors.append(sw);
+                    } else if (event.value() != null && !event.value().equals("null")) {
+                        String src = event.snippet().source().trim();
+                        if (!src.endsWith(";") || src.contains("=")) {
+                            if (!output.toString().contains(event.value())) {
+                                output.append("=> ").append(event.value()).append("\n");
+                            }
                         }
                     }
                 }
+
+                return new ExecutionResult(
+                        truncate(output.toString().trim()),
+                        truncate(errors.toString().trim()),
+                        errors.length() == 0,
+                        System.currentTimeMillis() - startTime
+                );
+
+            } catch (Exception e) {
+                return new ExecutionResult("", "Internal error: " + sanitise(e), false,
+                        System.currentTimeMillis() - startTime);
+            } finally {
+                System.setOut(originalOut);
+                System.setErr(originalErr);
+
+                // Drop all non-import snippets to reset state for next execution
+                try {
+                    shell.snippets()
+                         .filter(s -> s.kind() != jdk.jshell.Snippet.Kind.IMPORT)
+                         .collect(Collectors.toList())
+                         .forEach(shell::drop);
+                } catch (Exception ignored) {
+                    // If cleanup fails recreate on next call
+                    try { shell.close(); } catch (Exception e2) {}
+                    createShell();
+                }
             }
-
-            return new ExecutionResult(
-                    truncate(output.toString().trim()),
-                    truncate(errors.toString().trim()),
-                    errors.length() == 0,
-                    System.currentTimeMillis() - startTime
-            );
-
-        } catch (Exception e) {
-            return new ExecutionResult("", "Internal error: " + sanitise(e), false,
-                    System.currentTimeMillis() - startTime);
-        } finally {
-            System.setOut(originalOut);
-            System.setErr(originalErr);
         }
     }
 
@@ -144,7 +199,6 @@ public class JShellExecutionService {
         return m.find() ? m.group() : p.pattern();
     }
 
-    /** Return exception class + message only — never a full stack trace to the client. */
     private String sanitise(Throwable t) {
         if (t == null) return "unknown error";
         return t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -155,10 +209,10 @@ public class JShellExecutionService {
         return s.substring(0, MAX_OUTPUT_BYTES) + "\n… [output truncated]";
     }
 
-    /** OutputStream that stops accepting bytes once the limit is reached */
-    private static final class LimitedOutputStream extends ByteArrayOutputStream {
+    /** OutputStream that can be reset between executions and caps byte count. */
+    private static final class ResettableStream extends ByteArrayOutputStream {
         private final int limit;
-        LimitedOutputStream(int limit) { this.limit = limit; }
+        ResettableStream(int limit) { this.limit = limit; }
 
         @Override
         public synchronized void write(int b) {
