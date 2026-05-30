@@ -9,29 +9,45 @@ export function TopicsPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [exerciseIds, setExerciseIds] = useState<Record<string, string[]>>({})
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [elapsed, setElapsed] = useState(0)
   const navigate = useNavigate()
   const { getTopicProgress, resetProgress } = useProgress()
 
+  // Tick elapsed seconds while loading (shows user something is happening)
   useEffect(() => {
+    if (!loading) return
+    const t = setInterval(() => setElapsed(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [loading])
+
+  useEffect(() => {
+    setLoading(true)
+    setError(false)
+    setElapsed(0)
+
     async function load() {
       try {
-        const { data: topicList } = await axios.get<Topic[]>('/api/topics')
+        const { data: topicList } = await axios.get<Topic[]>('/api/topics', { timeout: 90_000 })
         setTopics(topicList)
 
         const ids: Record<string, string[]> = {}
         await Promise.all(
           topicList.map(async t => {
-            const { data: exs } = await axios.get(`/api/topics/${t.id}/exercises`)
+            const { data: exs } = await axios.get(`/api/topics/${t.id}/exercises`, { timeout: 30_000 })
             ids[t.id] = exs.map((e: { id: string }) => e.id)
           })
         )
         setExerciseIds(ids)
+      } catch {
+        setError(true)
       } finally {
         setLoading(false)
       }
     }
     load()
-  }, [])
+  }, [retryCount])
 
   const totalExercises = topics.reduce((s, t) => s + t.exerciseCount, 0)
   const totalDone = Object.entries(exerciseIds).reduce((s, [tid]) => {
@@ -40,11 +56,42 @@ export function TopicsPage() {
   }, 0)
 
   if (loading) {
+    const warming = elapsed > 5
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-12 h-12 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Loading topics...</p>
+      <div className="flex items-center justify-center h-screen bg-gray-950">
+        <div className="text-center px-6 max-w-sm">
+          <div className="w-14 h-14 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-5" />
+          {warming ? (
+            <>
+              <p className="text-white font-semibold mb-2">Backend is warming up…</p>
+              <p className="text-gray-400 text-sm leading-relaxed mb-1">
+                The server spins down after inactivity and takes ~60 seconds to wake up.
+              </p>
+              <p className="text-gray-600 text-xs">{elapsed}s elapsed — hang tight ☕</p>
+            </>
+          ) : (
+            <p className="text-gray-400 text-sm">Loading topics…</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-950">
+        <div className="text-center px-6 max-w-sm">
+          <div className="text-4xl mb-4">⚠️</div>
+          <p className="text-white font-semibold mb-2">Couldn't reach the server</p>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            The backend may still be starting up. Wait a moment and try again.
+          </p>
+          <button
+            onClick={() => setRetryCount(c => c + 1)}
+            className="btn-primary py-2.5 px-6 text-sm"
+          >
+            <RotateCcw size={14} /> Retry
+          </button>
         </div>
       </div>
     )
